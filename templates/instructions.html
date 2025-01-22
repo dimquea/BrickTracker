@@ -5,6 +5,8 @@
 {% block main %}
   {% if upload %}
     {% include 'instructions/upload.html' %}
+  {% elif download %}
+    {% include 'instructions/download.html' %}
   {% elif rename %}
     {% include 'instructions/rename.html' %}
   {% elif delete %}
@@ -14,6 +16,7 @@
       {% if g.login.is_authenticated() %}
         <p class="border-bottom pb-2 px-2 text-center">
           <a class="btn btn-primary" href="{{ url_for('instructions.upload') }}"><i class="ri-upload-line"></i> Upload an instructions file</a>
+          <a class="btn btn-primary" href="{{ url_for('instructions.download') }}"><i class="ri-download-line"></i> Download instructions from Rebrickable</a>
           <a href="{{ url_for('admin.admin', open_instructions=true) }}" class="btn btn-light border" role="button"><i class="ri-refresh-line"></i> Refresh the instructions cache</a>
         </p>
       {% endif %}

@@ -3,10 +3,12 @@ import logging
 import os
 from typing import TYPE_CHECKING
 
-from flask import current_app, g, url_for
+from flask import current_app, g, url_for, flash
 import humanize
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
+
+import requests
 
 from .exceptions import ErrorException
 if TYPE_CHECKING:
@@ -114,6 +116,31 @@ class BrickInstructions(object):
             ))
 
         file.save(target)
+
+        # Info
+        logger.info('The instruction file {file} has been imported'.format(
+            file=self.filename
+        ))
+        
+    def download(self, href: str, /) -> None:
+        target = self.path(secure_filename(self.filename))
+
+        if os.path.isfile(target):
+            raise ErrorException('Cannot upload {target} as it already exists'.format(  # noqa: E501
+                target=self.filename
+            ))
+
+        url = f"https://rebrickable.com/{href}"
+
+        response = requests.get(url)
+        if response.status_code == 200:
+            # Save the file
+            with open(target, 'wb') as file:
+                file.write(response.content)
+            print(f"Downloaded {self.filename} to {target}")
+        else:
+            print(f"Failed to download {self.filename}. Status code: {response.status_code}", 'danger')
+
 
         # Info
         logger.info('The instruction file {file} has been imported'.format(

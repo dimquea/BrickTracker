@@ -1,0 +1,49 @@
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <form method="POST" action="{{ url_for('instructions.do_download') }}">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="ri-add-circle-line"></i> Download instructions from Rebrickable</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="add-fail" class="alert alert-danger d-none" role="alert"></div>
+                        <div id="add-complete" class="alert alert-success d-none" role="alert"></div>
+                        <div class="mb-3">
+                            <label for="add-set" class="form-label">Set number (only one)</label>
+                            <input type="text" class="form-control" id="add-set" name="add-set" placeholder="107-1 or 1642-1 or ..." value="{{ request.args.get('set_num', '') }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+            </form>
+            {% if found_tags %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="ri-add-circle-line"></i> Select instructions to download</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('instructions.confirm_download') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Available Instructions</label>
+                            <div class="form-check">
+                                {% for alt_text, href in found_tags %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="instruction-{{ loop.index }}" id="instruction-{{ loop.index }}">
+                                    <label class="form-check-label" for="instruction-{{ loop.index }}">
+                                        {{ alt_text }}
+                                    </label>
+                                    <input type="hidden" name="instruction-alt-text-{{ loop.index }}" value="{{ alt_text }}">
+                                    <input type="hidden" name="instruction-href-text-{{ loop.index }}" value="{{ href }}">
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Download Selected</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
