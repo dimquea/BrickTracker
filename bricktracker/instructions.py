@@ -9,6 +9,7 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 import requests
+from bs4 import BeautifulSoup
 
 from .exceptions import ErrorException
 if TYPE_CHECKING:
@@ -122,11 +123,34 @@ class BrickInstructions(object):
             file=self.filename
         ))
         
+    def find_instructions(self, set_id: str, /) -> None:
+        
+        url = f"https://rebrickable.com/instructions/{set_id}"
+        print(url)
+    
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            raise ErrorException('Failed to load page. Status code: {response.status_code}')
+        
+        # Parse the HTML content
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Collect all <img> tags with "LEGO Building Instructions" in the alt attribute
+        found_tags = []
+        for a_tag in soup.find_all('a', href=True):
+            img_tag = a_tag.find('img', alt=True)
+            if img_tag and "LEGO Building Instructions" in img_tag['alt']:
+                found_tags.append((img_tag['alt'].replace('LEGO Building Instructions for ', ''), a_tag['href']))  # Save alt and href
+        return found_tags
+        
     def download(self, href: str, /) -> None:
         target = self.path(secure_filename(self.filename))
 
         if os.path.isfile(target):
-            raise ErrorException('Cannot upload {target} as it already exists'.format(  # noqa: E501
+            raise ErrorException('Cannot download {target} as it already exists'.format(  # noqa: E501
                 target=self.filename
             ))
 
@@ -137,9 +161,8 @@ class BrickInstructions(object):
             # Save the file
             with open(target, 'wb') as file:
                 file.write(response.content)
-            print(f"Downloaded {self.filename} to {target}")
         else:
-            print(f"Failed to download {self.filename}. Status code: {response.status_code}", 'danger')
+            raise ErrorException(f"Failed to download {self.filename}. Status code: {response.status_code}")
 
 
         # Info

@@ -16,9 +16,6 @@ from ..instructions import BrickInstructions
 from ..instructions_list import BrickInstructionsList
 from .upload import upload_helper
 
-import requests
-from bs4 import BeautifulSoup
-
 instructions_page = Blueprint(
     'instructions',
     __name__,
@@ -150,25 +147,7 @@ def download() -> str:
 def do_download() -> Response:
     set_id: str = request.form.get('add-set', '')
 
-    url = f"https://rebrickable.com/instructions/{set_id}"
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-    response = requests.get(url, headers=headers)
-    if response.status_code != 200:
-        flash(f"Failed to load page. Status code: {response.status_code}", 'danger')
-        return redirect(url_for('instructions.download'))
-    
-    # Parse the HTML content
-    soup = BeautifulSoup(response.content, 'html.parser')
-    
-    # Collect all <img> tags with "LEGO Building Instructions" in the alt attribute
-    found_tags = []
-    for a_tag in soup.find_all('a', href=True):
-        img_tag = a_tag.find('img', alt=True)
-        if img_tag and "LEGO Building Instructions" in img_tag['alt']:
-            found_tags.append((img_tag['alt'].replace('LEGO Building Instructions for ', ''), a_tag['href']))  # Save alt and href
+    found_tags = BrickInstructions(set_id).find_instructions(set_id)
         
     return render_template('instructions.html', download=True, found_tags=found_tags)
 
