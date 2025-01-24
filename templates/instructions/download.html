@@ -17,7 +17,7 @@
                     </div>
                 </div>
             </form>
-            {% if found_tags %}
+            {% if instructions %}
             <div class="card mb-3">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="ri-add-circle-line"></i> Select instructions to download</h5>
@@ -27,7 +27,7 @@
                         <div class="mb-3">
                             <label class="form-label">Available Instructions</label>
                             <div class="form-check">
-                                {% for alt_text, href in found_tags %}
+                                {% for alt_text, href in instructions %}
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="instruction-{{ loop.index }}" id="instruction-{{ loop.index }}">
                                     <label class="form-check-label" for="instruction-{{ loop.index }}">

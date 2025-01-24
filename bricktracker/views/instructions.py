@@ -140,35 +140,35 @@ def download() -> str:
         error=request.args.get('error')
     )
     
-# Actually download an instructions file
+# Show search results
 @instructions_page.route('/download/', methods=['POST'])
 @login_required
 @exception_handler(__file__, post_redirect='instructions.download')
 def do_download() -> Response:
+    # get set_id from input field
     set_id: str = request.form.get('add-set', '')
 
-    # BrickInstructions require an argument. Not sure which makes sense here.
-    found_tags = BrickInstructions(set_id).find_instructions(set_id)
-        
-    return render_template('instructions.html', download=True, found_tags=found_tags)
+    # get list of instructions for the set and offer them to download
+    instructions = BrickInstructions(set_id).find_instructions(set_id)
+    
+    return render_template('instructions.html', download=True, instructions=instructions)
 
 @instructions_page.route('/confirm_download', methods=['POST'])
 @login_required
 @exception_handler(__file__, post_redirect='instructions.download')
 def confirm_download() -> Response:
     
-    # BrickInstructions require an argument. Not sure which makes sense here.
+    # Get list of selected instructions
     selected_instructions = BrickInstructions("").get_list(request.form)
-
+    
+    # No instructions selected
     if not selected_instructions:
-        # No instructions selected
         return redirect(url_for('instructions.download'))
 
+    # Loop over selected instructions and download them
     for href, filename in selected_instructions:
         BrickInstructions(f"{filename}.pdf").download(href) 
 
-
     BrickInstructionsList(force=True)
 
-    #flash("Selected instructions have been downloaded", 'success')
     return redirect(url_for('instructions.list'))

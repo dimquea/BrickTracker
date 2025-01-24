@@ -8,6 +8,7 @@ import humanize
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
+from io import BytesIO
 import requests
 from bs4 import BeautifulSoup
 
@@ -117,21 +118,30 @@ class BrickInstructions(object):
             ))
 
         file.save(target)
-
+        
         # Info
         logger.info('The instruction file {file} has been imported'.format(
             file=self.filename
         ))
-        
-    def find_instructions(self, set_id: str, /) -> None:
-        
-        url = f"https://rebrickable.com/instructions/{set_id}"
-        print(url)
+       
+     # Compute the url for the rebrickable instructions page
+    def url_for_instructions(self, /) -> str:       
+        try:
+            return current_app.config['REBRICKABLE_LINK_INSTRUCTIONS_PATTERN'].format(  # noqa: E501
+                number=self.filename,
+            )
+        except Exception:
+            pass
+
+        return ''
     
+    def find_instructions(self, set: str, /) -> None:
+            
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': current_app.config['REBRICKABLE_USER_AGENT']
         }
-        response = requests.get(url, headers=headers)
+        
+        response = requests.get(BrickInstructions.url_for_instructions(self), headers=headers)
         if response.status_code != 200:
             raise ErrorException('Failed to load page. Status code: {response.status_code}')
         
@@ -144,6 +154,7 @@ class BrickInstructions(object):
             img_tag = a_tag.find('img', alt=True)
             if img_tag and "LEGO Building Instructions" in img_tag['alt']:
                 found_tags.append((img_tag['alt'].replace('LEGO Building Instructions for ', ''), a_tag['href']))  # Save alt and href
+        
         return found_tags
     
     def get_list(self, request_form, /) -> list:
@@ -153,29 +164,27 @@ class BrickInstructions(object):
             if key.startswith('instruction-') and request_form.get(key) == 'on':  # Checkbox is checked
                 index = key.split('-')[-1]
                 alt_text = request_form.get(f'instruction-alt-text-{index}')
-                href_text = request_form.get(f'instruction-href-text-{index}')
+                href_text = request_form.get(f'instruction-href-text-{index}').replace('/instructions/', '')  # Remove the /instructions/ part
                 selected_instructions.append((href_text,alt_text))
 
         return selected_instructions
         
-    def download(self, href: str, /) -> None:
-        target = self.path(secure_filename(self.filename))
+    def download(self, href: str, /) -> None:     
+        target = self.path(filename=secure_filename(self.filename))
 
         if os.path.isfile(target):
             raise ErrorException('Cannot download {target} as it already exists'.format(  # noqa: E501
                 target=self.filename
             ))
 
-        url = f"https://rebrickable.com/{href}"
+        url = current_app.config['REBRICKABLE_LINK_INSTRUCTIONS_PATTERN'].format(number=href)
 
         response = requests.get(url)
         if response.status_code == 200:
-            # Save the file
-            with open(target, 'wb') as file:
-                file.write(response.content)
+            # Save the content to the target path
+            FileStorage(stream=BytesIO(response.content)).save(target)
         else:
             raise ErrorException(f"Failed to download {self.filename}. Status code: {response.status_code}")
-
 
         # Info
         logger.info('The instruction file {file} has been imported'.format(
