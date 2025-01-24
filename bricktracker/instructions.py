@@ -145,6 +145,18 @@ class BrickInstructions(object):
             if img_tag and "LEGO Building Instructions" in img_tag['alt']:
                 found_tags.append((img_tag['alt'].replace('LEGO Building Instructions for ', ''), a_tag['href']))  # Save alt and href
         return found_tags
+    
+    def get_list(self, request_form, /) -> list:
+        selected_instructions = []
+        # Get the list of instructions
+        for key in request_form:
+            if key.startswith('instruction-') and request_form.get(key) == 'on':  # Checkbox is checked
+                index = key.split('-')[-1]
+                alt_text = request_form.get(f'instruction-alt-text-{index}')
+                href_text = request_form.get(f'instruction-href-text-{index}')
+                selected_instructions.append((href_text,alt_text))
+
+        return selected_instructions
         
     def download(self, href: str, /) -> None:
         target = self.path(secure_filename(self.filename))

@@ -147,6 +147,7 @@ def download() -> str:
 def do_download() -> Response:
     set_id: str = request.form.get('add-set', '')
 
+    # BrickInstructions require an argument. Not sure which makes sense here.
     found_tags = BrickInstructions(set_id).find_instructions(set_id)
         
     return render_template('instructions.html', download=True, found_tags=found_tags)
@@ -155,20 +156,15 @@ def do_download() -> Response:
 @login_required
 @exception_handler(__file__, post_redirect='instructions.download')
 def confirm_download() -> Response:
-    selected_instructions = []
-    for key in request.form:
-        if key.startswith('instruction-') and request.form.get(key) == 'on':  # Checkbox is checked
-            index = key.split('-')[-1]
-            alt_text = request.form.get(f'instruction-alt-text-{index}')
-            href_text = request.form.get(f'instruction-href-text-{index}')
-            selected_instructions.append((href_text,alt_text))
+    
+    # BrickInstructions require an argument. Not sure which makes sense here.
+    selected_instructions = BrickInstructions("").get_list(request.form)
 
     if not selected_instructions:
-        flash("No instructions selected", 'danger')
+        # No instructions selected
         return redirect(url_for('instructions.download'))
 
     for href, filename in selected_instructions:
-        print(f"Downloading {filename} from {href}")
         BrickInstructions(f"{filename}.pdf").download(href) 
 
 
