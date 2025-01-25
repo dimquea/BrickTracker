@@ -4,9 +4,9 @@ from typing import Self
 from flask import current_app
 
 from .exceptions import NotFoundException
+from .parser import parse_set
 from .rebrickable import Rebrickable
 from .rebrickable_image import RebrickableImage
-from .rebrickable_set import RebrickableSet
 from .record_list import BrickRecordList
 from .wish import BrickWish
 
@@ -34,7 +34,7 @@ class BrickWishList(BrickRecordList[BrickWish]):
     @staticmethod
     def add(set: str, /) -> None:
         try:
-            set = RebrickableSet.parse_number(set)
+            set = parse_set(set)
             BrickWish().select_specific(set)
         except NotFoundException:
             logger.debug('rebrick.lego.get_set("{set}")'.format(

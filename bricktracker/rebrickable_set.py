@@ -7,6 +7,7 @@ from flask import current_app
 
 from .exceptions import ErrorException, NotFoundException
 from .instructions import BrickInstructions
+from .parser import parse_set
 from .rebrickable import Rebrickable
 from .rebrickable_image import RebrickableImage
 from .record import BrickRecord
@@ -98,7 +99,7 @@ class RebrickableSet(BrickRecord):
 
         try:
             self.socket.auto_progress(message='Parsing set number')
-            set = RebrickableSet.parse_number(str(data['set']))
+            set = parse_set(str(data['set']))
 
             self.socket.auto_progress(
                 message='Set {set}: loading from Rebrickable'.format(
@@ -187,39 +188,3 @@ class RebrickableSet(BrickRecord):
             'url': str(data['set_url']),
             'last_modified': str(data['last_modified_dt']),
         }
-
-    # Make sense of the number from the data
-    @staticmethod
-    def parse_number(set: str, /) -> str:
-        number, _, version = set.partition('-')
-
-        # Making sure both are integers
-        if version == '':
-            version = 1
-
-        try:
-            number = int(number)
-        except Exception:
-            raise ErrorException('Number "{number}" is not a number'.format(
-                number=number,
-            ))
-
-        try:
-            version = int(version)
-        except Exception:
-            raise ErrorException('Version "{version}" is not a number'.format(
-                version=version,
-            ))
-
-        # Make sure both are positive
-        if number < 0:
-            raise ErrorException('Number "{number}" should be positive'.format(
-                number=number,
-            ))
-
-        if version < 0:
-            raise ErrorException('Version "{version}" should be positive'.format(  # noqa: E501
-                version=version,
-            ))
-
-        return '{number}-{version}'.format(number=number, version=version)
