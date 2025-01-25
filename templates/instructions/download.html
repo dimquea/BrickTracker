@@ -1,7 +1,8 @@
 <div class="container">
+    {% if error %}<div class="alert alert-danger" role="alert"><strong>Error:</strong> {{ error }}.</div>{% endif %}
     <div class="row">
         <div class="col-12">
-            <form method="POST" action="{{ url_for('instructions.do_download') }}">
+            <form method="POST" action="{{ url_for('instructions.select_download') }}">
                 <div class="card mb-3">
                     <div class="card-header">
                         <h5 class="mb-0"><i class="ri-add-circle-line"></i> Download instructions from Rebrickable</h5>
@@ -11,7 +12,7 @@
                         <div id="add-complete" class="alert alert-success d-none" role="alert"></div>
                         <div class="mb-3">
                             <label for="add-set" class="form-label">Set number (only one)</label>
-                            <input type="text" class="form-control" id="add-set" name="add-set" placeholder="107-1 or 1642-1 or ..." value="{{ request.args.get('set_num', '') }}">
+                            <input type="text" class="form-control" id="add-set" name="add-set" placeholder="107-1 or 1642-1 or ..." value="{{ set }}">
                         </div>
                         <button type="submit" class="btn btn-primary">Search</button>
                     </div>
@@ -23,7 +24,7 @@
                     <h5 class="mb-0"><i class="ri-add-circle-line"></i> Select instructions to download</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('instructions.confirm_download') }}">
+                    <form method="POST" action="{{ url_for('instructions.do_download') }}">
                         <div class="mb-3">
                             <label class="form-label">Available Instructions</label>
                             <div class="form-check">

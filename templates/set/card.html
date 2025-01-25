@@ -48,8 +48,10 @@
             <span class="list-group-item list-group-item-action text-center"><i class="ri-error-warning-line"></i> No instructions file found.</span>
             {% if g.login.is_authenticated() %}
               <a class="list-group-item list-group-item-action" href="{{ url_for('instructions.upload') }}"><i class="ri-upload-line"></i> Upload an instructions file</a>
-              <a class="list-group-item list-group-item-action" href="{{ url_for('instructions.download', set_num=item.fields.number) }}"><i class="ri-download-line"></i> Download instruction from Rebrickable</a>
             {% endif %}
+          {% endif %}
+          {% if g.login.is_authenticated() %}
+            <a class="list-group-item list-group-item-action" href="{{ url_for('instructions.download', set=item.fields.set) }}"><i class="ri-download-line"></i> Download instructions from Rebrickable</a>
           {% endif %}
         </div>
         {{ accordion.footer() }}

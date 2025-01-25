@@ -1,18 +1,18 @@
 from datetime import datetime, timezone
 import logging
 import os
-from typing import TYPE_CHECKING
+from shutil import copyfileobj
+from typing import Tuple, TYPE_CHECKING
 
-from flask import current_app, g, url_for, flash
+from bs4 import BeautifulSoup
+from flask import current_app, g, url_for
 import humanize
+import requests
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-from io import BytesIO
-import requests
-from bs4 import BeautifulSoup
-
-from .exceptions import ErrorException
+from .exceptions import ErrorException, DownloadException
+from .parser import parse_set
 if TYPE_CHECKING:
     from .rebrickable_set import RebrickableSet
 
@@ -71,6 +71,34 @@ class BrickInstructions(object):
     def delete(self, /) -> None:
         os.remove(self.path())
 
+    # Download an instruction file
+    def download(self, path: str, /) -> None:
+        target = self.path(filename=secure_filename(self.filename))
+
+        if os.path.isfile(target):
+            raise ErrorException('Cannot download {target} as it already exists'.format(  # noqa: E501
+                target=self.filename
+            ))
+
+        url = current_app.config['REBRICKABLE_LINK_INSTRUCTIONS_PATTERN'].format(  # noqa: E501
+            path=path
+        )
+
+        response = requests.get(url, stream=True)
+        if response.ok:
+            with open(target, 'wb') as f:
+                copyfileobj(response.raw, f)
+        else:
+            raise DownloadException('Failed to download {file}. Status code: {code}'.format(  # noqa: E501
+                file=self.filename,
+                code=response.status_code
+            ))
+
+        # Info
+        logger.info('The instruction file {file} has been downloaded'.format(
+            file=self.filename
+        ))
+
     # Display the size in a human format
     def human_size(self) -> str:
         return humanize.naturalsize(self.size)
@@ -118,73 +146,6 @@ class BrickInstructions(object):
             ))
 
         file.save(target)
-        
-        # Info
-        logger.info('The instruction file {file} has been imported'.format(
-            file=self.filename
-        ))
-       
-     # Compute the url for the rebrickable instructions page
-    def url_for_instructions(self, /) -> str:       
-        try:
-            return current_app.config['REBRICKABLE_LINK_INSTRUCTIONS_PATTERN'].format(  # noqa: E501
-                number=self.filename,
-            )
-        except Exception:
-            pass
-
-        return ''
-    
-    def find_instructions(self, set: str, /) -> None:
-            
-        headers = {
-            'User-Agent': current_app.config['REBRICKABLE_USER_AGENT']
-        }
-        
-        response = requests.get(BrickInstructions.url_for_instructions(self), headers=headers)
-        if response.status_code != 200:
-            raise ErrorException('Failed to load page. Status code: {response.status_code}')
-        
-        # Parse the HTML content
-        soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Collect all <img> tags with "LEGO Building Instructions" in the alt attribute
-        found_tags = []
-        for a_tag in soup.find_all('a', href=True):
-            img_tag = a_tag.find('img', alt=True)
-            if img_tag and "LEGO Building Instructions" in img_tag['alt']:
-                found_tags.append((img_tag['alt'].replace('LEGO Building Instructions for ', ''), a_tag['href']))  # Save alt and href
-        
-        return found_tags
-    
-    def get_list(self, request_form, /) -> list:
-        selected_instructions = []
-        # Get the list of instructions
-        for key in request_form:
-            if key.startswith('instruction-') and request_form.get(key) == 'on':  # Checkbox is checked
-                index = key.split('-')[-1]
-                alt_text = request_form.get(f'instruction-alt-text-{index}')
-                href_text = request_form.get(f'instruction-href-text-{index}').replace('/instructions/', '')  # Remove the /instructions/ part
-                selected_instructions.append((href_text,alt_text))
-
-        return selected_instructions
-        
-    def download(self, href: str, /) -> None:     
-        target = self.path(filename=secure_filename(self.filename))
-
-        if os.path.isfile(target):
-            raise ErrorException('Cannot download {target} as it already exists'.format(  # noqa: E501
-                target=self.filename
-            ))
-
-        url = current_app.config['REBRICKABLE_LINK_INSTRUCTIONS_PATTERN'].format(number=href)
-
-        response = requests.get(url)
-        if response.status_code == 200:
-            # Save the content to the target path
-            FileStorage(stream=BytesIO(response.content)).save(target)
-        else:
-            raise ErrorException(f"Failed to download {self.filename}. Status code: {response.status_code}")
 
         # Info
         logger.info('The instruction file {file} has been imported'.format(
@@ -213,3 +174,71 @@ class BrickInstructions(object):
             return 'file-image-line'
         else:
             return 'file-line'
+
+    # Download selected instructions for a set
+    @staticmethod
+    def download_instructions(form: dict[str, str], /) -> None:
+        selected_instructions: list[Tuple[str, str]] = []
+
+        # Get the list of instructions
+        for key in form:
+            if key.startswith('instruction-') and form.get(key) == 'on':
+                _, _, index = key.partition('-')
+                alt_text = form.get(f'instruction-alt-text-{index}', '')
+                href_text = form.get(f'instruction-href-text-{index}', '').removeprefix('/instructions/')  # Remove the /instructions/ part  # noqa: E501
+                selected_instructions.append((href_text, alt_text))
+
+        # Raise if nothing selected
+        if not len(selected_instructions):
+            raise ErrorException('No instruction was selected to download')
+
+        # Loop over selected instructions and download them
+        for href, filename in selected_instructions:
+            BrickInstructions(f"{filename}.pdf").download(href)
+
+    # Find the instructions for a set
+    @staticmethod
+    def find_instructions(form: dict[str, str], /) -> list[Tuple[str, str]]:
+        # Grab the set ID
+        set: str = form.get('add-set', '')
+
+        # Parse it
+        set = parse_set(set)
+
+        response = requests.get(
+            current_app.config['REBRICKABLE_LINK_INSTRUCTIONS_PATTERN'].format(
+                path=set,
+            ),
+            headers={
+                'User-Agent': current_app.config['REBRICKABLE_USER_AGENT']
+            }
+        )
+
+        if not response.ok:
+            raise ErrorException('Failed to load the Rebrickable instructions page. Status code: {code}'.format(  # noqa: E501
+                code=response.status_code
+            ))
+
+        # Parse the HTML content
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        # Collect all <img> tags with "LEGO Building Instructions" in the
+        # alt attribute
+        found_tags: list[Tuple[str, str]] = []
+        for a_tag in soup.find_all('a', href=True):
+            img_tag = a_tag.find('img', alt=True)
+            if img_tag and "LEGO Building Instructions" in img_tag['alt']:
+                found_tags.append(
+                    (
+                        img_tag['alt'].removeprefix('LEGO Building Instructions for '),  # noqa: E501
+                        a_tag['href']
+                    )
+                )  # Save alt and href
+
+        # Raise an error if nothing found
+        if not len(found_tags):
+            raise ErrorException('No instruction found for set {set}'.format(
+                set=set
+            ))
+
+        return found_tags
