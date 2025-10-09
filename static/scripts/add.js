@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputValue = document.getElementById('add-set').value.trim();
 
     if (inputValue.startsWith('fig-') || inputValue.match(/^fig\d/i)) {
-      // It's a minifigure - create minifig socket if needed
+      // It's a minifigure - create minifig socket if needed and execute when ready
       if (!minifigSocket) {
         minifigSocket = new BrickMinifigureSocket(
           'add',
@@ -61,8 +61,17 @@ document.addEventListener("DOMContentLoaded", () => {
             PROGRESS: templateData.messages.PROGRESS,
           }
         );
+
+        // Wait for socket to connect before executing
+        const checkConnection = setInterval(() => {
+          if (minifigSocket.socket && minifigSocket.socket.connected) {
+            clearInterval(checkConnection);
+            minifigSocket.execute();
+          }
+        }, 100);
+      } else {
+        minifigSocket.execute();
       }
-      minifigSocket.execute();
     } else {
       // It's a set - use original execute
       originalExecute();

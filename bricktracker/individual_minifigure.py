@@ -418,7 +418,7 @@ class IndividualMinifigure(RebrickableMinifigure):
     def short(self, /, *, from_download: bool = False) -> dict[str, Any]:
         return {
             'download': from_download,
-            'image': self.fields.image if self.fields.image else '',
+            'image': self.url_for_image(),
             'name': self.fields.name,
             'figure': self.fields.figure,
         }

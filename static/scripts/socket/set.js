@@ -181,14 +181,31 @@ class BrickSetSocket extends BrickSocket {
                 this.html_progress_bar.scrollIntoView();
             }
 
-            this.socket.emit(this.messages.IMPORT_SET, {
-                set: (set !== undefined) ? set : this.html_input.value,
-                owners: owners,
-                purchase_location: purchase_location,
-                storage: storage,
-                tags: tags,
-                refresh: this.refresh
-            });
+            // Determine if this is a set or minifigure
+            const itemValue = (set !== undefined) ? set : this.html_input.value;
+            const isMinifigure = itemValue.trim().startsWith('fig-') || itemValue.trim().match(/^fig\d/i);
+
+            if (isMinifigure) {
+                // Emit minifigure import message
+                this.socket.emit(this.messages.IMPORT_MINIFIGURE, {
+                    figure: itemValue,
+                    owners: owners,
+                    purchase_location: purchase_location,
+                    storage: storage,
+                    tags: tags,
+                    quantity: 1
+                });
+            } else {
+                // Emit set import message
+                this.socket.emit(this.messages.IMPORT_SET, {
+                    set: itemValue,
+                    owners: owners,
+                    purchase_location: purchase_location,
+                    storage: storage,
+                    tags: tags,
+                    refresh: this.refresh
+                });
+            }
         } else {
             this.fail("Could not find the input field for the set number");
         }
