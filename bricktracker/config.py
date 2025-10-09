@@ -39,7 +39,7 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'HIDE_TABLE_MISSING_PARTS', 'c': bool},
     {'n': 'HIDE_TABLE_CHECKED_PARTS', 'c': bool},
     {'n': 'HIDE_WISHES', 'c': bool},
-    {'n': 'MINIFIGURES_DEFAULT_ORDER', 'd': '"rebrickable_minifigures"."name" ASC'},  # noqa: E501
+    {'n': 'MINIFIGURES_DEFAULT_ORDER', 'd': '"combined"."name" ASC'},  # noqa: E501
     {'n': 'MINIFIGURES_FOLDER', 'd': 'minifigures', 's': True},
     {'n': 'MINIFIGURES_PAGINATION_SIZE_DESKTOP', 'd': 10, 'c': int},
     {'n': 'MINIFIGURES_PAGINATION_SIZE_MOBILE', 'd': 5, 'c': int},
@@ -47,7 +47,7 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'NO_THREADED_SOCKET', 'c': bool},
     {'n': 'PARTS_SERVER_SIDE_PAGINATION', 'c': bool},
     {'n': 'SETS_SERVER_SIDE_PAGINATION', 'c': bool},
-    {'n': 'PARTS_DEFAULT_ORDER', 'd': '"rebrickable_parts"."name" ASC, "rebrickable_parts"."color_name" ASC, "bricktracker_parts"."spare" ASC'},  # noqa: E501
+    {'n': 'PARTS_DEFAULT_ORDER', 'd': '"rebrickable_parts"."name" ASC, "rebrickable_parts"."color_name" ASC, "combined"."spare" ASC'},  # noqa: E501
     {'n': 'PARTS_FOLDER', 'd': 'parts', 's': True},
     {'n': 'PARTS_PAGINATION_SIZE_DESKTOP', 'd': 10, 'c': int},
     {'n': 'PARTS_PAGINATION_SIZE_MOBILE', 'd': 5, 'c': int},

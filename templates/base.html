@@ -92,7 +92,11 @@
     <script src="{{ url_for('static', filename='scripts/socket/socket.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/socket/instructions.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/socket/set.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/socket/minifigure.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/table.js') }}"></script>
+    {% if request.endpoint == 'add.add' %}
+    <script src="{{ url_for('static', filename='scripts/add.js') }}"></script>
+    {% endif %}
     {% if request.endpoint == 'minifigure.list' %}
     <script src="{{ url_for('static', filename='scripts/minifigures.js') }}"></script>
     {% endif %}

@@ -26,8 +26,20 @@
             <div id="add-complete"></div>
           {% endif %}
           <div class="mb-3">
-            <label for="add-set" class="form-label">{% if not bulk %}Set number (only one){% else %}List of sets (separated by a comma){% endif %}</label>
-            <input type="text" class="form-control" id="add-set" placeholder="{% if not bulk %}107-1 or 1642-1 or ...{% else %}107-1, 1642-1, ...{% endif %}">
+            <label for="add-set" class="form-label">{% if not bulk %}Set or Minifigure number (only one){% else %}List of sets (separated by a comma){% endif %}</label>
+            <input type="text" class="form-control" id="add-set" placeholder="{% if not bulk %}107-1 or fig-001234 or ...{% else %}107-1, 1642-1, ...{% endif %}"
+              data-path="{{ path }}"
+              data-namespace="{{ namespace }}"
+              data-msg-complete="{{ messages['COMPLETE'] }}"
+              data-msg-fail="{{ messages['FAIL'] }}"
+              data-msg-import-set="{{ messages['IMPORT_SET'] }}"
+              data-msg-load-set="{{ messages['LOAD_SET'] }}"
+              data-msg-progress="{{ messages['PROGRESS'] }}"
+              data-msg-set-loaded="{{ messages['SET_LOADED'] }}"
+              data-msg-import-minifigure="{{ messages['IMPORT_MINIFIGURE'] }}"
+              data-msg-load-minifigure="{{ messages['LOAD_MINIFIGURE'] }}"
+              data-msg-minifigure-loaded="{{ messages['MINIFIGURE_LOADED'] }}">
+            <div class="form-text">Sets: use format like 107-1. Minifigures: use format like fig-001234</div>
           </div>
           <div class="form-check">
             <input type="checkbox" class="form-check-input" id="add-no-confirm" {% if bulk %}checked disabled{% endif %}>
@@ -141,7 +153,9 @@
     </div>
   </div>
 </div>
+{% if bulk %}
 {% with id='add', bulk=bulk %}
   {% include 'set/socket.html' %}
 {% endwith %}
+{% endif %}
 {% endblock %}

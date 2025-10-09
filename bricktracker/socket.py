@@ -22,9 +22,12 @@ MESSAGES: Final[dict[str, str]] = {
     'DOWNLOAD_INSTRUCTIONS': 'download_instructions',
     'DOWNLOAD_PEERON_PAGES': 'download_peeron_pages',
     'FAIL': 'fail',
+    'IMPORT_MINIFIGURE': 'import_minifigure',
     'IMPORT_SET': 'import_set',
+    'LOAD_MINIFIGURE': 'load_minifigure',
     'LOAD_PEERON_PAGES': 'load_peeron_pages',
     'LOAD_SET': 'load_set',
+    'MINIFIGURE_LOADED': 'minifigure_loaded',
     'PROGRESS': 'progress',
     'SET_LOADED': 'set_loaded',
 }
@@ -206,6 +209,27 @@ class BrickSocket(object):
             ))
 
             BrickSet().load(self, data)
+
+        @self.socket.on(MESSAGES['IMPORT_MINIFIGURE'], namespace=self.namespace)
+        @rebrickable_socket(self)
+        def import_minifigure(data: dict[str, Any], /) -> None:
+            logger.debug('Socket: IMPORT_MINIFIGURE={data} (from: {fr})'.format(
+                data=data,
+                fr=request.sid,  # type: ignore
+            ))
+
+            from .individual_minifigure import IndividualMinifigure
+            IndividualMinifigure().download(self, data)
+
+        @self.socket.on(MESSAGES['LOAD_MINIFIGURE'], namespace=self.namespace)
+        def load_minifigure(data: dict[str, Any], /) -> None:
+            logger.debug('Socket: LOAD_MINIFIGURE={data} (from: {fr})'.format(
+                data=data,
+                fr=request.sid,  # type: ignore
+            ))
+
+            from .individual_minifigure import IndividualMinifigure
+            IndividualMinifigure().load(self, data)
 
     # Update the progress auto-incrementing
     def auto_progress(

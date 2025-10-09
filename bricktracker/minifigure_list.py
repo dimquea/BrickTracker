@@ -76,12 +76,13 @@ class BrickMinifigureList(BrickRecordList[BrickMinifigure]):
 
         # Field mapping for sorting
         field_mapping = {
-            'name': '"rebrickable_minifigures"."name"',
-            'parts': '"rebrickable_minifigures"."number_of_parts"',
+            'name': '"combined"."name"',
+            'parts': '"combined"."number_of_parts"',
             'quantity': '"total_quantity"',
             'missing': '"total_missing"',
             'damaged': '"total_damaged"',
-            'sets': '"total_sets"'
+            'sets': '"total_sets"',
+            'individual': '"total_individual"'
         }
 
         # Use the base pagination method

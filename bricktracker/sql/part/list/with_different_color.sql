@@ -6,12 +6,12 @@
 {% block total_damaged %}{% endblock %}
 
 {% block where %}
-WHERE "bricktracker_parts"."color" IS DISTINCT FROM :color
-AND "bricktracker_parts"."part" IS NOT DISTINCT FROM :part
+WHERE "combined"."color" IS DISTINCT FROM :color
+AND "combined"."part" IS NOT DISTINCT FROM :part
 {% endblock %}
 
 {% block group %}
 GROUP BY
-    "bricktracker_parts"."part",
-    "bricktracker_parts"."color"
+    "combined"."part",
+    "combined"."color"
 {% endblock %}

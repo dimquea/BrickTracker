@@ -9,6 +9,7 @@ from .exceptions import DatabaseException, ErrorException, NotFoundException
 from .record import BrickRecord
 from .sql import BrickSQL
 if TYPE_CHECKING:
+    from .individual_minifigure import IndividualMinifigure
     from .set import BrickSet
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ class BrickMetadata(BrickRecord):
     update_field_query: str
     update_set_state_query: str
     update_set_value_query: str
+    update_individual_minifigure_state_query: str
 
     def __init__(
         self,
@@ -212,6 +214,65 @@ class BrickMetadata(BrickRecord):
             state=state,
             set=brickset.fields.set,
             id=brickset.fields.id,
+        ))
+
+        return state
+
+    # Check if this metadata has a specific individual minifigure
+    def has_individual_minifigure(
+        self,
+        individual_minifigure: 'IndividualMinifigure',
+        /,
+    ) -> bool:
+        """Check if this owner/tag/status is assigned to a individual minifigure"""
+        # Determine the table name based on metadata type
+        table_name = f'bricktracker_individual_minifigure_{self.kind}s'
+        column_name = f'{self.kind}_{self.fields.id}'
+
+        # Query to check if the relationship exists using raw SQL
+        sql = BrickSQL()
+        query = f'SELECT COUNT(*) as count FROM "{table_name}" WHERE "id" = ? AND "{column_name}" = 1'
+        result = sql.cursor.execute(query, (individual_minifigure.fields.id,)).fetchone()
+
+        return result and result['count'] > 0
+
+    # Update the selected state of this metadata item for a individual minifigure
+    def update_individual_minifigure_state(
+        self,
+        individual_minifigure: 'IndividualMinifigure',
+        /,
+        *,
+        json: Any | None = None,
+        state: Any | None = None
+    ) -> Any:
+        if state is None and json is not None:
+            state = json.get('value', False)
+
+        parameters = self.sql_parameters()
+        parameters['id'] = individual_minifigure.fields.id
+        parameters['state'] = state
+
+        rows, _ = BrickSQL().execute_and_commit(
+            self.update_individual_minifigure_state_query,
+            parameters=parameters,
+            name=self.as_column(),
+        )
+
+        if rows != 1:
+            raise DatabaseException('Could not update the {kind} "{name}" state for individual minifigure {figure} ({id})'.format(
+                kind=self.kind,
+                name=self.fields.name,
+                figure=individual_minifigure.fields.figure,
+                id=individual_minifigure.fields.id,
+            ))
+
+        # Info
+        logger.info('{kind} "{name}" state changed to "{state}" for individual minifigure {figure} ({id})'.format(
+            kind=self.kind,
+            name=self.fields.name,
+            state=state,
+            figure=individual_minifigure.fields.figure,
+            id=individual_minifigure.fields.id,
         ))
 
         return state

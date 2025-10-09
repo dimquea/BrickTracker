@@ -16,6 +16,7 @@ class BrickSetStatus(BrickMetadata):
     select_query: str = 'set/metadata/status/select'
     update_field_query: str = 'set/metadata/status/update/field'
     update_set_state_query: str = 'set/metadata/status/update/state'
+    update_individual_minifigure_state_query: str = ''  # Not used for status
 
     # Grab data from a form
     def from_form(self, form: dict[str, str], /) -> Self:

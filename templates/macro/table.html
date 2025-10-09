@@ -1,4 +1,4 @@
-{% macro header(image=true, color=false, parts=false, quantity=false, missing=true, missing_parts=false, damaged=true, damaged_parts=false, sets=false, minifigures=false, checked=false, hamburger_menu=false, accordion_id='') %}
+{% macro header(image=true, color=false, parts=false, quantity=false, missing=true, missing_parts=false, damaged=true, damaged_parts=false, sets=false, individual=false, minifigures=false, checked=false, hamburger_menu=false, accordion_id='') %}
   <thead>
     <tr>
       {% if image %}
@@ -22,6 +22,9 @@
       {% endif %}
       {% if sets %}
         <th data-table-number="true" scope="col"><i class="ri-hashtag fw-normal"></i> Sets</th>
+      {% endif %}
+      {% if individual %}
+        <th data-table-number="true" scope="col"><i class="ri-package-line fw-normal"></i> Individual</th>
       {% endif %}
       {% if minifigures %}
         <th data-table-number="true" scope="col"><i class="ri-group-line fw-normal"></i> Minifigures</th>

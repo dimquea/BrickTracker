@@ -1,42 +1,57 @@
 {% extends 'part/base/base.sql' %}
 
 {% block total_missing %}
-SUM("bricktracker_parts"."missing") AS "total_missing",
+SUM("combined"."missing") AS "total_missing",
 {% endblock %}
 
 {% block total_damaged %}
-SUM("bricktracker_parts"."damaged") AS "total_damaged",
+SUM("combined"."damaged") AS "total_damaged",
 {% endblock %}
 
 {% block total_quantity %}
-SUM("bricktracker_parts"."quantity" * IFNULL("bricktracker_minifigures"."quantity", 1)) AS "total_quantity",
+SUM("combined"."quantity" * IFNULL("minifigure_quantities"."quantity", 1)) AS "total_quantity",
 {% endblock %}
 
 {% block total_sets %}
-IFNULL(COUNT(DISTINCT "bricktracker_parts"."id"), 0) AS "total_sets",
+IFNULL(COUNT(DISTINCT "combined"."id"), 0) AS "total_sets",
 {% endblock %}
 
 {% block total_minifigures %}
-SUM(IFNULL("bricktracker_minifigures"."quantity", 0)) AS "total_minifigures"
+SUM(IFNULL("minifigure_quantities"."quantity", 0)) AS "total_minifigures"
 {% endblock %}
 
 {% block join %}
-LEFT JOIN "bricktracker_minifigures"
-ON "bricktracker_parts"."id" IS NOT DISTINCT FROM "bricktracker_minifigures"."id"
-AND "bricktracker_parts"."figure" IS NOT DISTINCT FROM "bricktracker_minifigures"."figure"
+-- Join to get minifigure quantities from both set-based and individual minifigures
+LEFT JOIN (
+    SELECT
+        "bricktracker_minifigures"."id",
+        "bricktracker_minifigures"."figure",
+        "bricktracker_minifigures"."quantity"
+    FROM "bricktracker_minifigures"
+
+    UNION ALL
+
+    SELECT
+        "bricktracker_individual_minifigures"."id",
+        "bricktracker_individual_minifigures"."figure",
+        "bricktracker_individual_minifigures"."quantity"
+    FROM "bricktracker_individual_minifigures"
+) AS "minifigure_quantities"
+ON "combined"."id" IS NOT DISTINCT FROM "minifigure_quantities"."id"
+AND "combined"."figure" IS NOT DISTINCT FROM "minifigure_quantities"."figure"
 {% endblock %}
 
 {% block where %}
 {% set conditions = [] %}
 {% if color_id and color_id != 'all' %}
-  {% set _ = conditions.append('"bricktracker_parts"."color" = ' ~ color_id) %}
+  {% set _ = conditions.append('"combined"."color" = ' ~ color_id) %}
 {% endif %}
 {% if search_query %}
-  {% set search_condition = '(LOWER("rebrickable_parts"."name") LIKE LOWER(\'%' ~ search_query ~ '%\') OR LOWER("rebrickable_parts"."color_name") LIKE LOWER(\'%' ~ search_query ~ '%\') OR LOWER("bricktracker_parts"."part") LIKE LOWER(\'%' ~ search_query ~ '%\'))' %}
+  {% set search_condition = '(LOWER("rebrickable_parts"."name") LIKE LOWER(\'%' ~ search_query ~ '%\') OR LOWER("rebrickable_parts"."color_name") LIKE LOWER(\'%' ~ search_query ~ '%\') OR LOWER("combined"."part") LIKE LOWER(\'%' ~ search_query ~ '%\'))' %}
   {% set _ = conditions.append(search_condition) %}
 {% endif %}
 {% if skip_spare_parts %}
-  {% set _ = conditions.append('"bricktracker_parts"."spare" = 0') %}
+  {% set _ = conditions.append('"combined"."spare" = 0') %}
 {% endif %}
 {% if conditions %}
 WHERE {{ conditions | join(' AND ') }}
@@ -45,7 +60,7 @@ WHERE {{ conditions | join(' AND ') }}
 
 {% block group %}
 GROUP BY
-    "bricktracker_parts"."part",
-    "bricktracker_parts"."color",
-    "bricktracker_parts"."spare"
+    "combined"."part",
+    "combined"."color",
+    "combined"."spare"
 {% endblock %}

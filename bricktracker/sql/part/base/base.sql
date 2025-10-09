@@ -1,17 +1,14 @@
 SELECT
-    "bricktracker_parts"."id",
-    "bricktracker_parts"."figure",
-    "bricktracker_parts"."part",
-    "bricktracker_parts"."color",
-    "bricktracker_parts"."spare",
-    "bricktracker_parts"."quantity",
-    "bricktracker_parts"."element",
-    --"bricktracker_parts"."rebrickable_inventory",
-    "bricktracker_parts"."missing",
-    "bricktracker_parts"."damaged",
-    "bricktracker_parts"."checked",
-    --"rebrickable_parts"."part",
-    --"rebrickable_parts"."color_id",
+    "combined"."id",
+    "combined"."figure",
+    "combined"."part",
+    "combined"."color",
+    "combined"."spare",
+    "combined"."quantity",
+    "combined"."element",
+    "combined"."missing",
+    "combined"."damaged",
+    "combined"."checked",
     "rebrickable_parts"."color_name",
     "rebrickable_parts"."color_rgb",
     "rebrickable_parts"."color_transparent",
@@ -19,7 +16,6 @@ SELECT
     "rebrickable_parts"."bricklink_color_name",
     "rebrickable_parts"."bricklink_part_num",
     "rebrickable_parts"."name",
-    --"rebrickable_parts"."category",
     "rebrickable_parts"."image",
     "rebrickable_parts"."image_id",
     "rebrickable_parts"."url",
@@ -42,11 +38,45 @@ SELECT
     {% block total_minifigures %}
     NULL AS "total_minifigures" -- dummy for order: total_minifigures
     {% endblock %}
-FROM "bricktracker_parts"
+FROM (
+    -- Parts from set-based minifigures
+    SELECT
+        "bricktracker_parts"."id",
+        "bricktracker_parts"."figure",
+        "bricktracker_parts"."part",
+        "bricktracker_parts"."color",
+        "bricktracker_parts"."spare",
+        "bricktracker_parts"."quantity",
+        "bricktracker_parts"."element",
+        "bricktracker_parts"."missing",
+        "bricktracker_parts"."damaged",
+        "bricktracker_parts"."checked",
+        'set' AS "source_type"
+    FROM "bricktracker_parts"
+
+    UNION ALL
+
+    -- Parts from individual minifigures
+    SELECT
+        "bricktracker_individual_minifigure_parts"."id",
+        "bricktracker_individual_minifigures"."figure",
+        "bricktracker_individual_minifigure_parts"."part",
+        "bricktracker_individual_minifigure_parts"."color",
+        "bricktracker_individual_minifigure_parts"."spare",
+        "bricktracker_individual_minifigure_parts"."quantity",
+        "bricktracker_individual_minifigure_parts"."element",
+        "bricktracker_individual_minifigure_parts"."missing",
+        "bricktracker_individual_minifigure_parts"."damaged",
+        "bricktracker_individual_minifigure_parts"."checked",
+        'individual' AS "source_type"
+    FROM "bricktracker_individual_minifigure_parts"
+    INNER JOIN "bricktracker_individual_minifigures"
+    ON "bricktracker_individual_minifigure_parts"."id" = "bricktracker_individual_minifigures"."id"
+) AS "combined"
 
 INNER JOIN "rebrickable_parts"
-ON "bricktracker_parts"."part" IS NOT DISTINCT FROM "rebrickable_parts"."part"
-AND "bricktracker_parts"."color" IS NOT DISTINCT FROM "rebrickable_parts"."color_id"
+ON "combined"."part" IS NOT DISTINCT FROM "rebrickable_parts"."part"
+AND "combined"."color" IS NOT DISTINCT FROM "rebrickable_parts"."color_id"
 
 {% block join %}{% endblock %}
 

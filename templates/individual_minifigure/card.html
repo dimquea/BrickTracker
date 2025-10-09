@@ -1,0 +1,25 @@
+{% import 'macro/badge.html' as badge %}
+{% import 'macro/card.html' as card %}
+
+<div class="card mb-3 flex-fill">
+  {{ card.header(item, item.fields.name, solo=false, identifier=item.fields.figure, icon='user-line') }}
+  {{ card.image(item, solo=false, last=false, caption=item.fields.name, alt=item.fields.figure, medium=false) }}
+  <div class="card-body border-bottom p-1">
+    {{ badge.quantity(item.fields.quantity, solo=false, last=false) }}
+    {% if item.fields.storage_name %}
+      <span class="badge text-bg-info" data-bs-toggle="tooltip" title="Storage">
+        <i class="ri-archive-2-line"></i> {{ item.fields.storage_name }}
+      </span>
+    {% endif %}
+    {% if item.fields.purchase_location_name %}
+      <span class="badge text-bg-secondary" data-bs-toggle="tooltip" title="Purchase Location">
+        <i class="ri-building-line"></i> {{ item.fields.purchase_location_name }}
+      </span>
+    {% endif %}
+    {% if item.fields.description %}
+      <span class="badge text-bg-light text-dark" data-bs-toggle="tooltip" title="Description">
+        <i class="ri-file-text-line"></i> {{ item.fields.description }}
+      </span>
+    {% endif %}
+  </div>
+</div>

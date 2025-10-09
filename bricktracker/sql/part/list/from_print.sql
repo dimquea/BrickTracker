@@ -7,12 +7,12 @@
 
 {% block where %}
 WHERE "rebrickable_parts"."print" IS NOT DISTINCT FROM :print
-AND "bricktracker_parts"."color" IS NOT DISTINCT FROM :color
-AND "bricktracker_parts"."part" IS DISTINCT FROM :part
+AND "combined"."color" IS NOT DISTINCT FROM :color
+AND "combined"."part" IS DISTINCT FROM :part
 {% endblock %}
 
 {% block group %}
 GROUP BY
-    "bricktracker_parts"."part",
-    "bricktracker_parts"."color"
+    "combined"."part",
+    "combined"."color"
 {% endblock %}

@@ -3,6 +3,7 @@ from flask import Blueprint, current_app, render_template, request
 from .exceptions import exception_handler
 from ..minifigure import BrickMinifigure
 from ..minifigure_list import BrickMinifigureList
+from ..individual_minifigure_list import IndividualMinifigureList
 from ..pagination_helper import get_pagination_config, build_pagination_context, get_request_params
 from ..set_list import BrickSetList, set_metadata_lists
 from ..set_owner_list import BrickSetOwnerList
@@ -72,5 +73,6 @@ def details(*, figure: str) -> str:
         using=BrickSetList().using_minifigure(figure),
         missing=BrickSetList().missing_minifigure(figure),
         damaged=BrickSetList().damaged_minifigure(figure),
+        individual_instances=IndividualMinifigureList().instances_by_figure(figure),
         **set_metadata_lists(as_class=True)
     )

@@ -29,6 +29,7 @@ from bricktracker.views.error import error_404
 from bricktracker.views.index import index_page
 from bricktracker.views.instructions import instructions_page
 from bricktracker.views.login import login_page
+from bricktracker.views.individual_minifigure import individual_minifigure_page
 from bricktracker.views.minifigure import minifigure_page
 from bricktracker.views.part import part_page
 from bricktracker.views.set import set_page
@@ -80,6 +81,7 @@ def setup_app(app: Flask) -> None:
     app.register_blueprint(index_page)
     app.register_blueprint(instructions_page)
     app.register_blueprint(login_page)
+    app.register_blueprint(individual_minifigure_page)
     app.register_blueprint(minifigure_page)
     app.register_blueprint(part_page)
     app.register_blueprint(set_page)

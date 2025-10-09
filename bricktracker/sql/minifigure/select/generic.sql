@@ -9,16 +9,22 @@ IFNULL("problem_join"."total_damaged", 0) AS "total_damaged",
 {% endblock %}
 
 {% block total_quantity %}
-SUM(IFNULL("bricktracker_minifigures"."quantity", 0)) AS "total_quantity",
+SUM(IFNULL("combined"."quantity", 0)) AS "total_quantity",
 {% endblock %}
 
 {% block total_sets %}
-IFNULL(COUNT(DISTINCT "bricktracker_minifigures"."id"), 0) AS "total_sets"
+IFNULL(COUNT(DISTINCT "combined"."id"), 0) AS "total_sets",
+{% endblock %}
+
+{% block total_individual %}
+IFNULL(COUNT(DISTINCT "combined"."id"), 0) AS "total_individual"
 {% endblock %}
 
 {% block join %}
 -- LEFT JOIN + SELECT to avoid messing the total
+-- Combine parts from both set-based and individual minifigures
 LEFT JOIN (
+    -- Set-based minifigure parts
     SELECT
         "bricktracker_parts"."figure",
         SUM("bricktracker_parts"."missing") AS "total_missing",
@@ -26,15 +32,27 @@ LEFT JOIN (
     FROM "bricktracker_parts"
     WHERE "bricktracker_parts"."figure" IS NOT DISTINCT FROM :figure
     GROUP BY "bricktracker_parts"."figure"
+
+    UNION ALL
+
+    -- Individual minifigure parts
+    SELECT
+        "bricktracker_individual_minifigures"."figure",
+        SUM("bricktracker_individual_minifigure_parts"."missing") AS "total_missing",
+        SUM("bricktracker_individual_minifigure_parts"."damaged") AS "total_damaged"
+    FROM "bricktracker_individual_minifigure_parts"
+    INNER JOIN "bricktracker_individual_minifigures" ON "bricktracker_individual_minifigure_parts"."id" = "bricktracker_individual_minifigures"."id"
+    WHERE "bricktracker_individual_minifigures"."figure" IS NOT DISTINCT FROM :figure
+    GROUP BY "bricktracker_individual_minifigures"."figure"
 ) "problem_join"
-ON "rebrickable_minifigures"."figure" IS NOT DISTINCT FROM "problem_join"."figure"
+ON "combined"."figure" IS NOT DISTINCT FROM "problem_join"."figure"
 {% endblock %}
 
 {% block where %}
-WHERE "rebrickable_minifigures"."figure" IS NOT DISTINCT FROM :figure
+WHERE "combined"."figure" IS NOT DISTINCT FROM :figure
 {% endblock %}
 
 {% block group %}
 GROUP BY
-    "rebrickable_minifigures"."figure"
+    "combined"."figure"
 {% endblock %}

@@ -14,3 +14,4 @@ class BrickSetTag(BrickMetadata):
     select_query: str = 'set/metadata/tag/select'
     update_field_query: str = 'set/metadata/tag/update/field'
     update_set_state_query: str = 'set/metadata/tag/update/state'
+    update_individual_minifigure_state_query: str = 'individual_minifigure/metadata/tag/update/state'
