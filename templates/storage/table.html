@@ -3,14 +3,24 @@
 
 <div class="table-responsive-sm">
   <table data-table="true" class="table table-striped align-middle" id="storage">
-    {{ table.header(image=false, missing=false, damaged=false, sets=true) }}
+    {{ table.header(image=false, missing=false, damaged=false, sets=true, individual=true) }}
     <tbody>
       {% for item in table_collection %}
       <tr>
         <td data-sort="{{ item.fields.name }}"><a class="text-reset" href="{{ item.url() }}">{{ item.fields.name }}</a></td>
         <td>{{ item.fields.total_sets }}</td>
+        <td>{{ item.fields.total_individual_minifigures }}</td>
       </tr>
       {% endfor %}
+      {% if sets_no_storage is defined and minifigs_no_storage is defined %}
+      {% if sets_no_storage > 0 or minifigs_no_storage > 0 %}
+      <tr class="table-warning">
+        <td data-sort="zzz-not-in-storage"><a class="text-reset" href="{{ url_for('storage.no_storage_details') }}"><em>Not in a storage location</em></a></td>
+        <td>{{ sets_no_storage }}</td>
+        <td>{{ minifigs_no_storage }}</td>
+      </tr>
+      {% endif %}
+      {% endif %}
     </tbody>
   </table>
 </div>

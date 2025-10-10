@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 class IndividualMinifigureList(BrickRecordList[IndividualMinifigure]):
     # Queries
     instances_by_figure_query: str = 'individual_minifigure/select/instances_by_figure'
+    using_storage_query: str = 'individual_minifigure/list/using_storage'
+    without_storage_query: str = 'individual_minifigure/list/without_storage'
 
     def __init__(self, /):
         super().__init__()
@@ -34,6 +36,23 @@ class IndividualMinifigureList(BrickRecordList[IndividualMinifigure]):
 
         # Load the instances from the database
         self.list(override_query=self.instances_by_figure_query, **context)
+
+        return self
+
+    # Load all individual minifigures using a specific storage
+    def using_storage(self, storage: 'BrickSetStorage', /) -> Self:
+        # Save the storage parameter
+        self.fields.storage = storage.fields.id
+
+        # Load the minifigures from the database
+        self.list(override_query=self.using_storage_query)
+
+        return self
+
+    # Load all individual minifigures without storage
+    def without_storage(self, /) -> Self:
+        # Load minifigures with no storage
+        self.list(override_query=self.without_storage_query)
 
         return self
 

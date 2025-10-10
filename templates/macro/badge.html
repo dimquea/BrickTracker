@@ -207,6 +207,10 @@
   {{ badge(check=sets, solo=solo, last=last, color='secondary', icon='hashtag', collapsible='Sets:', text=sets, alt='Sets') }}
 {% endmacro %}
 
+{% macro total_individual_minifigures(minifigures, solo=false, last=false) %}
+  {{ badge(check=minifigures, solo=solo, last=last, color='info', icon='user-line', collapsible='Individual Minifigures:', text=minifigures, alt='Individual Minifigures') }}
+{% endmacro %}
+
 {% macro total_spare(spare, solo=false, last=false) %}
   {{ badge(check=spare, solo=solo, last=last, color='warning', icon='loop-left-line', collapsible='Spare:', text=spare, alt='Spare') }}
 {% endmacro %}

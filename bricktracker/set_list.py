@@ -36,6 +36,7 @@ class BrickSetList(BrickRecordList[BrickSet]):
     using_minifigure_query: str = 'set/list/using_minifigure'
     using_part_query: str = 'set/list/using_part'
     using_storage_query: str = 'set/list/using_storage'
+    without_storage_query: str = 'set/list/without_storage'
 
     def __init__(self, /):
         super().__init__()
@@ -667,6 +668,12 @@ class BrickSetList(BrickRecordList[BrickSet]):
 
         # Load the sets from the database
         self.list(override_query=self.using_storage_query)
+
+        return self
+
+    def without_storage(self, /) -> Self:
+        # Load sets with no storage
+        self.list(override_query=self.without_storage_query)
 
         return self
 
