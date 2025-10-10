@@ -33,3 +33,6 @@ vitepress/
 
 # Local data
 offline/
+TODO.md
+run-local.sh
+test-server.sh
