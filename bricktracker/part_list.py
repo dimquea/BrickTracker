@@ -25,6 +25,7 @@ class BrickPartList(BrickRecordList[BrickPart]):
     all_query: str = 'part/list/all'
     all_by_owner_query: str = 'part/list/all_by_owner'
     different_color_query = 'part/list/with_different_color'
+    individual_minifigure_query: str = 'individual_minifigure/part/list/from_instance'
     last_query: str = 'part/list/last'
     minifigure_query: str = 'part/list/from_minifigure'
     problem_query: str = 'part/list/problem'
@@ -212,6 +213,20 @@ class BrickPartList(BrickRecordList[BrickPart]):
 
         return self
 
+    # Load parts from an individual minifigure instance
+    def from_individual_minifigure(
+        self,
+        minifigure: 'BrickMinifigure',
+        /,
+    ) -> Self:
+        # Save the minifigure
+        self.minifigure = minifigure
+
+        # Load the parts from the database using the instance-specific query
+        self.list(override_query=self.individual_minifigure_query)
+
+        return self
+
     # Load generic parts from a print
     def from_print(
         self,
@@ -306,9 +321,11 @@ class BrickPartList(BrickRecordList[BrickPart]):
     def sql_parameters(self, /) -> dict[str, Any]:
         parameters: dict[str, Any] = super().sql_parameters()
 
-        # Set id
+        # Set id - prioritize brickset, then check minifigure
         if self.brickset is not None:
             parameters['id'] = self.brickset.fields.id
+        elif self.minifigure is not None and hasattr(self.minifigure.fields, 'id'):
+            parameters['id'] = self.minifigure.fields.id
 
         # Use the minifigure number if present,
         if self.minifigure is not None:

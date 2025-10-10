@@ -459,6 +459,11 @@ class IndividualMinifigure(RebrickableMinifigure):
     def url_for_description(self, /) -> str:
         return url_for('individual_minifigure.update_description', id=self.fields.id)
 
+    # Parts
+    def generic_parts(self, /):
+        from .part_list import BrickPartList
+        return BrickPartList().from_individual_minifigure(self)
+
     # Override from_rebrickable to handle minifigure data
     @staticmethod
     def from_rebrickable(data: dict[str, Any], /, **_) -> dict[str, Any]:

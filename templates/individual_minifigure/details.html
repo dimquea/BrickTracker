@@ -25,16 +25,17 @@
             <img class="card-medium-img" src="{{ item.url_for_image() }}" alt="{{ item.fields.figure }}" loading="lazy">
           </a>
         </div>
-        <div class="accordion accordion-flush border-top" id="individual-minifigure-details">
-          {{ accordion.header('Quantity', 'quantity', 'individual-minifigure-details', icon='functions') }}
+        <div class="accordion accordion-flush border-top" id="individual-minifigure-details-{{ item.fields.id }}">
+          {{ accordion.header('Quantity', 'accordion-quantity-' ~ item.fields.id, 'individual-minifigure-details-' ~ item.fields.id, icon='functions') }}
             {{ form.input('Quantity', item.fields.id, 'quantity', item.url_for_quantity(), item.fields.quantity, icon='functions', type='number') }}
           {{ accordion.footer() }}
-          {{ accordion.header('Description', 'description-section', 'individual-minifigure-details', icon='file-text-line') }}
+          {{ accordion.header('Description', 'accordion-description-' ~ item.fields.id, 'individual-minifigure-details-' ~ item.fields.id, icon='file-text-line') }}
             {{ form.input('Description', item.fields.id, 'description', item.url_for_description(), item.fields.description or '', icon='file-text-line', textarea=true) }}
           {{ accordion.footer() }}
+          {{ accordion.table(item.generic_parts(), 'Parts', 'accordion-parts-' ~ item.fields.id, 'individual-minifigure-details-' ~ item.fields.id, 'part/table.html', icon='shapes-line', alt=item.fields.figure) }}
           {% include 'individual_minifigure/management.html' %}
           {% if g.login.is_authenticated() %}
-            {{ accordion.header('Danger zone', 'danger-zone', 'individual-minifigure-details', danger=true, class='text-end') }}
+            {{ accordion.header('Danger zone', 'accordion-danger-zone-' ~ item.fields.id, 'individual-minifigure-details-' ~ item.fields.id, danger=true, class='text-end') }}
               <a href="{{ url_for('individual_minifigure.delete', id=item.fields.id) }}" class="btn btn-danger" role="button" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="ri-close-line"></i> Delete this individual minifigure instance</a>
             {{ accordion.footer() }}
           {% endif %}

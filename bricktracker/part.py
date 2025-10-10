@@ -181,7 +181,18 @@ class BrickPart(RebrickablePart):
 
     # Compute the url for updating checked state
     def url_for_checked(self, /) -> str:
-        # Different URL for a minifigure part
+        # Check if this is an individual minifigure (has minifigure with id field, no brickset)
+        if self.minifigure is not None and hasattr(self.minifigure.fields, 'id') and self.brickset is None:
+            # Individual minifigure part
+            return url_for(
+                'individual_minifigure.checked_part',
+                id=self.minifigure.fields.id,
+                part=self.fields.part,
+                color=self.fields.color,
+                spare=self.fields.spare,
+            )
+
+        # Set-based part (with or without minifigure)
         if self.minifigure is not None:
             figure = self.minifigure.fields.figure
         else:
@@ -228,7 +239,19 @@ class BrickPart(RebrickablePart):
 
     # Compute the url for problematic part
     def url_for_problem(self, problem: str, /) -> str:
-        # Different URL for a minifigure part
+        # Check if this is an individual minifigure (has minifigure with id field, no brickset)
+        if self.minifigure is not None and hasattr(self.minifigure.fields, 'id') and self.brickset is None:
+            # Individual minifigure part
+            return url_for(
+                'individual_minifigure.problem_part',
+                id=self.minifigure.fields.id,
+                part=self.fields.part,
+                color=self.fields.color,
+                spare=self.fields.spare,
+                problem=problem,
+            )
+
+        # Set-based part (with or without minifigure)
         if self.minifigure is not None:
             figure = self.minifigure.fields.figure
         else:
@@ -243,3 +266,82 @@ class BrickPart(RebrickablePart):
             spare=self.fields.spare,
             problem=problem,
         )
+
+    # Select a specific part from an individual minifigure
+    def select_specific_individual_minifigure(
+        self,
+        minifigure: 'BrickMinifigure',
+        part: str,
+        color: int,
+        spare: int,
+        /,
+    ) -> Self:
+        # Save the parameters to the fields
+        self.minifigure = minifigure
+        self.fields.id = minifigure.fields.id
+        self.fields.part = part
+        self.fields.color = color
+        self.fields.spare = spare
+
+        if not self.select(override_query='individual_minifigure/part/select/specific'):
+            raise NotFoundException(
+                'Part {part} with color {color} (spare: {spare}) from individual minifigure {figure} ({id}) was not found in the database'.format(
+                    part=self.fields.part,
+                    color=self.fields.color,
+                    spare=self.fields.spare,
+                    figure=self.minifigure.fields.figure,
+                    id=self.minifigure.fields.id,
+                ),
+            )
+
+        return self
+
+    # Update a problematic part for individual minifigure
+    def update_problem_individual_minifigure(self, problem: str, json: Any | None, /) -> int:
+        amount: str | int = json.get('value', '')  # type: ignore
+
+        # We need a positive integer
+        try:
+            if amount == '':
+                amount = 0
+
+            amount = int(amount)
+
+            if amount < 0:
+                amount = 0
+        except Exception:
+            raise ErrorException('"{amount}" is not a valid integer'.format(
+                amount=amount
+            ))
+
+        if amount < 0:
+            raise ErrorException('Cannot set a negative amount')
+
+        setattr(self.fields, problem, amount)
+
+        BrickSQL().execute_and_commit(
+            'individual_minifigure/part/update/{problem}'.format(problem=problem),
+            parameters=self.sql_parameters()
+        )
+
+        return amount
+
+    # Update checked state for individual minifigure part
+    def update_checked_individual_minifigure(self, json: Any | None, /) -> bool:
+        # Handle both direct 'checked' key and changer.js 'value' key format
+        if json:
+            checked = json.get('checked', json.get('value', False))
+        else:
+            checked = False
+
+        checked = bool(checked)
+
+        # Update the field
+        self.fields.checked = checked
+
+        BrickSQL().execute_and_commit(
+            'individual_minifigure/part/update/checked',
+            parameters=self.sql_parameters()
+        )
+
+        return checked

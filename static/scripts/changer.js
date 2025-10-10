@@ -136,6 +136,8 @@ class BrickChanger {
                 break;
 
                 case "text":
+                case "number":
+                case "textarea":
                 case "select":
                     value = this.html_element.value;
                 break;
@@ -191,10 +193,16 @@ class BrickChanger {
 
 // Helper to setup the changer
 const setup_changers = () => document.querySelectorAll("*[data-changer-id]").forEach(
-    el => new BrickChanger(
-        el.dataset.changerPrefix,
-        el.dataset.changerId,
-        el.dataset.changerUrl,
-        el.dataset.changerParent
-    )
+    el => {
+        try {
+            new BrickChanger(
+                el.dataset.changerPrefix,
+                el.dataset.changerId,
+                el.dataset.changerUrl,
+                el.dataset.changerParent
+            );
+        } catch (error) {
+            console.error('Error setting up changer for element:', el, 'Error:', error);
+        }
+    }
 );

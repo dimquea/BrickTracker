@@ -1,14 +1,19 @@
-from flask import Blueprint, redirect, render_template, request, url_for
+import logging
+
+from flask import Blueprint, jsonify, redirect, render_template, request, url_for, Response
 from flask_login import login_required
 
 from .exceptions import exception_handler
 from ..individual_minifigure import IndividualMinifigure
+from ..part import BrickPart
 from ..set_list import set_metadata_lists
 from ..set_owner_list import BrickSetOwnerList
 from ..set_tag_list import BrickSetTagList
 from ..set_storage_list import BrickSetStorageList
 from ..set_purchase_location_list import BrickSetPurchaseLocationList
 from ..sql import BrickSQL
+
+logger = logging.getLogger(__name__)
 
 individual_minifigure_page = Blueprint('individual_minifigure', __name__, url_prefix='/individual-minifigures')
 
@@ -86,7 +91,7 @@ def update_quantity(*, id: str):
         }
     )
 
-    return redirect(url_for('individual_minifigure.details', id=id))
+    return jsonify({'success': True})
 
 
 # Update description
@@ -108,7 +113,7 @@ def update_description(*, id: str):
         }
     )
 
-    return redirect(url_for('individual_minifigure.details', id=id))
+    return jsonify({'success': True})
 
 
 # Update owner
@@ -117,10 +122,10 @@ def update_description(*, id: str):
 @exception_handler(__file__)
 def update_owner(*, id: str, metadata_id: str):
     item = IndividualMinifigure().select_by_id(id)
-    owner = BrickSetOwnerList.from_id(metadata_id)
+    owner = BrickSetOwnerList.get(metadata_id)
     owner.update_individual_minifigure_state(item, json=request.json)
 
-    return redirect(url_for('individual_minifigure.details', id=id))
+    return jsonify({'success': True})
 
 
 # Update tag
@@ -129,10 +134,10 @@ def update_owner(*, id: str, metadata_id: str):
 @exception_handler(__file__)
 def update_tag(*, id: str, metadata_id: str):
     item = IndividualMinifigure().select_by_id(id)
-    tag = BrickSetTagList.from_id(metadata_id)
+    tag = BrickSetTagList.get(metadata_id)
     tag.update_individual_minifigure_state(item, json=request.json)
 
-    return redirect(url_for('individual_minifigure.details', id=id))
+    return jsonify({'success': True})
 
 
 # Update status
@@ -145,7 +150,7 @@ def update_status(*, id: str, metadata_id: str):
     status = BrickSetStatusList.get(metadata_id)
     status.update_individual_minifigure_state(item, json=request.json)
 
-    return redirect(url_for('individual_minifigure.details', id=id))
+    return jsonify({'success': True})
 
 
 # Update storage
@@ -167,7 +172,7 @@ def update_storage(*, id: str):
         }
     )
 
-    return redirect(url_for('individual_minifigure.details', id=id))
+    return jsonify({'success': True})
 
 
 # Update purchase location
@@ -189,7 +194,79 @@ def update_purchase_location(*, id: str):
         }
     )
 
-    return redirect(url_for('individual_minifigure.details', id=id))
+    return jsonify({'success': True})
+
+
+# Update problematic pieces of an individual minifigure
+@individual_minifigure_page.route('/<id>/parts/<part>/<int:color>/<int:spare>/<problem>', methods=['POST'])
+@login_required
+@exception_handler(__file__, json=True)
+def problem_part(
+    *,
+    id: str,
+    part: str,
+    color: int,
+    spare: int,
+    problem: str,
+) -> Response:
+    minifigure = IndividualMinifigure().select_by_id(id)
+
+    brickpart = BrickPart().select_specific_individual_minifigure(
+        minifigure,
+        part,
+        color,
+        spare,
+    )
+
+    amount = brickpart.update_problem_individual_minifigure(problem, request.json)
+
+    # Info
+    logger.info('Individual minifigure {figure} ({id}): updated part ({part} color: {color}, spare: {spare}) {problem} count to {amount}'.format(
+        figure=minifigure.fields.figure,
+        id=minifigure.fields.id,
+        part=brickpart.fields.part,
+        color=brickpart.fields.color,
+        spare=brickpart.fields.spare,
+        problem=problem,
+        amount=amount
+    ))
+
+    return jsonify({problem: amount})
+
+
+# Update checked state of parts
+@individual_minifigure_page.route('/<id>/parts/<part>/<int:color>/<int:spare>/checked', methods=['POST'])
+@login_required
+@exception_handler(__file__, json=True)
+def checked_part(
+    *,
+    id: str,
+    part: str,
+    color: int,
+    spare: int,
+) -> Response:
+    minifigure = IndividualMinifigure().select_by_id(id)
+
+    brickpart = BrickPart().select_specific_individual_minifigure(
+        minifigure,
+        part,
+        color,
+        spare,
+    )
+
+    checked = brickpart.update_checked_individual_minifigure(request.json)
+
+    # Info
+    logger.info('Individual minifigure {figure} ({id}): updated part ({part} color: {color}, spare: {spare}) checked state to {checked}'.format(
+        figure=minifigure.fields.figure,
+        id=minifigure.fields.id,
+        part=brickpart.fields.part,
+        color=brickpart.fields.color,
+        spare=brickpart.fields.spare,
+        checked=checked
+    ))
+
+    return jsonify({'checked': checked})
 
 
 # Delete individual minifigure instance
