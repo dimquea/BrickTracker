@@ -15,6 +15,9 @@ class BrickSetOwnerList(BrickMetadataList[BrickSetOwner]):
     # Queries
     select_query = 'set/metadata/owner/list'
 
+    # Endpoints
+    set_state_endpoint: str = 'set.update_owner'
+
     # Instantiate the list with the proper class
     @classmethod
     def new(cls, /, *, force: bool = False) -> Self:

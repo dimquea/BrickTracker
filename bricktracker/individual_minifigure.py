@@ -428,7 +428,17 @@ class IndividualMinifigure(RebrickableMinifigure):
         # Save the ID parameter
         self.fields.id = id
 
-        if not self.select():
+        # Import status list here to get metadata columns
+        from .set_status_list import BrickSetStatusList
+
+        # Pass metadata columns to the query with correct table names for individual minifigures
+        context = {
+            'owners': ', ' + BrickSetOwnerList.as_columns(table='bricktracker_individual_minifigure_owners') if BrickSetOwnerList.list() else '',
+            'statuses': ', ' + BrickSetStatusList.as_columns(table='bricktracker_individual_minifigure_statuses', all=True) if BrickSetStatusList.list(all=True) else '',
+            'tags': ', ' + BrickSetTagList.as_columns(table='bricktracker_individual_minifigure_tags') if BrickSetTagList.list() else '',
+        }
+
+        if not self.select(**context):
             raise NotFoundException(
                 'Individual minifigure with ID {id} was not found in the database'.format(
                     id=id,
@@ -440,6 +450,14 @@ class IndividualMinifigure(RebrickableMinifigure):
     # URL to this individual minifigure instance
     def url(self, /) -> str:
         return url_for('individual_minifigure.details', id=self.fields.id)
+
+    # URL for updating quantity
+    def url_for_quantity(self, /) -> str:
+        return url_for('individual_minifigure.update_quantity', id=self.fields.id)
+
+    # URL for updating description
+    def url_for_description(self, /) -> str:
+        return url_for('individual_minifigure.update_description', id=self.fields.id)
 
     # Override from_rebrickable to handle minifigure data
     @staticmethod

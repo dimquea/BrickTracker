@@ -15,6 +15,9 @@ class BrickSetTagList(BrickMetadataList[BrickSetTag]):
     # Queries
     select_query: str = 'set/metadata/tag/list'
 
+    # Endpoints
+    set_state_endpoint: str = 'set.update_tag'
+
     # Instantiate the list with the proper class
     @classmethod
     def new(cls, /, *, force: bool = False) -> Self:

@@ -16,14 +16,23 @@
   {% endif %}
 {% endmacro %}
 
-{% macro input(name, id, prefix, url, value, all=none, read_only=none, icon=none, suffix=none, date=false) %}
+{% macro input(name, id, prefix, url, value, all=none, read_only=none, icon=none, suffix=none, date=false, type=none, textarea=false) %}
   {% if all or read_only %}
     {{ value }}
   {% else %}
     <label class="visually-hidden" for="{{ prefix }}-{{ id }}">{{ name }}</label>
     <div class="input-group">
       {% if icon %}<span class="input-group-text px-1"><i class="ri-{{ icon }} me-1"></i><span class="ms-1 d-none d-md-inline"> {{ name }}</span></span>{% endif %}
-      <input class="form-control form-control-sm flex-shrink-1 px-1" type="text" id="{{ prefix }}-{{ id }}" value="{% if value %}{{ value }}{% endif %}"
+      {% if textarea %}
+      <textarea class="form-control form-control-sm flex-shrink-1 px-1" id="{{ prefix }}-{{ id }}"
+      {% if g.login.is_authenticated() %}
+        data-changer-id="{{ id }}" data-changer-prefix="{{ prefix }}" data-changer-url="{{ url }}"
+      {% else %}
+        disabled
+      {% endif %}
+        autocomplete="off" rows="3">{% if value %}{{ value }}{% endif %}</textarea>
+      {% else %}
+      <input class="form-control form-control-sm flex-shrink-1 px-1" type="{% if type %}{{ type }}{% else %}text{% endif %}" id="{{ prefix }}-{{ id }}" value="{% if value %}{{ value }}{% endif %}"
       {% if g.login.is_authenticated() %}
         data-changer-id="{{ id }}" data-changer-prefix="{{ prefix }}" data-changer-url="{{ url }}"
         {% if date %}data-changer-date="true"{% endif %}
@@ -31,6 +40,7 @@
         disabled
       {% endif %}
         autocomplete="off">
+      {% endif %}
       {% if suffix %}<span class="input-group-text d-none d-md-inline px-1">{{ suffix }}</span>{% endif %}
       {% if g.login.is_authenticated() %}
         <span id="status-{{ prefix }}-{{ id }}" class="input-group-text ri-save-line px-1"></span>

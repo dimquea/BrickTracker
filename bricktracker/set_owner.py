@@ -5,8 +5,9 @@ from .metadata import BrickMetadata
 class BrickSetOwner(BrickMetadata):
     kind: str = 'owner'
 
-    # Set state endpoint
+    # Endpoints
     set_state_endpoint: str = 'set.update_owner'
+    individual_minifigure_state_endpoint: str = 'individual_minifigure.update_owner'
 
     # Queries
     delete_query: str = 'set/metadata/owner/delete'

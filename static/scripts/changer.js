@@ -25,12 +25,18 @@ class BrickChanger {
                 switch (this.html_type) {
                     case "checkbox":
                     case "text":
+                    case "number":
                         listener = "change";
                     break;
 
                     default:
                         throw Error(`Unsupported input type for BrickChanger: ${this.html_type}`);
                 }
+            break;
+
+            case "TEXTAREA":
+                this.html_type = "textarea";
+                listener = "change";
             break;
 
             case "SELECT":

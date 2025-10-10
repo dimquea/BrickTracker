@@ -20,6 +20,9 @@ class BrickSetStorageList(BrickMetadataList[BrickSetStorage]):
     # Set value endpoint
     set_value_endpoint: str = 'set.update_storage'
 
+    # Individual minifigure value endpoint
+    individual_minifigure_value_endpoint: str = 'individual_minifigure.update_storage'
+
     # Load all storages
     @classmethod
     def all(cls, /) -> Self:

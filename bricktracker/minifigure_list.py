@@ -113,7 +113,7 @@ class BrickMinifigureList(BrickRecordList[BrickMinifigure]):
         if current_app.config['RANDOM']:
             order = 'RANDOM()'
         else:
-            order = '"bricktracker_minifigures"."rowid" DESC'
+            order = '"combined"."rowid" DESC'
 
         self.list(override_query=self.last_query, order=order, limit=limit)
 

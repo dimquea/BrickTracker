@@ -22,6 +22,9 @@ class BrickSetPurchaseLocationList(
     # Set value endpoint
     set_value_endpoint: str = 'set.update_purchase_location'
 
+    # Individual minifigure value endpoint
+    individual_minifigure_value_endpoint: str = 'individual_minifigure.update_purchase_location'
+
     # Load all purchase locations
     @classmethod
     def all(cls, /) -> Self:

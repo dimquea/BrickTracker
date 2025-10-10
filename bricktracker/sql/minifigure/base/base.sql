@@ -31,6 +31,7 @@ FROM (
         "rebrickable_minifigures"."number_of_parts",
         "rebrickable_minifigures"."name",
         "rebrickable_minifigures"."image",
+        "bricktracker_minifigures"."rowid" AS "rowid",
         'set' AS "source_type"
     FROM "bricktracker_minifigures"
     INNER JOIN "rebrickable_minifigures"
@@ -47,6 +48,7 @@ FROM (
         "rebrickable_minifigures"."number_of_parts",
         "rebrickable_minifigures"."name",
         "rebrickable_minifigures"."image",
+        "bricktracker_individual_minifigures"."rowid" AS "rowid",
         'individual' AS "source_type"
     FROM "bricktracker_individual_minifigures"
     INNER JOIN "rebrickable_minifigures"

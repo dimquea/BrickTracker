@@ -7,8 +7,9 @@ from .metadata import BrickMetadata
 class BrickSetStatus(BrickMetadata):
     kind: str = 'status'
 
-    # Set state endpoint
+    # Endpoints
     set_state_endpoint: str = 'set.update_status'
+    individual_minifigure_state_endpoint: str = 'individual_minifigure.update_status'
 
     # Queries
     delete_query: str = 'set/metadata/status/delete'
@@ -16,7 +17,7 @@ class BrickSetStatus(BrickMetadata):
     select_query: str = 'set/metadata/status/select'
     update_field_query: str = 'set/metadata/status/update/field'
     update_set_state_query: str = 'set/metadata/status/update/state'
-    update_individual_minifigure_state_query: str = ''  # Not used for status
+    update_individual_minifigure_state_query: str = 'individual_minifigure/metadata/status/update/state'
 
     # Grab data from a form
     def from_form(self, form: dict[str, str], /) -> Self:

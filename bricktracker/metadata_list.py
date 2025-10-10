@@ -39,9 +39,10 @@ class BrickMetadataList(BrickRecordList[T]):
     # Queries
     select_query: str
 
-    # Set endpoints
-    set_state_endpoint: str
-    set_value_endpoint: str
+    # List-specific endpoints (for operations on the list itself)
+    set_state_endpoint: str = ''
+    set_value_endpoint: str = ''
+    individual_minifigure_value_endpoint: str = ''
 
     def __init__(
         self,
@@ -99,12 +100,15 @@ class BrickMetadataList(BrickRecordList[T]):
 
     # Return the items as columns for a select
     @classmethod
-    def as_columns(cls, /, **kwargs) -> str:
+    def as_columns(cls, /, table: str | None = None, **kwargs) -> str:
         new = cls.new()
+
+        # Use provided table name or default to class table
+        table_name = table if table is not None else cls.table
 
         return ', '.join([
             '"{table}"."{column}"'.format(
-                table=cls.table,
+                table=table_name,
                 column=record.as_column(),
             )
             for record
@@ -182,5 +186,13 @@ class BrickMetadataList(BrickRecordList[T]):
     def url_for_set_value(cls, id: str, /) -> str:
         return url_for(
             cls.set_value_endpoint,
+            id=id,
+        )
+
+    # URL to change the selected value of this metadata item for an individual minifigure
+    @classmethod
+    def url_for_individual_minifigure_value(cls, id: str, /) -> str:
+        return url_for(
+            cls.individual_minifigure_value_endpoint,
             id=id,
         )

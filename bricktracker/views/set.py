@@ -285,7 +285,6 @@ def details(*, id: str) -> str:
             item=item,
             all_instances=same_set_instances,
             open_instructions=request.args.get('open_instructions'),
-            brickset_statuses=BrickSetStatusList.list(all=True),
             **set_metadata_lists(as_class=True)
         )
     else:
@@ -294,7 +293,6 @@ def details(*, id: str) -> str:
             'set.html',
             item=item,
             open_instructions=request.args.get('open_instructions'),
-            brickset_statuses=BrickSetStatusList.list(all=True),
             **set_metadata_lists(as_class=True)
         )
 

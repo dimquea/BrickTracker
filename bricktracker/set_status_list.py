@@ -15,6 +15,9 @@ class BrickSetStatusList(BrickMetadataList[BrickSetStatus]):
     # Queries
     select_query = 'set/metadata/status/list'
 
+    # Endpoints
+    set_state_endpoint: str = 'set.update_status'
+
     # Filter the list of set status
     def filter(self, all: bool = False) -> list[BrickSetStatus]:
         return [

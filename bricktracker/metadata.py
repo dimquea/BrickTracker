@@ -19,17 +19,20 @@ logger = logging.getLogger(__name__)
 class BrickMetadata(BrickRecord):
     kind: str
 
-    # Set state endpoint
-    set_state_endpoint: str
+    # Endpoints (optional, not all metadata types use all of these)
+    set_state_endpoint: str = ''
+    individual_minifigure_state_endpoint: str = ''
+    individual_minifigure_value_endpoint: str = ''
 
     # Queries
     delete_query: str
     insert_query: str
     select_query: str
     update_field_query: str
-    update_set_state_query: str
-    update_set_value_query: str
-    update_individual_minifigure_state_query: str
+    update_set_state_query: str = ''
+    update_set_value_query: str = ''
+    update_individual_minifigure_state_query: str = ''
+    update_individual_minifigure_value_query: str = ''
 
     def __init__(
         self,
@@ -106,6 +109,21 @@ class BrickMetadata(BrickRecord):
             self.set_state_endpoint,
             id=id,
             metadata_id=self.fields.id
+        )
+
+    # URL to change the selected state of this metadata item for an individual minifigure
+    def url_for_individual_minifigure_state(self, id: str, /) -> str:
+        return url_for(
+            self.individual_minifigure_state_endpoint,
+            id=id,
+            metadata_id=self.fields.id
+        )
+
+    # URL to change the value for an individual minifigure
+    def url_for_individual_minifigure_value(self, id: str, /) -> str:
+        return url_for(
+            self.individual_minifigure_value_endpoint,
+            id=id
         )
 
     # Select a specific metadata (with an id)

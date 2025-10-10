@@ -673,7 +673,8 @@ class BrickSetList(BrickRecordList[BrickSet]):
 
 # Helper to build the metadata lists
 def set_metadata_lists(
-    as_class: bool = False
+    as_class: bool = False,
+    hardcoded_statuses_only: bool = False
 ) -> dict[
     str,
     Union[
@@ -685,9 +686,20 @@ def set_metadata_lists(
         list[BrickSetTag]
     ]
 ]:
+    # Get all statuses
+    all_statuses = BrickSetStatusList.list(all=True)
+
+    # Filter to only hardcoded statuses if requested (for individual minifigures)
+    if hardcoded_statuses_only:
+        hardcoded_status_ids = ['minifigures_collected', 'set_checked', 'set_collected']
+        statuses = [s for s in all_statuses if s.fields.id in hardcoded_status_ids]
+    else:
+        statuses = all_statuses
+
     return {
         'brickset_owners': BrickSetOwnerList.list(),
         'brickset_purchase_locations': BrickSetPurchaseLocationList.list(as_class=as_class),  # noqa: E501
+        'brickset_statuses': statuses,
         'brickset_storages': BrickSetStorageList.list(as_class=as_class),
         'brickset_tags': BrickSetTagList.list(),
     }

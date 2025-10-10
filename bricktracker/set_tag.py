@@ -5,8 +5,9 @@ from .metadata import BrickMetadata
 class BrickSetTag(BrickMetadata):
     kind: str = 'tag'
 
-    # Set state endpoint
+    # Endpoints
     set_state_endpoint: str = 'set.update_tag'
+    individual_minifigure_state_endpoint: str = 'individual_minifigure.update_tag'
 
     # Queries
     delete_query: str = 'set/metadata/tag/delete'

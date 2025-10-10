@@ -1,10 +1,14 @@
 from flask import Blueprint, redirect, render_template, request, url_for
+from flask_login import login_required
 
 from .exceptions import exception_handler
 from ..individual_minifigure import IndividualMinifigure
 from ..set_list import set_metadata_lists
 from ..set_owner_list import BrickSetOwnerList
 from ..set_tag_list import BrickSetTagList
+from ..set_storage_list import BrickSetStorageList
+from ..set_purchase_location_list import BrickSetPurchaseLocationList
+from ..sql import BrickSQL
 
 individual_minifigure_page = Blueprint('individual_minifigure', __name__, url_prefix='/individual-minifigures')
 
@@ -63,8 +67,134 @@ def update(*, id: str):
     return redirect(url_for('individual_minifigure.details', id=id))
 
 
+# Update quantity
+@individual_minifigure_page.route('/<id>/update/quantity', methods=['POST'])
+@login_required
+@exception_handler(__file__)
+def update_quantity(*, id: str):
+    item = IndividualMinifigure().select_by_id(id)
+    item.fields.quantity = int(request.json.get('value', 1))
+
+    BrickSQL().execute_and_commit(
+        'individual_minifigure/update',
+        parameters={
+            'id': item.fields.id,
+            'quantity': item.fields.quantity,
+            'description': item.fields.description,
+            'storage': item.fields.storage,
+            'purchase_location': item.fields.purchase_location,
+        }
+    )
+
+    return redirect(url_for('individual_minifigure.details', id=id))
+
+
+# Update description
+@individual_minifigure_page.route('/<id>/update/description', methods=['POST'])
+@login_required
+@exception_handler(__file__)
+def update_description(*, id: str):
+    item = IndividualMinifigure().select_by_id(id)
+    item.fields.description = request.json.get('value', '')
+
+    BrickSQL().execute_and_commit(
+        'individual_minifigure/update',
+        parameters={
+            'id': item.fields.id,
+            'quantity': item.fields.quantity,
+            'description': item.fields.description,
+            'storage': item.fields.storage,
+            'purchase_location': item.fields.purchase_location,
+        }
+    )
+
+    return redirect(url_for('individual_minifigure.details', id=id))
+
+
+# Update owner
+@individual_minifigure_page.route('/<id>/update/owner/<metadata_id>', methods=['POST'])
+@login_required
+@exception_handler(__file__)
+def update_owner(*, id: str, metadata_id: str):
+    item = IndividualMinifigure().select_by_id(id)
+    owner = BrickSetOwnerList.from_id(metadata_id)
+    owner.update_individual_minifigure_state(item, json=request.json)
+
+    return redirect(url_for('individual_minifigure.details', id=id))
+
+
+# Update tag
+@individual_minifigure_page.route('/<id>/update/tag/<metadata_id>', methods=['POST'])
+@login_required
+@exception_handler(__file__)
+def update_tag(*, id: str, metadata_id: str):
+    item = IndividualMinifigure().select_by_id(id)
+    tag = BrickSetTagList.from_id(metadata_id)
+    tag.update_individual_minifigure_state(item, json=request.json)
+
+    return redirect(url_for('individual_minifigure.details', id=id))
+
+
+# Update status
+@individual_minifigure_page.route('/<id>/update/status/<metadata_id>', methods=['POST'])
+@login_required
+@exception_handler(__file__)
+def update_status(*, id: str, metadata_id: str):
+    item = IndividualMinifigure().select_by_id(id)
+    from ..set_status_list import BrickSetStatusList
+    status = BrickSetStatusList.get(metadata_id)
+    status.update_individual_minifigure_state(item, json=request.json)
+
+    return redirect(url_for('individual_minifigure.details', id=id))
+
+
+# Update storage
+@individual_minifigure_page.route('/<id>/update/storage', methods=['POST'])
+@login_required
+@exception_handler(__file__)
+def update_storage(*, id: str):
+    item = IndividualMinifigure().select_by_id(id)
+    storage_id = request.json.get('value')
+
+    BrickSQL().execute_and_commit(
+        'individual_minifigure/update',
+        parameters={
+            'id': item.fields.id,
+            'quantity': item.fields.quantity,
+            'description': item.fields.description,
+            'storage': storage_id if storage_id else None,
+            'purchase_location': item.fields.purchase_location,
+        }
+    )
+
+    return redirect(url_for('individual_minifigure.details', id=id))
+
+
+# Update purchase location
+@individual_minifigure_page.route('/<id>/update/purchase_location', methods=['POST'])
+@login_required
+@exception_handler(__file__)
+def update_purchase_location(*, id: str):
+    item = IndividualMinifigure().select_by_id(id)
+    location_id = request.json.get('value')
+
+    BrickSQL().execute_and_commit(
+        'individual_minifigure/update',
+        parameters={
+            'id': item.fields.id,
+            'quantity': item.fields.quantity,
+            'description': item.fields.description,
+            'storage': item.fields.storage,
+            'purchase_location': location_id if location_id else None,
+        }
+    )
+
+    return redirect(url_for('individual_minifigure.details', id=id))
+
+
 # Delete individual minifigure instance
 @individual_minifigure_page.route('/<id>/delete', methods=['POST'])
+@login_required
 @exception_handler(__file__)
 def delete(*, id: str):
     item = IndividualMinifigure().select_by_id(id)
