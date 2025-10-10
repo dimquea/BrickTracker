@@ -20,3 +20,4 @@ services:
       BK_RETIRED_SETS_PATH: /local/retired_sets.csv
       BK_SETS_FOLDER: sets
       BK_THEMES_PATH: /local/themes.csv
+    env_file: .env
