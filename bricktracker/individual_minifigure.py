@@ -309,6 +309,14 @@ class IndividualMinifigure(RebrickableMinifigure):
         socket.progress_total = 2
 
         try:
+            # Check if individual minifigures are disabled
+            from flask import current_app
+            if current_app.config.get('DISABLE_INDIVIDUAL_MINIFIGURES', False):
+                raise ErrorException(
+                    'Individual minifigures system is disabled. '
+                    'Only set-based minifigures can be added.'
+                )
+
             socket.auto_progress(message='Parsing minifigure number')
             figure = parse_minifig(str(data['figure']))
 
@@ -402,12 +410,17 @@ class IndividualMinifigure(RebrickableMinifigure):
             return True
 
         except Exception as e:
-            socket.fail(
-                message='Could not load the minifigure from Rebrickable: {error}. Data: {data}'.format(
-                    error=str(e),
-                    data=data,
+            # Check if this is the "disabled" error - if so, show cleaner message
+            error_msg = str(e)
+            if 'Individual minifigures system is disabled' in error_msg:
+                socket.fail(message=error_msg)
+            else:
+                socket.fail(
+                    message='Could not load the minifigure from Rebrickable: {error}. Data: {data}'.format(
+                        error=error_msg,
+                        data=data,
+                    )
                 )
-            )
 
             if not isinstance(e, (NotFoundException, ErrorException)):
                 logger.debug(traceback.format_exc())

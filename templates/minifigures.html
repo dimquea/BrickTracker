@@ -33,7 +33,7 @@
   <!-- PAGINATION MODE -->
   <div class="table-responsive-sm">
     <table data-table="false" class="table table-striped align-middle mb-0" id="minifigures">
-      {{ table.header(parts=true, quantity=true, missing=true, damaged=true, sets=true, individual=true, minifigures=false) }}
+      {{ table.header(parts=true, quantity=true, missing=true, damaged=true, sets=true, individual=(not config['DISABLE_INDIVIDUAL_MINIFIGURES']), minifigures=false) }}
       {% include 'minifigure/table_body.html' %}
     </table>
   </div>
@@ -148,7 +148,7 @@
   <!-- ORIGINAL MODE - Single page with client-side search -->
   <div class="table-responsive-sm">
     <table data-table="true" class="table table-striped align-middle {% if not all %}sortable mb-0{% endif %}" id="minifigures">
-      {{ table.header(parts=true, quantity=true, missing=true, damaged=true, sets=true, individual=true, minifigures=false) }}
+      {{ table.header(parts=true, quantity=true, missing=true, damaged=true, sets=true, individual=(not config['DISABLE_INDIVIDUAL_MINIFIGURES']), minifigures=false) }}
       <tbody>
         {% for minifigure in table_collection %}
         <tr>

@@ -18,6 +18,7 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'DEBUG', 'c': bool},
     {'n': 'DEFAULT_TABLE_PER_PAGE', 'd': 25, 'c': int},
     {'n': 'DESCRIPTION_BADGE_MAX_LENGTH', 'd': 15, 'c': int},
+    {'n': 'DISABLE_INDIVIDUAL_MINIFIGURES', 'c': bool},
     {'n': 'DOMAIN_NAME', 'e': 'DOMAIN_NAME', 'd': ''},
     {'n': 'FILE_DATETIME_FORMAT', 'd': '%d/%m/%Y, %H:%M:%S'},
     {'n': 'HOST', 'd': '0.0.0.0'},

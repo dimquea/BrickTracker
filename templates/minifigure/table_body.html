@@ -17,7 +17,9 @@
     <td data-sort="{{ minifigure.fields.total_damaged }}">{{ minifigure.fields.total_damaged }}</td>
     {% endif %}
     <td data-sort="{{ minifigure.fields.total_sets }}">{{ minifigure.fields.total_sets }}</td>
+    {% if not config['DISABLE_INDIVIDUAL_MINIFIGURES'] %}
     <td data-sort="{{ minifigure.fields.total_individual }}">{{ minifigure.fields.total_individual }}</td>
+    {% endif %}
   </tr>
   {% endfor %}
 </tbody>

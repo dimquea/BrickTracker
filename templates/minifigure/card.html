@@ -23,8 +23,10 @@
     <div class="accordion accordion-flush" id="minifigure-details">
       {{ accordion.table(item.generic_parts(), 'Parts', item.fields.figure, 'minifigure-details', 'part/table.html', icon='shapes-line', alt=item.fields.figure, read_only=read_only)}}
       {{ accordion.cards(using, 'Sets using this minifigure', 'using-inventory', 'minifigure-details', 'set/card.html', icon='hashtag') }}
-      {% if individual_instances is defined and individual_instances | length > 0 %}
-        {{ accordion.cards(individual_instances, 'Individual minifigure instances', 'individual-instances', 'minifigure-details', 'individual_minifigure/card.html', icon='package-line') }}
+      {% if not config['DISABLE_INDIVIDUAL_MINIFIGURES'] %}
+        {% if individual_instances is defined and individual_instances | length > 0 %}
+          {{ accordion.cards(individual_instances, 'Individual minifigure instances', 'individual-instances', 'minifigure-details', 'individual_minifigure/card.html', icon='package-line') }}
+        {% endif %}
       {% endif %}
       {{ accordion.cards(missing, 'Sets missing parts for this minifigure', 'missing-inventory', 'minifigure-details', 'set/card.html', icon='question-line') }}
       {{ accordion.cards(damaged, 'Sets with damaged parts for this minifigure', 'damaged-inventory', 'minifigure-details', 'set/card.html', icon='error-warning-line') }}

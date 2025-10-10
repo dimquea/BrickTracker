@@ -18,8 +18,10 @@
       {% endif %}
       <button id="sort-sets" type="button" class="btn btn-outline-primary mb-2"
         data-sort-attribute="sets" data-sort-desc="true"><i class="ri-hashtag"></i><span class="d-none d-xl-inline"> Sets</span></button>
+      {% if not config['DISABLE_INDIVIDUAL_MINIFIGURES'] %}
       <button id="sort-individual" type="button" class="btn btn-outline-primary mb-2"
         data-sort-attribute="individual" data-sort-desc="true"><i class="ri-package-line"></i><span class="d-none d-xl-inline"> Individual</span></button>
+      {% endif %}
       <button id="sort-clear" type="button" class="btn btn-outline-dark mb-2"
         data-sort-clear="true"><i class="ri-close-circle-line"></i><span class="d-none d-xl-inline"> Clear</span></button>
     </div>

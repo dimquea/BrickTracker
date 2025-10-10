@@ -5,13 +5,17 @@
 <div class="card mb-3 flex-fill {% if solo %}card-solo{% endif %}">
   {{ card.header(item, item.fields.name, solo=solo, icon='archive-2-line') }}
   <div class="card-body border-bottom-0 {% if not solo %}p-1{% endif %}">
-    {{ badge.total_sets(sets | length, solo=solo, last=false) }}
-    {{ badge.total_individual_minifigures(individual_minifigures | length, solo=solo, last=last) }}
+    {{ badge.total_sets(sets | length, solo=solo, last=(config['DISABLE_INDIVIDUAL_MINIFIGURES'] or last)) }}
+    {% if not config['DISABLE_INDIVIDUAL_MINIFIGURES'] %}
+      {{ badge.total_individual_minifigures(individual_minifigures | length, solo=solo, last=last) }}
+    {% endif %}
   </div>
   {% if solo %}
     <div class="accordion accordion-flush border-top" id="storage-details">
       {{ accordion.cards(sets, 'Sets', 'sets-stored', 'storage-details', 'set/card.html', expanded=true, icon='hashtag') }}
-      {{ accordion.cards(individual_minifigures, 'Individual Minifigures', 'individual-minifigures-stored', 'storage-details', 'individual_minifigure/card.html', icon='user-line') }}
+      {% if not config['DISABLE_INDIVIDUAL_MINIFIGURES'] %}
+        {{ accordion.cards(individual_minifigures, 'Individual Minifigures', 'individual-minifigures-stored', 'storage-details', 'individual_minifigure/card.html', icon='user-line') }}
+      {% endif %}
     </div>
     <div class="card-footer"></div>
   {% endif %}

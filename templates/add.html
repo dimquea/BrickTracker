@@ -26,8 +26,8 @@
             <div id="add-complete"></div>
           {% endif %}
           <div class="mb-3">
-            <label for="add-set" class="form-label">{% if not bulk %}Set or Minifigure number (only one){% else %}List of sets (separated by a comma){% endif %}</label>
-            <input type="text" class="form-control" id="add-set" placeholder="{% if not bulk %}107-1 or fig-001234 or ...{% else %}107-1, 1642-1, ...{% endif %}"
+            <label for="add-set" class="form-label">{% if not bulk %}{% if not config['DISABLE_INDIVIDUAL_MINIFIGURES'] %}Set or Minifigure number (only one){% else %}Set number (only one){% endif %}{% else %}List of sets (separated by a comma){% endif %}</label>
+            <input type="text" class="form-control" id="add-set" placeholder="{% if not bulk %}{% if not config['DISABLE_INDIVIDUAL_MINIFIGURES'] %}107-1 or fig-001234 or ...{% else %}107-1 or ...{% endif %}{% else %}107-1, 1642-1, ...{% endif %}"
               data-path="{{ path }}"
               data-namespace="{{ namespace }}"
               data-msg-complete="{{ messages['COMPLETE'] }}"
@@ -39,7 +39,7 @@
               data-msg-import-minifigure="{{ messages['IMPORT_MINIFIGURE'] }}"
               data-msg-load-minifigure="{{ messages['LOAD_MINIFIGURE'] }}"
               data-msg-minifigure-loaded="{{ messages['MINIFIGURE_LOADED'] }}">
-            <div class="form-text">Sets: use format like 107-1. Minifigures: use format like fig-001234</div>
+            <div class="form-text">Sets: use format like 107-1{% if not config['DISABLE_INDIVIDUAL_MINIFIGURES'] %}. Minifigures: use format like fig-001234{% endif %}</div>
           </div>
           <div class="form-check">
             <input type="checkbox" class="form-check-input" id="add-no-confirm" {% if bulk %}checked disabled{% endif %}>
