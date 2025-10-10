@@ -20,8 +20,20 @@ class IndividualMinifigureList(BrickRecordList[IndividualMinifigure]):
         # Save the figure parameter
         self.fields.figure = figure
 
+        # Import metadata lists to get columns
+        from .set_owner_list import BrickSetOwnerList
+        from .set_status_list import BrickSetStatusList
+        from .set_tag_list import BrickSetTagList
+
+        # Prepare context with metadata columns
+        context = {
+            'owners': BrickSetOwnerList.as_columns(table='bricktracker_individual_minifigure_owners') if BrickSetOwnerList.list() else 'NULL AS "no_owners"',
+            'statuses': BrickSetStatusList.as_columns(table='bricktracker_individual_minifigure_statuses', all=True) if BrickSetStatusList.list(all=True) else 'NULL AS "no_statuses"',
+            'tags': BrickSetTagList.as_columns(table='bricktracker_individual_minifigure_tags') if BrickSetTagList.list() else 'NULL AS "no_tags"',
+        }
+
         # Load the instances from the database
-        self.list(override_query=self.instances_by_figure_query)
+        self.list(override_query=self.instances_by_figure_query, **context)
 
         return self
 
@@ -33,12 +45,14 @@ class IndividualMinifigureList(BrickRecordList[IndividualMinifigure]):
         override_query: str | None = None,
         order: str | None = None,
         limit: int | None = None,
+        **context,
     ) -> None:
         # Load the individual minifigures from the database
         for record in super().select(
             override_query=override_query,
             order=order,
             limit=limit,
+            **context
         ):
             individual_minifigure = IndividualMinifigure(record=record)
             self.records.append(individual_minifigure)

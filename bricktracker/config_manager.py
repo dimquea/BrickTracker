@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 LIVE_CHANGEABLE_VARS: Final[List[str]] = [
     'BK_BRICKLINK_LINKS',
     'BK_DEFAULT_TABLE_PER_PAGE',
+    'BK_DESCRIPTION_BADGE_MAX_LENGTH',
     'BK_INDEPENDENT_ACCORDIONS',
     'BK_HIDE_ADD_SET',
     'BK_HIDE_ADD_BULK_SET',
@@ -173,7 +174,7 @@ class ConfigManager:
             else:
                 return []
         # Integer variables (pagination sizes, delays, etc.) - Check BEFORE boolean check
-        if any(keyword in var_name.lower() for keyword in ['_size', '_page', 'delay', 'min_', 'per_page', 'page_size']):
+        if any(keyword in var_name.lower() for keyword in ['_size', '_page', 'delay', 'min_', 'per_page', 'page_size', '_length']):
             try:
                 return int(value)
             except (ValueError, TypeError):

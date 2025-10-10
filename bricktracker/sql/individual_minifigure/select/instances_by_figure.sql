@@ -11,7 +11,12 @@ SELECT
     "rebrickable_minifigures"."image",
     "rebrickable_minifigures"."number_of_parts",
     "storage_meta"."name" AS "storage_name",
-    "purchase_meta"."name" AS "purchase_location_name"
+    "purchase_meta"."name" AS "purchase_location_name",
+    {{ owners }},
+    {{ statuses }},
+    {{ tags }},
+    IFNULL("problem_join"."total_missing", 0) AS "total_missing",
+    IFNULL("problem_join"."total_damaged", 0) AS "total_damaged"
 FROM "bricktracker_individual_minifigures"
 
 INNER JOIN "rebrickable_minifigures"
@@ -22,6 +27,25 @@ ON "bricktracker_individual_minifigures"."storage" = "storage_meta"."id"
 
 LEFT JOIN "bricktracker_metadata_purchase_locations" AS "purchase_meta"
 ON "bricktracker_individual_minifigures"."purchase_location" = "purchase_meta"."id"
+
+LEFT JOIN "bricktracker_individual_minifigure_owners"
+ON "bricktracker_individual_minifigures"."id" = "bricktracker_individual_minifigure_owners"."id"
+
+LEFT JOIN "bricktracker_individual_minifigure_statuses"
+ON "bricktracker_individual_minifigures"."id" = "bricktracker_individual_minifigure_statuses"."id"
+
+LEFT JOIN "bricktracker_individual_minifigure_tags"
+ON "bricktracker_individual_minifigures"."id" = "bricktracker_individual_minifigure_tags"."id"
+
+LEFT JOIN (
+    SELECT
+        "bricktracker_individual_minifigure_parts"."id",
+        SUM("bricktracker_individual_minifigure_parts"."missing") AS "total_missing",
+        SUM("bricktracker_individual_minifigure_parts"."damaged") AS "total_damaged"
+    FROM "bricktracker_individual_minifigure_parts"
+    GROUP BY "bricktracker_individual_minifigure_parts"."id"
+) "problem_join"
+ON "bricktracker_individual_minifigures"."id" = "problem_join"."id"
 
 WHERE "bricktracker_individual_minifigures"."figure" = :figure
 

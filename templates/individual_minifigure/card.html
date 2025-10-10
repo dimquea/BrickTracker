@@ -1,25 +1,40 @@
 {% import 'macro/badge.html' as badge %}
 {% import 'macro/card.html' as card %}
+{% import 'macro/form.html' as form %}
 
 <div class="card mb-3 flex-fill">
   {{ card.header(item, item.fields.name, solo=false, identifier=item.fields.figure, icon='user-line') }}
   {{ card.image(item, solo=false, last=false, caption=item.fields.name, alt=item.fields.figure, medium=false) }}
   <div class="card-body border-bottom p-1">
     {{ badge.quantity(item.fields.quantity, solo=false, last=false) }}
-    {% if item.fields.storage_name %}
-      <span class="badge text-bg-info" data-bs-toggle="tooltip" title="Storage">
-        <i class="ri-archive-2-line"></i> {{ item.fields.storage_name }}
-      </span>
+    {{ badge.parts(item.fields.number_of_parts, solo=false, last=false) }}
+    {{ badge.total_missing(item.fields.total_missing, solo=false, last=false) }}
+    {{ badge.total_damaged(item.fields.total_damaged, solo=false, last=false) }}
+    {% for owner in brickset_owners %}
+      {{ badge.owner(item, owner, solo=false, last=false) }}
+    {% endfor %}
+    {% for tag in brickset_tags %}
+      {{ badge.tag(item, tag, solo=false, last=false) }}
+    {% endfor %}
+    {% if item.fields.storage %}
+      {{ badge.storage(item, brickset_storages, solo=false, last=false) }}
     {% endif %}
-    {% if item.fields.purchase_location_name %}
-      <span class="badge text-bg-secondary" data-bs-toggle="tooltip" title="Purchase Location">
-        <i class="ri-building-line"></i> {{ item.fields.purchase_location_name }}
-      </span>
+    {% if item.fields.purchase_location %}
+      {{ badge.purchase_location(item, brickset_purchase_locations, solo=false, last=false) }}
     {% endif %}
     {% if item.fields.description %}
-      <span class="badge text-bg-light text-dark" data-bs-toggle="tooltip" title="Description">
-        <i class="ri-file-text-line"></i> {{ item.fields.description }}
+      <span class="badge text-bg-light text-dark text-wrap" data-bs-toggle="tooltip" title="{{ item.fields.description }}">
+        <i class="ri-file-text-line"></i> {{ item.fields.description[:config['DESCRIPTION_BADGE_MAX_LENGTH']] }}{% if item.fields.description | length > config['DESCRIPTION_BADGE_MAX_LENGTH'] %}...{% endif %}
       </span>
     {% endif %}
   </div>
+  {% if brickset_statuses | length %}
+    <ul class="list-group list-group-flush card-check border-bottom-0">
+      {% for status in brickset_statuses %}
+        <li class="d-flex list-group-item p-1 text-nowrap">
+          {{ form.checkbox(status.fields.name, item.fields.id, status.as_dataset(), status.url_for_individual_minifigure_state(item.fields.id), item.fields[status.as_column()]) }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
 </div>

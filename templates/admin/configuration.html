@@ -473,6 +473,14 @@
 
           <div class="row g-3">
             <div class="col-md-6">
+              <label for="BK_DESCRIPTION_BADGE_MAX_LENGTH" class="form-label">
+                BK_DESCRIPTION_BADGE_MAX_LENGTH {{ config_badges('BK_DESCRIPTION_BADGE_MAX_LENGTH') }}
+                <div class="text-muted small">Maximum length for description text in badges before truncating with ellipsis</div>
+              </label>
+              <input type="number" class="form-control config-number" id="BK_DESCRIPTION_BADGE_MAX_LENGTH" data-var="BK_DESCRIPTION_BADGE_MAX_LENGTH" min="5" max="200">
+            </div>
+
+            <div class="col-md-6">
               <label for="BK_PEERON_DOWNLOAD_DELAY" class="form-label">
                 BK_PEERON_DOWNLOAD_DELAY {{ config_badges('BK_PEERON_DOWNLOAD_DELAY') }}
                 <div class="text-muted small">Delay between Peeron downloads in milliseconds</div>
