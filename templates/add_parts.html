@@ -1,0 +1,675 @@
+{% import 'macro/accordion.html' as accordion %}
+
+{% extends 'base.html' %}
+
+{% block title %} - Add individual parts{% endblock %}
+
+{% block main %}
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="ri-hammer-line"></i> Add individual parts</h5>
+        </div>
+        <div class="card-body">
+          <div id="add-part-fail" class="alert alert-danger d-none" role="alert"></div>
+          <div id="add-part-complete" class="alert alert-success d-none" role="alert"></div>
+
+          <div class="mb-3">
+            <label for="add-part-input" class="form-label">Part number</label>
+            <input type="text" class="form-control" id="add-part-input" placeholder="3001" required>
+            <div class="form-text">Enter the Rebrickable part number (e.g., 3001, 3622, etc.)</div>
+          </div>
+
+          <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="add-part-lot-mode">
+            <label class="form-check-label" for="add-part-lot-mode">
+              <strong>Lot/Bulk Mode</strong> - Add multiple parts to a cart before saving
+            </label>
+            <div class="form-text">When enabled, parts are added to a cart and saved together as a lot</div>
+          </div>
+
+          <!-- Cart section (only visible in lot mode) -->
+          <div id="add-part-cart-section" class="d-none mb-3">
+            <h6 class="border-bottom">
+              <i class="ri-shopping-cart-line"></i> Cart
+              <span class="badge bg-primary" id="add-part-cart-count">0</span>
+            </h6>
+            <div id="add-part-cart-items" class="mb-2">
+              <!-- Cart items will be inserted here -->
+            </div>
+            <div class="d-grid gap-2">
+              <button id="add-part-complete-lot" type="button" class="btn btn-success" disabled>
+                <i class="ri-check-line"></i> Complete Lot & Add All Parts
+              </button>
+              <button id="add-part-clear-cart" type="button" class="btn btn-outline-danger btn-sm">
+                <i class="ri-delete-bin-line"></i> Clear Cart
+              </button>
+            </div>
+          </div>
+
+          <hr>
+          <div class="mb-3">
+            <p>
+              Progress <span id="add-part-count"></span>
+              <span id="add-part-spinner" class="d-none">
+                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                <span class="visually-hidden" role="status">Loading...</span>
+              </span>
+            </p>
+            <div id="add-part-progress" class="progress" role="progressbar" aria-label="Add part progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+              <div id="add-part-progress-bar" class="progress-bar" style="width: 0%"></div>
+            </div>
+            <p id="add-part-progress-message" class="text-center d-none"></p>
+          </div>
+
+          <!-- Color selection section (hidden until part is loaded) -->
+          <div id="add-part-colors-section" class="d-none">
+            <h6 class="border-bottom mt-3 mb-3">Select Color</h6>
+            <div id="add-part-colors-grid" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+              <!-- Color cards will be inserted here dynamically -->
+            </div>
+          </div>
+
+          <!-- Metadata section (initially hidden, shown after selecting part) -->
+          <div id="add-part-metadata-section" class="d-none">
+            <h6 class="border-bottom mt-3">Metadata</h6>
+            <div class="accordion accordion" id="metadata">
+              {% if not (brickset_owners | length) and not (brickset_purchase_locations | length) and not (brickset_storages | length) and not (brickset_tags | length) %}
+                <div class="alert alert-warning" role="alert">
+                  You have no metadata configured.
+                  You can add entries in the <a href="{{ url_for('admin.admin', open_metadata=true) }}\" class="btn btn-warning" role="button"><i class="ri-profile-line"></i> Set metadata management</a> section of the Admin panel.
+                </div>
+              {% else %}
+                {% if brickset_owners | length %}
+                  {{ accordion.header('Owners', 'owners', 'metadata', icon='user-line') }}
+                  <div id="add-part-owners">
+                  {% for owner in brickset_owners %}
+                    {% with id=owner.as_dataset() %}
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="{{ owner.fields.id }}" id="part-{{ id }}" autocomplete="off">
+                        <label class="form-check-label" for="part-{{ id }}">{{ owner.fields.name }}</label>
+                      </div>
+                    {% endwith %}
+                  {% endfor %}
+                  </div>
+                  {{ accordion.footer() }}
+                {% endif %}
+
+                {% if brickset_purchase_locations | length %}
+                  {{ accordion.header('Purchase location', 'purchase-location', 'metadata', icon='building-line') }}
+                  <label class="visually-hidden" for="add-part-purchase-location">Purchase location</label>
+                  <div class="input-group">
+                    <select id="add-part-purchase-location" class="form-select" autocomplete="off">
+                      <option value="" selected><i>None</i></option>
+                      {% for purchase_location in brickset_purchase_locations %}
+                        <option value="{{ purchase_location.fields.id }}">{{ purchase_location.fields.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  {{ accordion.footer() }}
+                {% endif %}
+
+                {% if brickset_storages | length %}
+                  {{ accordion.header('Storage', 'storage', 'metadata', icon='archive-line') }}
+                  <label class="visually-hidden" for="add-part-storage">Storage</label>
+                  <div class="input-group">
+                    <select id="add-part-storage" class="form-select" autocomplete="off">
+                      <option value="" selected><i>None</i></option>
+                      {% for storage in brickset_storages %}
+                        <option value="{{ storage.fields.id }}">{{ storage.fields.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  {{ accordion.footer() }}
+                {% endif %}
+
+                {% if brickset_tags | length %}
+                  {{ accordion.header('Tags', 'tags', 'metadata', icon='price-tag-3-line') }}
+                  <div id="add-part-tags">
+                  {% for tag in brickset_tags %}
+                    {% with id=tag.as_dataset() %}
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="{{ tag.fields.id }}" id="part-{{ id }}" autocomplete="off">
+                        <label class="form-check-label" for="part-{{ id }}">{{ tag.fields.name }}</label>
+                      </div>
+                    {% endwith %}
+                  {% endfor %}
+                  </div>
+                  {{ accordion.footer() }}
+                {% endif %}
+
+                {% if brickset_purchase_locations | length %}
+                  {{ accordion.header('Purchase details', 'purchase', 'metadata', icon='money-dollar-circle-line') }}
+                  <div class="mb-3">
+                    <label for="add-part-purchase-date" class="form-label">Purchase date</label>
+                    <input type="date" class="form-control" id="add-part-purchase-date">
+                  </div>
+                  <div class="mb-3">
+                    <label for="add-part-purchase-price" class="form-label">Purchase price</label>
+                    <input type="number" class="form-control" id="add-part-purchase-price" placeholder="0.00" step="0.01" min="0">
+                  </div>
+                  {{ accordion.footer() }}
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="card-footer text-end">
+          <span id="add-part-status-icon" class="me-1"></span><span id="add-part-status" class="me-1"></span>
+          <button id="add-part-lookup" type="button" class="btn btn-primary"><i class="ri-search-line"></i> Look up part</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function() {
+  // Individual Part Color Selection Socket class
+  class BrickPartColorSocket extends BrickSocket {
+    constructor(id, path, namespace, messages) {
+      super(id, path, namespace, messages, false);
+
+      // Form elements
+      this.html_button = document.getElementById(id + '-lookup');
+      this.html_input = document.getElementById(`${id}-input`);
+      this.html_owners = document.getElementById(`${id}-owners`);
+      this.html_purchase_location = document.getElementById(`${id}-purchase-location`);
+      this.html_purchase_date = document.getElementById(`${id}-purchase-date`);
+      this.html_purchase_price = document.getElementById(`${id}-purchase-price`);
+      this.html_storage = document.getElementById(`${id}-storage`);
+      this.html_tags = document.getElementById(`${id}-tags`);
+
+      // Color selection elements
+      this.html_colors_section = document.getElementById(`${id}-colors-section`);
+      this.html_colors_grid = document.getElementById(`${id}-colors-grid`);
+      this.html_metadata_section = document.getElementById(`${id}-metadata-section`);
+
+      // Lot mode elements
+      this.html_lot_mode = document.getElementById(`${id}-lot-mode`);
+      this.html_cart_section = document.getElementById(`${id}-cart-section`);
+      this.html_cart_items = document.getElementById(`${id}-cart-items`);
+      this.html_cart_count = document.getElementById(`${id}-cart-count`);
+      this.html_complete_lot = document.getElementById(`${id}-complete-lot`);
+      this.html_clear_cart = document.getElementById(`${id}-clear-cart`);
+
+      // State
+      this.current_part = null;
+      this.current_part_name = null;
+      this.current_colors = null;
+      this.selected_color = null;
+
+      // Cart state
+      this.lot_mode = false;
+      this.cart = []; // Array of {part, part_name, color_id, color_name, quantity, color_info}
+
+      if (this.html_button) {
+        this.html_button.addEventListener("click", ((bricksocket) => (e) => {
+          bricksocket.lookup_part();
+        })(this));
+      }
+
+      if (this.html_input) {
+        this.html_input.addEventListener("keyup", ((bricksocket) => (e) => {
+          if (e.key === 'Enter') {
+            bricksocket.lookup_part();
+          }
+        })(this));
+      }
+
+      // Lot mode checkbox
+      if (this.html_lot_mode) {
+        this.html_lot_mode.addEventListener("change", ((bricksocket) => (e) => {
+          bricksocket.toggle_lot_mode(e.target.checked);
+        })(this));
+      }
+
+      // Clear cart button
+      if (this.html_clear_cart) {
+        this.html_clear_cart.addEventListener("click", ((bricksocket) => (e) => {
+          bricksocket.clear_cart();
+        })(this));
+      }
+
+      // Complete lot button
+      if (this.html_complete_lot) {
+        this.html_complete_lot.addEventListener("click", ((bricksocket) => (e) => {
+          bricksocket.complete_lot();
+        })(this));
+      }
+
+      // Setup the socket
+      this.setup();
+    }
+
+    // Clear form
+    clear() {
+      super.clear();
+
+      if (this.html_colors_section) {
+        this.html_colors_section.classList.add("d-none");
+      }
+
+      if (this.html_colors_grid) {
+        this.html_colors_grid.innerHTML = '';
+      }
+
+      if (this.html_metadata_section) {
+        this.html_metadata_section.classList.add("d-none");
+      }
+
+      this.current_part = null;
+      this.current_part_name = null;
+      this.current_colors = null;
+      this.selected_color = null;
+    }
+
+    // Look up part and load available colors
+    lookup_part() {
+      if (this.disabled) {
+        return;
+      }
+
+      const part = this.html_input.value.trim();
+
+      if (!part) {
+        this.fail({ message: 'Please enter a part number' });
+        return;
+      }
+
+      // Clear previous results
+      this.clear();
+
+      this.clear_status();
+      this.toggle(false);
+      this.spinner(true);
+
+      console.log('Emitting LOAD_PART_COLORS event with part:', part);
+      this.socket.emit(this.messages.LOAD_PART_COLORS, { part: part });
+    }
+
+    // Handle part colors loaded
+    part_colors_loaded(data) {
+      console.log('Received part colors:', data);
+
+      this.current_part = data.part;
+      this.current_part_name = data.part_name;
+      this.current_colors = data.colors;
+
+      // Show the colors section
+      if (this.html_colors_section) {
+        this.html_colors_section.classList.remove("d-none");
+      }
+
+      // Render color cards
+      if (this.html_colors_grid && this.current_colors) {
+        this.html_colors_grid.innerHTML = '';
+
+        this.current_colors.forEach((color) => {
+          const card = this.create_color_card(color);
+          this.html_colors_grid.appendChild(card);
+        });
+      }
+
+      // Show metadata section
+      if (this.html_metadata_section) {
+        this.html_metadata_section.classList.remove("d-none");
+      }
+
+      this.spinner(false);
+      this.toggle(true);
+      this.status(`Found ${data.count} colors for ${this.current_part_name} (${this.current_part})`);
+    }
+
+    // Create a color card element
+    create_color_card(color) {
+      const col = document.createElement('div');
+      col.className = 'col';
+
+      const card = document.createElement('div');
+      card.className = 'card h-100';
+
+      // Card image
+      const imgContainer = document.createElement('div');
+      imgContainer.className = 'card-img-top';
+      imgContainer.style.height = '150px';
+      imgContainer.style.backgroundImage = `url(${color.part_img_url || ''})`;
+      imgContainer.style.backgroundSize = 'contain';
+      imgContainer.style.backgroundRepeat = 'no-repeat';
+      imgContainer.style.backgroundPosition = 'center';
+
+      const img = document.createElement('img');
+      img.src = color.part_img_url || '';
+      img.alt = color.color_name;
+      img.className = 'd-none';
+      img.loading = 'lazy';
+      imgContainer.appendChild(img);
+
+      // Card body
+      const cardBody = document.createElement('div');
+      cardBody.className = 'card-body p-2';
+
+      const colorName = document.createElement('h6');
+      colorName.className = 'card-title mb-1';
+      colorName.textContent = color.color_name;
+
+      const colorId = document.createElement('small');
+      colorId.className = 'text-muted';
+      colorId.textContent = `ID: ${color.color_id}`;
+
+      cardBody.appendChild(colorName);
+      cardBody.appendChild(colorId);
+
+      // Card footer with quantity input and add button
+      const cardFooter = document.createElement('div');
+      cardFooter.className = 'card-footer p-2';
+
+      const inputGroup = document.createElement('div');
+      inputGroup.className = 'input-group input-group-sm';
+
+      const quantityInput = document.createElement('input');
+      quantityInput.type = 'number';
+      quantityInput.className = 'form-control';
+      quantityInput.placeholder = 'Qty';
+      quantityInput.value = '1';
+      quantityInput.min = '1';
+      quantityInput.id = `qty-${color.color_id}`;
+
+      const addButton = document.createElement('button');
+      addButton.className = 'btn btn-primary';
+      addButton.innerHTML = '<i class="ri-add-line"></i> Add';
+      addButton.onclick = ((bricksocket, colorData, qtyInput) => () => {
+        bricksocket.add_part_with_color(colorData, parseInt(qtyInput.value) || 1);
+      })(this, color, quantityInput);
+
+      inputGroup.appendChild(quantityInput);
+      inputGroup.appendChild(addButton);
+      cardFooter.appendChild(inputGroup);
+
+      // Assemble card
+      card.appendChild(imgContainer);
+      card.appendChild(cardBody);
+      card.appendChild(cardFooter);
+      col.appendChild(card);
+
+      return col;
+    }
+
+    // Add part with selected color
+    add_part_with_color(color, quantity) {
+      if (this.disabled) {
+        return;
+      }
+
+      console.log('Adding part with color:', color, 'quantity:', quantity);
+
+      // Clear previous status messages
+      this.clear_status();
+
+      // If in lot mode, add to cart instead of adding immediately
+      if (this.lot_mode) {
+        this.add_to_cart(color, quantity);
+        return;
+      }
+
+      // Collect owners
+      const owners = [];
+      if (this.html_owners) {
+        this.html_owners.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+          owners.push(cb.value);
+        });
+      }
+
+      // Collect tags
+      const tags = [];
+      if (this.html_tags) {
+        this.html_tags.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+          tags.push(cb.value);
+        });
+      }
+
+      const data = {
+        part: this.current_part,
+        part_name: this.current_part_name,
+        color: color.color_id,
+        color_info: color,
+        quantity: quantity,
+        description: '',  // No description field in this UI
+        owners: owners,
+        tags: tags,
+        storage: this.html_storage ? this.html_storage.value : null,
+        purchase_location: this.html_purchase_location ? this.html_purchase_location.value : null,
+        purchase_date: this.html_purchase_date ? this.html_purchase_date.value : null,
+        purchase_price: this.html_purchase_price ? parseFloat(this.html_purchase_price.value) : null
+      };
+
+      this.clear_status();
+      this.toggle(false);
+      this.spinner(true);
+
+      console.log('Emitting LOAD_PART event with data:', data);
+      this.socket.emit(this.messages.LOAD_PART, data);
+    }
+
+    // Toggle lot/bulk mode
+    toggle_lot_mode(enabled) {
+      this.lot_mode = enabled;
+
+      if (this.html_cart_section) {
+        if (enabled) {
+          this.html_cart_section.classList.remove("d-none");
+        } else {
+          this.html_cart_section.classList.add("d-none");
+          // Clear cart when disabling lot mode
+          this.clear_cart();
+        }
+      }
+    }
+
+    // Add part to cart
+    add_to_cart(color, quantity) {
+      const cart_item = {
+        part: this.current_part,
+        part_name: this.current_part_name,
+        color_id: color.color_id,
+        color_name: color.color_name,
+        quantity: quantity,
+        color_info: color
+      };
+
+      this.cart.push(cart_item);
+      this.render_cart();
+      this.status(`Added ${this.current_part} in ${color.color_name} to cart (${this.cart.length} items)`);
+    }
+
+    // Remove item from cart
+    remove_from_cart(index) {
+      this.cart.splice(index, 1);
+      this.render_cart();
+    }
+
+    // Clear entire cart
+    clear_cart() {
+      this.cart = [];
+      this.render_cart();
+      this.clear_status();
+    }
+
+    // Render cart items
+    render_cart() {
+      if (!this.html_cart_items) return;
+
+      this.html_cart_items.innerHTML = '';
+
+      if (this.cart.length === 0) {
+        this.html_cart_items.innerHTML = '<p class="text-muted text-center">Cart is empty</p>';
+        if (this.html_complete_lot) {
+          this.html_complete_lot.disabled = true;
+        }
+      } else {
+        this.cart.forEach((item, index) => {
+          const cartItem = document.createElement('div');
+          cartItem.className = 'card mb-2';
+
+          const cardBody = document.createElement('div');
+          cardBody.className = 'card-body p-2 d-flex justify-content-between align-items-center';
+
+          const info = document.createElement('div');
+          info.innerHTML = `
+            <strong>${item.part}</strong> - ${item.part_name}<br>
+            <small class="text-muted">Color: ${item.color_name}, Qty: ${item.quantity}</small>
+          `;
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'btn btn-sm btn-outline-danger';
+          removeBtn.innerHTML = '<i class="ri-delete-bin-line"></i>';
+          removeBtn.onclick = () => this.remove_from_cart(index);
+
+          cardBody.appendChild(info);
+          cardBody.appendChild(removeBtn);
+          cartItem.appendChild(cardBody);
+          this.html_cart_items.appendChild(cartItem);
+        });
+
+        if (this.html_complete_lot) {
+          this.html_complete_lot.disabled = false;
+        }
+      }
+
+      // Update cart count badge
+      if (this.html_cart_count) {
+        this.html_cart_count.textContent = this.cart.length;
+      }
+    }
+
+    // Complete lot and add all parts
+    complete_lot() {
+      if (this.cart.length === 0) {
+        this.fail({message: 'Cart is empty. Add parts before completing the lot.'});
+        return;
+      }
+
+      this.clear_status();
+      this.toggle(false);
+      this.spinner(true);
+
+      // Prepare cart data - convert to format expected by backend
+      const cart_data = this.cart.map(item => ({
+        part: item.part,
+        part_name: item.part_name,
+        color_id: item.color_id,
+        color_name: item.color_name,
+        quantity: item.quantity,
+        color_info: item.color_info
+      }));
+
+      // Gather metadata from form
+      const lot_data = {
+        cart: cart_data,
+        name: null,  // Could add optional lot name field
+        description: null,  // Could add optional lot description field
+        storage: this.html_storage ? (this.html_storage.value || '') : '',
+        purchase_location: this.html_purchase_location ? (this.html_purchase_location.value || '') : '',
+        purchase_date: this.html_purchase_date && this.html_purchase_date.value ? new Date(this.html_purchase_date.value).getTime() / 1000 : null,
+        purchase_price: this.html_purchase_price && this.html_purchase_price.value ? parseFloat(this.html_purchase_price.value) : null,
+        owners: this.html_owners ? Array.from(this.html_owners.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value) : [],
+        tags: this.html_tags ? Array.from(this.html_tags.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value) : []
+      };
+
+      // Emit CREATE_LOT socket event
+      this.socket.emit(this.messages.CREATE_LOT, lot_data);
+    }
+
+    // Setup socket listeners
+    setup() {
+      super.setup();
+
+      if (this.socket) {
+        // Listen for part colors loaded
+        this.socket.on(this.messages.PART_COLORS_LOADED, ((bricksocket) => (data) => {
+          bricksocket.part_colors_loaded(data);
+        })(this));
+      }
+    }
+
+    // Override complete to clear the form but keep success message
+    complete(data) {
+      super.complete(data);
+
+      // If lot was created, clear the cart
+      if (data && data.lot_id) {
+        this.clear_cart();
+        // Optionally disable lot mode after successful lot creation
+        if (this.html_lot_mode) {
+          this.html_lot_mode.checked = false;
+          this.toggle_lot_mode(false);
+        }
+      }
+
+      // Clear the form after successful add (but don't call this.clear() as it clears status)
+      if (this.html_input) {
+        this.html_input.value = '';
+      }
+
+      // Hide color selection section without clearing status
+      if (this.html_colors_section) {
+        this.html_colors_section.classList.add("d-none");
+      }
+
+      if (this.html_colors_grid) {
+        this.html_colors_grid.innerHTML = '';
+      }
+
+      if (this.html_metadata_section) {
+        this.html_metadata_section.classList.add("d-none");
+      }
+
+      // Clear state
+      this.current_part = null;
+      this.current_part_name = null;
+      this.current_colors = null;
+      this.selected_color = null;
+
+      // Uncheck all metadata
+      if (this.html_owners) {
+        this.html_owners.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      }
+      if (this.html_tags) {
+        this.html_tags.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      }
+      if (this.html_storage) {
+        this.html_storage.value = '';
+      }
+      if (this.html_purchase_location) {
+        this.html_purchase_location.value = '';
+      }
+      if (this.html_purchase_date) {
+        this.html_purchase_date.value = '';
+      }
+      if (this.html_purchase_price) {
+        this.html_purchase_price.value = '';
+      }
+    }
+  }
+
+  // Initialize the socket
+  const partSocket = new BrickPartColorSocket(
+    'add-part',
+    '{{ path }}',
+    '{{ namespace }}',
+    {
+      COMPLETE: '{{ messages["COMPLETE"] }}',
+      CREATE_LOT: '{{ messages["CREATE_LOT"] }}',
+      FAIL: '{{ messages["FAIL"] }}',
+      LOAD_PART: '{{ messages["LOAD_PART"] }}',
+      LOAD_PART_COLORS: '{{ messages["LOAD_PART_COLORS"] }}',
+      PART_COLORS_LOADED: '{{ messages["PART_COLORS_LOADED"] }}',
+      PROGRESS: '{{ messages["PROGRESS"] }}',
+      PART_LOADED: '{{ messages["PART_LOADED"] }}'
+    }
+  );
+});
+</script>
+{% endblock %}

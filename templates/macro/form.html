@@ -16,7 +16,7 @@
   {% endif %}
 {% endmacro %}
 
-{% macro input(name, id, prefix, url, value, all=none, read_only=none, icon=none, suffix=none, date=false, type=none, textarea=false) %}
+{% macro input(name, id, prefix, url, value, all=none, read_only=none, icon=none, suffix=none, date=false, type=none, textarea=false, no_clear=false) %}
   {% if all or read_only %}
     {{ value }}
   {% else %}
@@ -44,7 +44,9 @@
       {% if suffix %}<span class="input-group-text d-none d-md-inline px-1">{{ suffix }}</span>{% endif %}
       {% if g.login.is_authenticated() %}
         <span id="status-{{ prefix }}-{{ id }}" class="input-group-text ri-save-line px-1"></span>
+        {% if not no_clear %}
         <button id="clear-{{ prefix }}-{{ id }}" type="button" class="btn btn-sm btn-light btn-outline-danger border px-1"><i class="ri-eraser-line"></i></button>
+        {% endif %}
       {% else %}
         <span class="input-group-text ri-prohibited-line px-1"></span>
       {% endif %}

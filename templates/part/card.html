@@ -29,6 +29,11 @@
       {{ accordion.cards(minifigures_using, 'Minifigures using this part', 'minifigures-using-inventory', 'part-details', 'minifigure/card.html', icon='group-line') }}
       {{ accordion.cards(minifigures_missing, 'Minifigures missing this part', 'minifigures-missing-inventory', 'part-details', 'minifigure/card.html', icon='question-line') }}
       {{ accordion.cards(minifigures_damaged, 'Minifigures with this part damaged', 'minifigures-damaged-inventory', 'part-details', 'minifigure/card.html', icon='error-warning-line') }}
+      {% if not config['DISABLE_INDIVIDUAL_PARTS'] %}
+        {% if individual_parts is defined and individual_parts | length > 0 %}
+          {{ accordion.cards(individual_parts, 'Individual part instances', 'individual-parts', 'part-details', 'individual_part/card.html', icon='package-line') }}
+        {% endif %}
+      {% endif %}
       {{ accordion.cards(different_color, 'Same part with a different color', 'different-color', 'part-details', 'part/card.html', icon='palette-line') }}
       {{ accordion.cards(similar_prints, 'Prints using the same base', 'similar-prints', 'part-details', 'part/card.html', icon='paint-brush-line') }}
     </div>

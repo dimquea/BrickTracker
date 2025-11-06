@@ -40,3 +40,19 @@ def bulk() -> str:
         bulk=True,
         **set_metadata_lists()
     )
+
+
+# Add individual parts
+@add_page.route('/parts', methods=['GET'])
+@login_required
+@exception_handler(__file__)
+def parts() -> str:
+    BrickConfigurationList.error_unless_is_set('REBRICKABLE_API_KEY')
+
+    return render_template(
+        'add_parts.html',
+        path=current_app.config['SOCKET_PATH'],
+        namespace=current_app.config['SOCKET_NAMESPACE'],
+        messages=MESSAGES,
+        **set_metadata_lists()
+    )

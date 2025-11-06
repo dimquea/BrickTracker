@@ -1,0 +1,40 @@
+{% import 'macro/badge.html' as badge %}
+{% import 'macro/card.html' as card %}
+{% import 'macro/form.html' as form %}
+
+<div class="card mb-3 flex-fill">
+  <div class="card-header">
+    <h5 class="mb-0">
+      <a href="{{ item.url() }}" class="text-decoration-none">
+        <i class="ri-hammer-line"></i>
+        {{ item.fields.name }} ({{ item.fields.color_name }})
+      </a>
+    </h5>
+  </div>
+  <div class="card-body border-bottom p-1">
+    {{ badge.quantity(item.fields.quantity, solo=false, last=false) }}
+    {% if item.fields.missing > 0 %}
+      {{ badge.total_missing(item.fields.missing, solo=false, last=false) }}
+    {% endif %}
+    {% if item.fields.damaged > 0 %}
+      {{ badge.total_damaged(item.fields.damaged, solo=false, last=false) }}
+    {% endif %}
+    {% for owner in brickset_owners %}
+      {{ badge.owner(item, owner, solo=false, last=false) }}
+    {% endfor %}
+    {% for tag in brickset_tags %}
+      {{ badge.tag(item, tag, solo=false, last=false) }}
+    {% endfor %}
+    {% if item.fields.storage %}
+      {{ badge.storage(item, brickset_storages, solo=false, last=false) }}
+    {% endif %}
+    {% if item.fields.purchase_location %}
+      {{ badge.purchase_location(item, brickset_purchase_locations, solo=false, last=false) }}
+    {% endif %}
+    {% if item.fields.description %}
+      <span class="badge text-bg-light text-dark text-wrap" data-bs-toggle="tooltip" title="{{ item.fields.description }}">
+        <i class="ri-file-text-line"></i> {{ item.fields.description[:config['DESCRIPTION_BADGE_MAX_LENGTH']] }}{% if item.fields.description | length > config['DESCRIPTION_BADGE_MAX_LENGTH'] %}...{% endif %}
+      </span>
+    {% endif %}
+  </div>
+</div>

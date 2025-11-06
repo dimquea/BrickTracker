@@ -8,6 +8,7 @@ class BrickSetOwner(BrickMetadata):
     # Endpoints
     set_state_endpoint: str = 'set.update_owner'
     individual_minifigure_state_endpoint: str = 'individual_minifigure.update_owner'
+    individual_part_state_endpoint: str = 'individual_part.update_owner'
 
     # Queries
     delete_query: str = 'set/metadata/owner/delete'
@@ -16,3 +17,4 @@ class BrickSetOwner(BrickMetadata):
     update_field_query: str = 'set/metadata/owner/update/field'
     update_set_state_query: str = 'set/metadata/owner/update/state'
     update_individual_minifigure_state_query: str = 'individual_minifigure/metadata/owner/update/state'
+    update_individual_part_state_query: str = 'individual_part/metadata/owner/update/state'

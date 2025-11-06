@@ -10,6 +10,7 @@ class BrickSetStatus(BrickMetadata):
     # Endpoints
     set_state_endpoint: str = 'set.update_status'
     individual_minifigure_state_endpoint: str = 'individual_minifigure.update_status'
+    individual_part_state_endpoint: str = 'individual_part.update_status'
 
     # Queries
     delete_query: str = 'set/metadata/status/delete'
@@ -18,6 +19,7 @@ class BrickSetStatus(BrickMetadata):
     update_field_query: str = 'set/metadata/status/update/field'
     update_set_state_query: str = 'set/metadata/status/update/state'
     update_individual_minifigure_state_query: str = 'individual_minifigure/metadata/status/update/state'
+    update_individual_part_state_query: str = 'individual_part/metadata/status/update/state'
 
     # Grab data from a form
     def from_form(self, form: dict[str, str], /) -> Self:

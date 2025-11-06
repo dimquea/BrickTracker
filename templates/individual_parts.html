@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% import 'macro/form.html' as form %}
+
+{% block title %} - Individual Parts{% endblock %}
+
+{% block main %}
+<div class="container-fluid">
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2><i class="ri-hammer-line"></i> Individual Parts</h2>
+        <a href="{{ url_for('add.parts') }}" class="btn btn-primary">
+          <i class="ri-add-line"></i> Add Parts
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% if parts | length %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+    {% for item in parts %}
+      <div class="col">
+        {% include 'individual_part/card.html' with context %}
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="row">
+    <div class="col-12">
+      <div class="alert alert-info" role="alert">
+        <i class="ri-information-line"></i> No individual parts found.
+        <a href="{{ url_for('add.parts') }}" class="alert-link">Add some parts</a> to get started!
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

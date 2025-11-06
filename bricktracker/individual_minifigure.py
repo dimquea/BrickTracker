@@ -464,6 +464,14 @@ class IndividualMinifigure(RebrickableMinifigure):
     def url(self, /) -> str:
         return url_for('individual_minifigure.details', id=self.fields.id)
 
+    # String representation for debugging
+    def __repr__(self, /) -> str:
+        """String representation for debugging"""
+        figure = getattr(self.fields, 'figure', 'unknown')
+        name = getattr(self.fields, 'name', 'Unknown')
+        qty = getattr(self.fields, 'quantity', 0)
+        return f'<IndividualMinifigure {figure} "{name}" qty:{qty}>'
+
     # URL for updating quantity
     def url_for_quantity(self, /) -> str:
         return url_for('individual_minifigure.update_quantity', id=self.fields.id)

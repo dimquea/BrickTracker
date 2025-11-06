@@ -30,6 +30,7 @@ from bricktracker.views.index import index_page
 from bricktracker.views.instructions import instructions_page
 from bricktracker.views.login import login_page
 from bricktracker.views.individual_minifigure import individual_minifigure_page
+from bricktracker.views.individual_part import individual_part_page
 from bricktracker.views.minifigure import minifigure_page
 from bricktracker.views.part import part_page
 from bricktracker.views.set import set_page
@@ -37,10 +38,41 @@ from bricktracker.views.statistics import statistics_page
 from bricktracker.views.storage import storage_page
 from bricktracker.views.wish import wish_page
 
+logger = logging.getLogger(__name__)
+
+
+def _validate_config(app: Flask) -> None:
+    """
+    Validate application configuration and log warnings for potential issues.
+    """
+    # Check if both individual features are disabled
+    if app.config.get('DISABLE_INDIVIDUAL_PARTS') and app.config.get('DISABLE_INDIVIDUAL_MINIFIGURES'):
+        logger.warning(
+            'Both DISABLE_INDIVIDUAL_PARTS and DISABLE_INDIVIDUAL_MINIFIGURES are enabled. '
+            'Users will not be able to track standalone parts or minifigures.'
+        )
+
+    # Check if Rebrickable API key is missing
+    if not app.config.get('REBRICKABLE_API_KEY'):
+        logger.warning(
+            'REBRICKABLE_API_KEY is not set. You will not be able to fetch data from Rebrickable API. '
+            'Please set this in your .env file or environment variables.'
+        )
+
+    # Check authentication configuration
+    if not app.config.get('AUTHENTICATION_PASSWORD') and not app.config.get('AUTHENTICATION_KEY'):
+        logger.info(
+            'No authentication configured (AUTHENTICATION_PASSWORD or AUTHENTICATION_KEY). '
+            'Admin features will be accessible without login.'
+        )
+
 
 def setup_app(app: Flask) -> None:
     # Load the configuration
     BrickConfigurationList(app)
+
+    # Validate configuration
+    _validate_config(app)
 
     # Set the logging level
     if app.config['DEBUG']:
@@ -82,6 +114,7 @@ def setup_app(app: Flask) -> None:
     app.register_blueprint(instructions_page)
     app.register_blueprint(login_page)
     app.register_blueprint(individual_minifigure_page)
+    app.register_blueprint(individual_part_page)
     app.register_blueprint(minifigure_page)
     app.register_blueprint(part_page)
     app.register_blueprint(set_page)

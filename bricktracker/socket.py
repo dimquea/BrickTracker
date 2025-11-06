@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 MESSAGES: Final[dict[str, str]] = {
     'COMPLETE': 'complete',
     'CONNECT': 'connect',
+    'CREATE_LOT': 'create_lot',
     'DISCONNECT': 'disconnect',
     'DOWNLOAD_INSTRUCTIONS': 'download_instructions',
     'DOWNLOAD_PEERON_PAGES': 'download_peeron_pages',
@@ -25,9 +26,13 @@ MESSAGES: Final[dict[str, str]] = {
     'IMPORT_MINIFIGURE': 'import_minifigure',
     'IMPORT_SET': 'import_set',
     'LOAD_MINIFIGURE': 'load_minifigure',
+    'LOAD_PART': 'load_part',
+    'LOAD_PART_COLORS': 'load_part_colors',
     'LOAD_PEERON_PAGES': 'load_peeron_pages',
     'LOAD_SET': 'load_set',
     'MINIFIGURE_LOADED': 'minifigure_loaded',
+    'PART_COLORS_LOADED': 'part_colors_loaded',
+    'PART_LOADED': 'part_loaded',
     'PROGRESS': 'progress',
     'SET_LOADED': 'set_loaded',
 }
@@ -230,6 +235,36 @@ class BrickSocket(object):
 
             from .individual_minifigure import IndividualMinifigure
             IndividualMinifigure().load(self, data)
+
+        @self.socket.on(MESSAGES['LOAD_PART'], namespace=self.namespace)
+        def load_part(data: dict[str, Any], /) -> None:
+            logger.debug('Socket: LOAD_PART={data} (from: {fr})'.format(
+                data=data,
+                fr=request.sid,  # type: ignore
+            ))
+
+            from .individual_part import IndividualPart
+            IndividualPart().add(self, data)
+
+        @self.socket.on(MESSAGES['LOAD_PART_COLORS'], namespace=self.namespace)
+        def load_part_colors(data: dict[str, Any], /) -> None:
+            logger.debug('Socket: LOAD_PART_COLORS={data} (from: {fr})'.format(
+                data=data,
+                fr=request.sid,  # type: ignore
+            ))
+
+            from .individual_part import IndividualPart
+            IndividualPart().load_colors(self, data)
+
+        @self.socket.on(MESSAGES['CREATE_LOT'], namespace=self.namespace)
+        @rebrickable_socket(self)
+        def create_lot(data: dict[str, Any], /) -> None:
+            logger.debug('Socket: CREATE_LOT (from: {fr})'.format(
+                fr=request.sid,  # type: ignore
+            ))
+
+            from .individual_part_lot import IndividualPartLot
+            IndividualPartLot().create(self, data)
 
     # Update the progress auto-incrementing
     def auto_progress(

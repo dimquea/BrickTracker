@@ -1,4 +1,4 @@
--- Migration 0020: Add individual minifigures and individual parts tables
+-- description: Add individual minifigures and individual parts tables
 
 -- Individual minifigures table - tracks individual minifigures not associated with sets
 CREATE TABLE IF NOT EXISTS "bricktracker_individual_minifigures" (

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %} - {% if item.fields.name %}{{ item.fields.name }}{% else %}Individual Part Lot{% endif %}{% endblock %}
+
+{% block main %}
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+      {% with solo=true %}
+        {% include 'individual_part/lot_card.html' %}
+      {% endwith %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% import 'macro/form.html' as form %}
+{% import 'macro/table.html' as table %}
+
+<div class="table-responsive-sm">
+  <table class="table table-striped align-middle sortable mb-0">
+    {{ table.header(color=true, quantity=true, checked=true, hamburger_menu=g.login.is_authenticated(), accordion_id=accordion_id|default('')) }}
+    <tbody>
+      {% for item in table_collection %}
+      <tr>
+        {{ table.image(item.url_for_image(), caption=item.fields.name, alt=item.fields.part, accordion=false) }}
+        <td data-sort="{{ item.fields.name }}">
+          <a class="text-reset" href="{{ item.url() }}">{{ item.fields.name }}</a>
+        </td>
+        <td data-sort="{{ item.fields.color_name }}">
+          {% if item.fields.color_rgb %}<span class="color-rgb color-rgb-table {% if item.fields.color == 9999 %}color-any{% endif %} align-middle border border-black" {% if item.fields.color != 9999 %}style="background-color: #{{ item.fields.color_rgb }};"{% endif %}></span>{% endif %}
+          <span class="align-middle">{{ item.fields.color_name }}</span>
+        </td>
+        <td data-sort="{{ item.fields.quantity }}" class="table-td-input">
+          {{ form.input('Quantity', item.fields.id, item.html_id('quantity'), item.url_for_quantity(), item.fields.quantity, read_only=false, no_clear=true) }}
+        </td>
+        {% if not config['HIDE_TABLE_MISSING_PARTS'] %}
+          <td data-sort="{{ item.fields.missing }}" class="table-td-input">
+            {{ form.input('Missing', item.fields.id, item.html_id('missing'), item.url_for_problem('missing'), item.fields.missing, read_only=false) }}
+          </td>
+        {% endif %}
+        {% if not config['HIDE_TABLE_DAMAGED_PARTS'] %}
+          <td data-sort="{{ item.fields.damaged }}" class="table-td-input">
+            {{ form.input('Damaged', item.fields.id, item.html_id('damaged'), item.url_for_problem('damaged'), item.fields.damaged, read_only=false) }}
+          </td>
+        {% endif %}
+        {% if not config['HIDE_TABLE_CHECKED_PARTS'] %}
+          <td class="table-td-input">
+            <center>{{ form.checkbox('', item.fields.id, item.html_id('checked'), item.url_for_checked(), item.fields.checked | default(false), parent='part', delete=false) }}</center>
+          </td>
+        {% endif %}
+        {% if g.login.is_authenticated() %}
+          <td>
+            <div class="dropdown">
+              <button type="button" class="btn btn-sm btn-outline-primary border-0" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="ri-more-fill"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ item.url() }}"><i class="ri-eye-line"></i> View details</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger delete-part-btn" href="#" data-part-id="{{ item.fields.id }}" data-part-name="{{ item.fields.name }}" data-part-color="{{ item.fields.color_name }}"><i class="ri-delete-bin-line"></i> Delete from lot</a></li>
+              </ul>
+            </div>
+          </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Remove Part from Lot Confirmation Modal -->
+<div class="modal fade" id="removePartModal" tabindex="-1" aria-labelledby="removePartModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="removePartModalLabel">Remove Part from Lot</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to remove <strong id="removePartName"></strong> (<span id="removePartColor"></span>) from this lot?</p>
+        <p class="text-muted">This action cannot be undone. The part will be permanently deleted.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmRemovePart">Remove Part</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const removeModal = document.getElementById('removePartModal');
+  const removeModalBS = new bootstrap.Modal(removeModal);
+  const confirmBtn = document.getElementById('confirmRemovePart');
+  const partNameEl = document.getElementById('removePartName');
+  const partColorEl = document.getElementById('removePartColor');
+
+  let partToRemove = null;
+
+  // Handle delete button clicks
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.delete-part-btn')) {
+      e.preventDefault();
+      const btn = e.target.closest('.delete-part-btn');
+      const partId = btn.dataset.partId;
+      const partName = btn.dataset.partName;
+      const partColor = btn.dataset.partColor;
+
+      // Store part info
+      partToRemove = partId;
+
+      // Update modal text
+      partNameEl.textContent = partName;
+      partColorEl.textContent = partColor;
+
+      // Show modal
+      removeModalBS.show();
+    }
+  });
+
+  // Handle quantity input validation
+  document.addEventListener('change', function(e) {
+    const input = e.target;
+    if (input.id && input.id.includes('quantity')) {
+      const value = input.value.trim();
+      if (value === '0' || value === '') {
+        // Get the status icon element
+        const statusId = 'status-' + input.id;
+        const statusEl = document.getElementById(statusId);
+
+        if (statusEl) {
+          // Clear any existing classes
+          statusEl.className = '';
+          // Add error styling
+          statusEl.classList.add('input-group-text', 'ri-alert-line', 'text-danger', 'px-1');
+
+          // Create tooltip with error message
+          const tooltip = new bootstrap.Tooltip(statusEl, {
+            title: 'Quantity cannot be 0. Use the delete button in the menu to remove this part from the lot.',
+            trigger: 'manual',
+            placement: 'top'
+          });
+          tooltip.show();
+
+          // Hide tooltip after 5 seconds
+          setTimeout(function() {
+            tooltip.hide();
+            setTimeout(function() {
+              tooltip.dispose();
+              // Restore status icon
+              statusEl.className = '';
+              statusEl.classList.add('input-group-text', 'ri-save-line', 'px-1');
+            }, 200);
+          }, 5000);
+        }
+
+        // Prevent the change from going through
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Restore to 1 (minimum value)
+        input.value = '1';
+        return false;
+      }
+    }
+  }, true);
+
+  // Handle confirmation
+  confirmBtn.addEventListener('click', function() {
+    if (partToRemove) {
+      const uuid = partToRemove;
+
+      // Call delete endpoint
+      fetch(`/individual-parts/${uuid}/delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      .then(response => {
+        if (response.redirected || response.ok) {
+          window.location.reload();
+        } else {
+          return response.json();
+        }
+      })
+      .then(data => {
+        if (data && data.error) {
+          alert('Error removing part: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error removing part:', error);
+        alert('Error removing part from lot');
+      });
+
+      removeModalBS.hide();
+      partToRemove = null;
+    }
+  });
+
+  // Reset when modal is hidden
+  removeModal.addEventListener('hidden.bs.modal', function() {
+    partToRemove = null;
+  });
+});
+</script>

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% import 'macro/accordion.html' as accordion %}
+{% import 'macro/form.html' as form %}
+
+{% block title %} - Individual Part {{ item.fields.name }}{% endblock %}
+
+{% block main %}
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="ri-hammer-line"></i> {{ item.fields.name }}
+            <span class="badge text-bg-secondary fw-normal"><i class="ri-hashtag"></i> {{ item.fields.part }} / Color {{ item.fields.color }}</span>
+          </h5>
+          <div>
+            <a href="{{ url_for('part.details', part=item.fields.part, color=item.fields.color) }}" class="btn btn-sm btn-secondary">
+              <i class="ri-arrow-left-line"></i> Back to {{ item.fields.part }}
+            </a>
+          </div>
+        </div>
+        {% if item.fields.image %}
+        <div class="card-img border-bottom" style="background-image: url({{ item.url_for_image() }})">
+          <a data-lightbox data-caption="{{ item.fields.name }}" href="{{ item.url_for_image() }}" target="_blank">
+            <img class="card-medium-img" src="{{ item.url_for_image() }}" alt="{{ item.fields.part }}" loading="lazy">
+          </a>
+        </div>
+        {% endif %}
+        <div class="accordion accordion-flush border-top" id="individual-part-details-{{ item.fields.id }}">
+          {{ accordion.header('Quantity', 'accordion-quantity-' ~ item.fields.id, 'individual-part-details-' ~ item.fields.id, icon='functions') }}
+            {{ form.input('Quantity', item.fields.id, 'quantity', item.url_for_quantity(), item.fields.quantity, icon='functions', type='number') }}
+          {{ accordion.footer() }}
+          {{ accordion.header('Description', 'accordion-description-' ~ item.fields.id, 'individual-part-details-' ~ item.fields.id, icon='file-text-line') }}
+            {{ form.input('Description', item.fields.id, 'description', item.url_for_description(), item.fields.description or '', icon='file-text-line', textarea=true) }}
+          {{ accordion.footer() }}
+          {{ accordion.header('Problems', 'accordion-problems-' ~ item.fields.id, 'individual-part-details-' ~ item.fields.id, icon='error-warning-line') }}
+            {{ form.input('Missing', item.fields.id, 'missing', item.url_for_problem('missing'), item.fields.missing, icon='question-line', type='number') }}
+            {{ form.input('Damaged', item.fields.id, 'damaged', item.url_for_problem('damaged'), item.fields.damaged, icon='error-warning-line', type='number') }}
+          {{ accordion.footer() }}
+          {% if lot %}
+            {{ accordion.header('Lot', 'accordion-lot-' ~ item.fields.id, 'individual-part-details-' ~ item.fields.id, icon='shopping-cart-line') }}
+              <div class="alert alert-info" role="alert">
+                <i class="ri-information-line"></i> This part belongs to a lot
+                {% if lot.fields.name %}<strong>"{{ lot.fields.name }}"</strong>{% endif %}
+                with {{ lot.parts()|length }} total parts.
+              </div>
+              <p class="mb-3">
+                All metadata (storage, purchase information, owners, tags) is managed at the lot level.
+                View the full lot to see all metadata and other parts.
+              </p>
+              <a href="{{ lot.url() }}" class="btn btn-primary">
+                <i class="ri-eye-line"></i> View Full Lot
+              </a>
+            {{ accordion.footer() }}
+          {% else %}
+            {# Only show management accordion if NOT part of a lot #}
+            {% include 'individual_part/management.html' %}
+          {% endif %}
+          {% if g.login.is_authenticated() %}
+            {{ accordion.header('Danger zone', 'accordion-danger-zone-' ~ item.fields.id, 'individual-part-details-' ~ item.fields.id, danger=true, class='text-end') }}
+              <a href="{{ url_for('individual_part.delete_part', id=item.fields.id) }}" class="btn btn-danger" role="button" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="ri-close-line"></i> Delete this individual part instance</a>
+            {{ accordion.footer() }}
+          {% endif %}
+        </div>
+        <div class="card-footer"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this individual part instance? This action cannot be undone.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form method="POST" action="{{ url_for('individual_part.delete_part', id=item.fields.id) }}">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,23 +1,15 @@
--- Migration 0021: Add existing owner/tag columns to individual minifigure and individual part metadata tables
+-- description: Populate missing image_id values in rebrickable_parts from image URLs
+-- Extract image_id from image URL for records with 'elements/' path
+-- Note: The url_for_image() method now handles extraction on-the-fly for missing values,
+-- so this migration only needs to handle the common case to improve performance
 
--- Add owner columns to individual minifigure owners table
-ALTER TABLE "bricktracker_individual_minifigure_owners"
-ADD COLUMN "owner_32479d0a_cd3c_43c6_aa16_b3f378915b13" BOOLEAN NOT NULL DEFAULT 0;
-
-ALTER TABLE "bricktracker_individual_minifigure_owners"
-ADD COLUMN "owner_2f07518d_40e1_4279_b0d0_aa339f195cbf" BOOLEAN NOT NULL DEFAULT 0;
-
--- Add tag columns to individual minifigure tags table
-ALTER TABLE "bricktracker_individual_minifigure_tags"
-ADD COLUMN "tag_b1b5c316_5caf_4b82_a085_ac4c7ab9b8db" BOOLEAN NOT NULL DEFAULT 0;
-
--- Add owner columns to individual part owners table
-ALTER TABLE "bricktracker_individual_part_owners"
-ADD COLUMN "owner_32479d0a_cd3c_43c6_aa16_b3f378915b13" BOOLEAN NOT NULL DEFAULT 0;
-
-ALTER TABLE "bricktracker_individual_part_owners"
-ADD COLUMN "owner_2f07518d_40e1_4279_b0d0_aa339f195cbf" BOOLEAN NOT NULL DEFAULT 0;
-
--- Add tag columns to individual part tags table
-ALTER TABLE "bricktracker_individual_part_tags"
-ADD COLUMN "tag_b1b5c316_5caf_4b82_a085_ac4c7ab9b8db" BOOLEAN NOT NULL DEFAULT 0;
+-- For images with 'elements/' in the path, extract the element ID (e.g., 300126 from .../elements/300126.jpg)
+UPDATE "rebrickable_parts"
+SET "image_id" = SUBSTR(
+    "image",
+    INSTR("image", 'elements/') + 9,
+    INSTR(SUBSTR("image", INSTR("image", 'elements/') + 9), '.') - 1
+)
+WHERE "image" IS NOT NULL
+  AND ("image_id" IS NULL OR "image_id" = '')
+  AND "image" LIKE '%elements/%';

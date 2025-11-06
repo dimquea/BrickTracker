@@ -3,7 +3,7 @@
 
 <div class="table-responsive-sm">
   <table data-table="true" class="table table-striped align-middle" id="storage">
-    {{ table.header(image=false, missing=false, damaged=false, sets=true, individual=(not config['DISABLE_INDIVIDUAL_MINIFIGURES'])) }}
+    {{ table.header(image=false, missing=false, damaged=false, sets=true, individual=(not config['DISABLE_INDIVIDUAL_MINIFIGURES']), parts=(not config['DISABLE_INDIVIDUAL_PARTS'])) }}
     <tbody>
       {% for item in table_collection %}
       <tr>
@@ -12,15 +12,21 @@
         {% if not config['DISABLE_INDIVIDUAL_MINIFIGURES'] %}
           <td>{{ item.fields.total_individual_minifigures }}</td>
         {% endif %}
+        {% if not config['DISABLE_INDIVIDUAL_PARTS'] %}
+          <td>{{ item.fields.total_individual_parts }}</td>
+        {% endif %}
       </tr>
       {% endfor %}
-      {% if sets_no_storage is defined and minifigs_no_storage is defined %}
-      {% if sets_no_storage > 0 or minifigs_no_storage > 0 %}
+      {% if sets_no_storage is defined and minifigs_no_storage is defined and parts_no_storage is defined %}
+      {% if sets_no_storage > 0 or minifigs_no_storage > 0 or parts_no_storage > 0 %}
       <tr class="table-warning">
         <td data-sort="zzz-not-in-storage"><a class="text-reset" href="{{ url_for('storage.no_storage_details') }}"><em>Not in a storage location</em></a></td>
         <td>{{ sets_no_storage }}</td>
         {% if not config['DISABLE_INDIVIDUAL_MINIFIGURES'] %}
           <td>{{ minifigs_no_storage }}</td>
+        {% endif %}
+        {% if not config['DISABLE_INDIVIDUAL_PARTS'] %}
+          <td>{{ parts_no_storage }}</td>
         {% endif %}
       </tr>
       {% endif %}

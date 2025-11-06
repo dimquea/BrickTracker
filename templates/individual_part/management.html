@@ -1,0 +1,83 @@
+{% import 'macro/accordion.html' as accordion %}
+{% import 'macro/form.html' as form %}
+
+{% if g.login.is_authenticated() %}
+  {{ accordion.header('Management', 'accordion-management-' ~ item.fields.id, 'individual-part-details-' ~ item.fields.id, icon='settings-4-line', class='p-0') }}
+    {% if item.__class__.__name__ == 'IndividualPartLot' %}
+    {{ accordion.header('Details', 'accordion-details-' ~ item.fields.id, 'accordion-management-' ~ item.fields.id, icon='file-text-line') }}
+      <div class="row g-2">
+        <div class="col-12">
+          {{ form.input('Name', item.fields.id, 'lot-name-' ~ item.fields.id, url_for('individual_part.update_lot_name', lot_id=item.fields.id), item.fields.name) }}
+        </div>
+        <div class="col-12">
+          {{ form.input('Description', item.fields.id, 'lot-description-' ~ item.fields.id, url_for('individual_part.update_lot_description', lot_id=item.fields.id), item.fields.description, textarea=true) }}
+        </div>
+      </div>
+    {{ accordion.footer() }}
+    {% endif %}
+    {{ accordion.header('Owners', 'accordion-owners-' ~ item.fields.id, 'accordion-management-' ~ item.fields.id, icon='group-line', class='p-0') }}
+      <ul class="list-group list-group-flush">
+      {% if brickset_owners | length %}
+        {% for owner in brickset_owners %}
+          <li class="d-flex list-group-item list-group-item-action text-nowrap">{{ form.checkbox(owner.fields.name, item.fields.id, owner.as_dataset(), owner.url_for_individual_part_state(item.fields.id), item.fields[owner.as_column()]) }}</li>
+        {% endfor %}
+      {% else %}
+        <li class="list-group-item list-group-item-action text-center"><i class="ri-error-warning-line"></i> No owner found.</li>
+        {% endif %}
+      </ul>
+      <div class="list-group list-group-flush border-top">
+        <a class="list-group-item list-group-item-action" href="{{ url_for('admin.admin', open_owner=true) }}"><i class="ri-settings-4-line"></i> Manage the part owners</a>
+      </div>
+    {{ accordion.footer() }}
+    {{ accordion.header('Storage', 'accordion-storage-' ~ item.fields.id, 'accordion-management-' ~ item.fields.id, icon='archive-2-line') }}
+      {% if brickset_storages | length %}
+      {{ form.select('Storage', item.fields.id, brickset_storages.as_prefix(), brickset_storages.url_for_individual_part_value(item.fields.id), item.fields.storage, brickset_storages, icon='building-line') }}
+      {% else %}
+        <p class="text-center"><i class="ri-error-warning-line"></i> No storage found.</p>
+      {% endif %}
+      <hr>
+      <a href="{{ url_for('admin.admin', open_storage=true) }}" class="btn btn-primary" role="button"><i class="ri-settings-4-line"></i> Manage the storages</a>
+    {{ accordion.footer() }}
+    {{ accordion.header('Purchase', 'accordion-purchase-' ~ item.fields.id, 'accordion-management-' ~ item.fields.id, icon='wallet-3-line') }}
+      <div class="row row-cols-lg-auto g-1 justify-content-start align-items-center pb-2">
+        <div class="col-12 flex-grow-1">
+          {% if brickset_purchase_locations | length %}
+            {{ form.select('Location', item.fields.id, brickset_purchase_locations.as_prefix(), brickset_purchase_locations.url_for_individual_part_value(item.fields.id), item.fields.purchase_location, brickset_purchase_locations, icon='building-line') }}
+          {% else %}
+            <i class="ri-error-warning-line"></i> No purchase location found.
+          {% endif %}
+        </div>
+      </div>
+      <hr>
+      <a href="{{ url_for('admin.admin', open_purchase_location=true) }}" class="btn btn-primary" role="button"><i class="ri-settings-4-line"></i> Manage the purchase locations</a>
+    {{ accordion.footer() }}
+    {{ accordion.header('Statuses', 'accordion-statuses-' ~ item.fields.id, 'accordion-management-' ~ item.fields.id, icon='checkbox-line', class='p-0') }}
+      <ul class="list-group list-group-flush">
+      {% if brickset_statuses | length %}
+        {% for status in brickset_statuses %}
+          <li class="d-flex list-group-item list-group-item-action text-nowrap">{{ form.checkbox(status.fields.name, item.fields.id, status.as_dataset(), status.url_for_individual_part_state(item.fields.id), item.fields[status.as_column()]) }}</li>
+        {% endfor %}
+      {% else %}
+        <li class="list-group-item list-group-item-action text-center"><i class="ri-error-warning-line"></i> No status found.</li>
+        {% endif %}
+      </ul>
+      <div class="list-group list-group-flush border-top">
+        <a class="list-group-item list-group-item-action" href="{{ url_for('admin.admin', open_status=true) }}"><i class="ri-settings-4-line"></i> Manage the statuses</a>
+      </div>
+    {{ accordion.footer() }}
+    {{ accordion.header('Tags', 'accordion-tags-' ~ item.fields.id, 'accordion-management-' ~ item.fields.id, icon='price-tag-2-line', class='p-0') }}
+      <ul class="list-group list-group-flush">
+      {% if brickset_tags | length %}
+        {% for tag in brickset_tags %}
+          <li class="d-flex list-group-item list-group-item-action text-nowrap">{{ form.checkbox(tag.fields.name, item.fields.id, tag.as_dataset(), tag.url_for_individual_part_state(item.fields.id), item.fields[tag.as_column()]) }}</li>
+        {% endfor %}
+      {% else %}
+        <li class="list-group-item list-group-item-action text-center"><i class="ri-error-warning-line"></i> No tag found.</li>
+        {% endif %}
+      </ul>
+      <div class="list-group list-group-flush border-top">
+        <a class="list-group-item list-group-item-action" href="{{ url_for('admin.admin', open_tag=true) }}"><i class="ri-settings-4-line"></i> Manage the tags</a>
+      </div>
+    {{ accordion.footer() }}
+  {{ accordion.footer() }}
+{% endif %}

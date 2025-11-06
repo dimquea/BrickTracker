@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, current_app
 
 from .exceptions import exception_handler
+from ..individual_part_list import IndividualPartList
 from ..minifigure_list import BrickMinifigureList
 from ..pagination_helper import get_pagination_config, build_pagination_context, get_request_params
 from ..part import BrickPart
@@ -137,6 +138,11 @@ def problem() -> str:
 def details(*, part: str, color: int) -> str:
     brickpart = BrickPart().select_generic(part, color)
 
+    # Get individual parts if not disabled
+    individual_parts = None
+    if not current_app.config.get('DISABLE_INDIVIDUAL_PARTS', False):
+        individual_parts = IndividualPartList().by_part_and_color(part, color)
+
     return render_template(
         'part.html',
         item=brickpart,
@@ -166,5 +172,6 @@ def details(*, part: str, color: int) -> str:
         ),
         different_color=BrickPartList().with_different_color(brickpart),
         similar_prints=BrickPartList().from_print(brickpart),
+        individual_parts=individual_parts,
         **set_metadata_lists(as_class=True)
     )

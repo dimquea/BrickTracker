@@ -68,10 +68,27 @@ FROM (
         "bricktracker_individual_minifigure_parts"."missing",
         "bricktracker_individual_minifigure_parts"."damaged",
         "bricktracker_individual_minifigure_parts"."checked",
-        'individual' AS "source_type"
+        'individual_minifigure' AS "source_type"
     FROM "bricktracker_individual_minifigure_parts"
     INNER JOIN "bricktracker_individual_minifigures"
     ON "bricktracker_individual_minifigure_parts"."id" = "bricktracker_individual_minifigures"."id"
+
+    UNION ALL
+
+    -- Individual/standalone parts (not from any set or minifigure)
+    SELECT
+        "bricktracker_individual_parts"."id",
+        NULL AS "figure",
+        "bricktracker_individual_parts"."part",
+        "bricktracker_individual_parts"."color",
+        0 AS "spare",
+        "bricktracker_individual_parts"."quantity",
+        NULL AS "element",
+        "bricktracker_individual_parts"."missing",
+        "bricktracker_individual_parts"."damaged",
+        "bricktracker_individual_parts"."checked",
+        'individual_part' AS "source_type"
+    FROM "bricktracker_individual_parts"
 ) AS "combined"
 
 INNER JOIN "rebrickable_parts"

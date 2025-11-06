@@ -10,6 +10,7 @@ from .record import BrickRecord
 from .sql import BrickSQL
 if TYPE_CHECKING:
     from .individual_minifigure import IndividualMinifigure
+    from .individual_part import IndividualPart
     from .set import BrickSet
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,8 @@ class BrickMetadata(BrickRecord):
     set_state_endpoint: str = ''
     individual_minifigure_state_endpoint: str = ''
     individual_minifigure_value_endpoint: str = ''
+    individual_part_state_endpoint: str = ''
+    individual_part_value_endpoint: str = ''
 
     # Queries
     delete_query: str
@@ -33,6 +36,8 @@ class BrickMetadata(BrickRecord):
     update_set_value_query: str = ''
     update_individual_minifigure_state_query: str = ''
     update_individual_minifigure_value_query: str = ''
+    update_individual_part_state_query: str = ''
+    update_individual_part_value_query: str = ''
 
     def __init__(
         self,
@@ -126,6 +131,21 @@ class BrickMetadata(BrickRecord):
             id=id
         )
 
+    # URL to change the selected state of this metadata item for an individual part
+    def url_for_individual_part_state(self, id: str, /) -> str:
+        return url_for(
+            self.individual_part_state_endpoint,
+            id=id,
+            metadata_id=self.fields.id
+        )
+
+    # URL to change the value for an individual part
+    def url_for_individual_part_value(self, id: str, /) -> str:
+        return url_for(
+            self.individual_part_value_endpoint,
+            id=id
+        )
+
     # Select a specific metadata (with an id)
     def select_specific(self, id: str, /) -> Self:
         # Save the parameters to the fields
@@ -195,6 +215,40 @@ class BrickMetadata(BrickRecord):
 
         return value
 
+    # Generic method to update state for any entity type
+    def _update_entity_state(
+        self,
+        entity_type: str,
+        entity_id: str,
+        entity_name: str,
+        query: str,
+        /,
+        *,
+        json: Any | None = None,
+        state: Any | None = None
+    ) -> Any:
+        """Generic state update logic for sets, minifigures, and parts"""
+        if state is None and json is not None:
+            state = json.get('value', False)
+
+        parameters = self.sql_parameters()
+        parameters['id'] = entity_id
+        parameters['state'] = state
+
+        rows, _ = BrickSQL().execute_and_commit(
+            query,
+            parameters=parameters,
+            name=self.as_column(),
+        )
+
+        if rows != 1:
+            raise DatabaseException(f'Could not update the {self.kind} "{self.fields.name}" state for {entity_type} {entity_name} ({entity_id})')
+
+        # Info
+        logger.info(f'{self.kind.capitalize()} "{self.fields.name}" state changed to "{state}" for {entity_type} {entity_name} ({entity_id})')
+
+        return state
+
     # Update the selected state of this metadata item for a set
     def update_set_state(
         self,
@@ -204,37 +258,14 @@ class BrickMetadata(BrickRecord):
         json: Any | None = None,
         state: Any | None = None
     ) -> Any:
-        if state is None and json is not None:
-            state = json.get('value', False)
-
-        parameters = self.sql_parameters()
-        parameters['set_id'] = brickset.fields.id
-        parameters['state'] = state
-
-        rows, _ = BrickSQL().execute_and_commit(
+        return self._update_entity_state(
+            'set',
+            brickset.fields.id,
+            brickset.fields.set,
             self.update_set_state_query,
-            parameters=parameters,
-            name=self.as_column(),
+            json=json,
+            state=state
         )
-
-        if rows != 1:
-            raise DatabaseException('Could not update the {kind} "{name}" state for set {set} ({id})'.format(  # noqa: E501
-                kind=self.kind,
-                name=self.fields.name,
-                set=brickset.fields.set,
-                id=brickset.fields.id,
-            ))
-
-        # Info
-        logger.info('{kind} "{name}" state changed to "{state}" for set {set} ({id})'.format(  # noqa: E501
-            kind=self.kind,
-            name=self.fields.name,
-            state=state,
-            set=brickset.fields.set,
-            id=brickset.fields.id,
-        ))
-
-        return state
 
     # Check if this metadata has a specific individual minifigure
     def has_individual_minifigure(
@@ -263,37 +294,50 @@ class BrickMetadata(BrickRecord):
         json: Any | None = None,
         state: Any | None = None
     ) -> Any:
-        if state is None and json is not None:
-            state = json.get('value', False)
-
-        parameters = self.sql_parameters()
-        parameters['id'] = individual_minifigure.fields.id
-        parameters['state'] = state
-
-        rows, _ = BrickSQL().execute_and_commit(
+        return self._update_entity_state(
+            'individual minifigure',
+            individual_minifigure.fields.id,
+            individual_minifigure.fields.figure,
             self.update_individual_minifigure_state_query,
-            parameters=parameters,
-            name=self.as_column(),
+            json=json,
+            state=state
         )
 
-        if rows != 1:
-            raise DatabaseException('Could not update the {kind} "{name}" state for individual minifigure {figure} ({id})'.format(
-                kind=self.kind,
-                name=self.fields.name,
-                figure=individual_minifigure.fields.figure,
-                id=individual_minifigure.fields.id,
-            ))
+    # Check if this metadata has a specific individual part
+    def has_individual_part(
+        self,
+        individual_part: 'IndividualPart',
+        /,
+    ) -> bool:
+        """Check if this owner/tag/status is assigned to an individual part"""
+        # Determine the table name based on metadata type
+        table_name = f'bricktracker_individual_part_{self.kind}s'
+        column_name = f'{self.kind}_{self.fields.id}'
 
-        # Info
-        logger.info('{kind} "{name}" state changed to "{state}" for individual minifigure {figure} ({id})'.format(
-            kind=self.kind,
-            name=self.fields.name,
-            state=state,
-            figure=individual_minifigure.fields.figure,
-            id=individual_minifigure.fields.id,
-        ))
+        # Query to check if the relationship exists using raw SQL
+        sql = BrickSQL()
+        query = f'SELECT COUNT(*) as count FROM "{table_name}" WHERE "id" = ? AND "{column_name}" = 1'
+        result = sql.cursor.execute(query, (individual_part.fields.id,)).fetchone()
 
-        return state
+        return result and result['count'] > 0
+
+    # Update the selected state of this metadata item for an individual part
+    def update_individual_part_state(
+        self,
+        individual_part: 'IndividualPart',
+        /,
+        *,
+        json: Any | None = None,
+        state: Any | None = None
+    ) -> Any:
+        return self._update_entity_state(
+            'individual part',
+            individual_part.fields.id,
+            f'{individual_part.fields.part} color {individual_part.fields.color}',
+            self.update_individual_part_state_query,
+            json=json,
+            state=state
+        )
 
     # Update the selected value of this metadata item for a set
     def update_set_value(

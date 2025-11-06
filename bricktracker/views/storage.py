@@ -2,6 +2,7 @@ from flask import Blueprint, render_template
 
 from .exceptions import exception_handler
 from ..individual_minifigure_list import IndividualMinifigureList
+from ..individual_part_list import IndividualPartList
 from ..set_list import BrickSetList, set_metadata_lists
 from ..set_storage import BrickSetStorage
 from ..set_storage_list import BrickSetStorageList
@@ -27,11 +28,17 @@ def list() -> str:
     sql.cursor.execute(minifigs_no_storage_query)
     minifigs_no_storage = sql.cursor.fetchone()[0]
 
+    # Count individual parts with no storage
+    parts_no_storage_query = 'SELECT COUNT(*) FROM "bricktracker_individual_parts" WHERE "storage" IS NULL'
+    sql.cursor.execute(parts_no_storage_query)
+    parts_no_storage = sql.cursor.fetchone()[0]
+
     return render_template(
         'storages.html',
         table_collection=BrickSetStorageList.all(),
         sets_no_storage=sets_no_storage,
         minifigs_no_storage=minifigs_no_storage,
+        parts_no_storage=parts_no_storage,
     )
 
 
@@ -46,15 +53,17 @@ def no_storage_details() -> str:
     no_storage.fields.id = None
     no_storage.fields.name = 'Not in a storage location'
 
-    # Get sets and individual minifigures with no storage
+    # Get sets, individual minifigures, and individual parts with no storage
     sets = BrickSetList().without_storage()
     individual_minifigures = IndividualMinifigureList().without_storage()
+    individual_parts = IndividualPartList().without_storage()
 
     return render_template(
         'storage.html',
         item=no_storage,
         sets=sets,
         individual_minifigures=individual_minifigures,
+        individual_parts=individual_parts,
         **set_metadata_lists(as_class=True)
     )
 
@@ -70,5 +79,6 @@ def details(*, id: str) -> str:
         item=storage,
         sets=BrickSetList().using_storage(storage),
         individual_minifigures=IndividualMinifigureList().using_storage(storage),
+        individual_parts=IndividualPartList().using_storage(storage),
         **set_metadata_lists(as_class=True)
     )

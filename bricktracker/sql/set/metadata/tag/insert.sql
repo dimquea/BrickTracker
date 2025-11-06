@@ -11,6 +11,10 @@ ADD COLUMN "tag_{{ id }}" BOOLEAN NOT NULL DEFAULT 0;
 ALTER TABLE "bricktracker_individual_part_tags"
 ADD COLUMN "tag_{{ id }}" BOOLEAN NOT NULL DEFAULT 0;
 
+-- Also inject into individual part lots
+ALTER TABLE "bricktracker_individual_part_lot_tags"
+ADD COLUMN "tag_{{ id }}" BOOLEAN NOT NULL DEFAULT 0;
+
 INSERT INTO "bricktracker_metadata_tags" (
     "id",
     "name"

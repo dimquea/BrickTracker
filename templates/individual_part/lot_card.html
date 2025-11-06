@@ -1,0 +1,82 @@
+{% import 'macro/accordion.html' as accordion %}
+{% import 'macro/badge.html' as badge %}
+{% import 'macro/card.html' as card %}
+{% import 'macro/form.html' as form %}
+
+<div class="card mb-3 flex-fill {% if solo %}card-solo{% endif %}">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">
+      <i class="ri-shopping-cart-line"></i>
+      {% if item.fields.name %}
+        {{ item.fields.name }}
+      {% else %}
+        Individual Part Lot
+      {% endif %}
+      <span class="badge text-bg-secondary fw-normal">{{ item.parts()|length }} parts</span>
+    </h5>
+    {% if not solo %}
+      <a href="{{ item.url() }}" class="btn btn-sm btn-primary">
+        <i class="ri-eye-line"></i> View
+      </a>
+    {% else %}
+      <a href="{{ url_for('individual_part.list_lots') }}" class="btn btn-sm btn-secondary">
+        <i class="ri-arrow-left-line"></i> Back
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="card-body border-bottom-0 {% if not solo %}p-1{% endif %}">
+    {{ badge.parts(item.parts()|length, solo=solo, last=false) }}
+    {% for owner in brickset_owners %}
+      {{ badge.owner(item, owner, solo=solo, last=false) }}
+    {% endfor %}
+    {% for tag in brickset_tags %}
+      {{ badge.tag(item, tag, solo=solo, last=false) }}
+    {% endfor %}
+    {{ badge.storage(item, brickset_storages, solo=solo, last=false) }}
+    {{ badge.purchase_date(item.purchase_date_formatted(), solo=solo, last=false) }}
+    {{ badge.purchase_location(item, brickset_purchase_locations, solo=solo, last=false) }}
+    {% if item.fields.purchase_price %}
+      <span class="badge text-bg-light text-dark"><i class="ri-money-dollar-circle-line"></i> ${{ "%.2f"|format(item.fields.purchase_price) }}</span>
+    {% endif %}
+  </div>
+
+  {% if solo %}
+    <div class="accordion accordion-flush border-top" id="lot-details">
+      {{ accordion.table(item.parts(), 'Parts', 'parts-inventory', 'lot-details', 'part/lot_table.html', icon='shapes-line', hamburger_menu=g.login.is_authenticated())}}
+      {% include 'individual_part/management.html' %}
+      {% if g.login.is_authenticated() %}
+        {{ accordion.header('Danger zone', 'danger-zone', 'lot-details', danger=true, class='text-end') }}
+          <a href="{{ url_for('individual_part.delete_lot', lot_id=item.fields.id) }}" class="btn btn-danger" role="button" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <i class="ri-delete-bin-line"></i> Delete entire lot and all parts
+          </a>
+        {{ accordion.footer() }}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="card-footer"></div>
+</div>
+
+{% if solo and g.login.is_authenticated() %}
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this entire lot and all {{ item.parts()|length }} parts in it? This action cannot be undone.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form method="POST" action="{{ url_for('individual_part.delete_lot', lot_id=item.fields.id) }}">
+          <button type="submit" class="btn btn-danger">Delete Lot</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}

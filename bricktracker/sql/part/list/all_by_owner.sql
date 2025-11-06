@@ -4,7 +4,8 @@
 {% if owner_id and owner_id != 'all' %}
 SUM(CASE
     WHEN "combined"."source_type" = 'set' AND "bricktracker_set_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."missing"
-    WHEN "combined"."source_type" = 'individual' AND "bricktracker_individual_minifigure_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."missing"
+    WHEN "combined"."source_type" = 'individual_minifigure' AND "bricktracker_individual_minifigure_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."missing"
+    WHEN "combined"."source_type" = 'individual_part' AND "bricktracker_individual_part_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."missing"
     ELSE 0
 END) AS "total_missing",
 {% else %}
@@ -16,7 +17,8 @@ SUM("combined"."missing") AS "total_missing",
 {% if owner_id and owner_id != 'all' %}
 SUM(CASE
     WHEN "combined"."source_type" = 'set' AND "bricktracker_set_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."damaged"
-    WHEN "combined"."source_type" = 'individual' AND "bricktracker_individual_minifigure_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."damaged"
+    WHEN "combined"."source_type" = 'individual_minifigure' AND "bricktracker_individual_minifigure_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."damaged"
+    WHEN "combined"."source_type" = 'individual_part' AND "bricktracker_individual_part_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."damaged"
     ELSE 0
 END) AS "total_damaged",
 {% else %}
@@ -28,7 +30,8 @@ SUM("combined"."damaged") AS "total_damaged",
 {% if owner_id and owner_id != 'all' %}
 SUM(CASE
     WHEN "combined"."source_type" = 'set' AND "bricktracker_set_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."quantity" * IFNULL("bricktracker_minifigures"."quantity", 1)
-    WHEN "combined"."source_type" = 'individual' AND "bricktracker_individual_minifigure_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."quantity"
+    WHEN "combined"."source_type" = 'individual_minifigure' AND "bricktracker_individual_minifigure_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."quantity"
+    WHEN "combined"."source_type" = 'individual_part' AND "bricktracker_individual_part_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."quantity"
     ELSE 0
 END) AS "total_quantity",
 {% else %}
@@ -54,13 +57,13 @@ COUNT(DISTINCT CASE WHEN "combined"."source_type" = 'set' THEN "combined"."id" E
 {% if owner_id and owner_id != 'all' %}
 SUM(CASE
     WHEN "combined"."source_type" = 'set' AND "bricktracker_set_owners"."owner_{{ owner_id }}" = 1 THEN IFNULL("bricktracker_minifigures"."quantity", 0)
-    WHEN "combined"."source_type" = 'individual' AND "bricktracker_individual_minifigure_owners"."owner_{{ owner_id }}" = 1 THEN 1
+    WHEN "combined"."source_type" = 'individual_minifigure' AND "bricktracker_individual_minifigure_owners"."owner_{{ owner_id }}" = 1 THEN 1
     ELSE 0
 END) AS "total_minifigures"
 {% else %}
 SUM(CASE
     WHEN "combined"."source_type" = 'set' THEN IFNULL("bricktracker_minifigures"."quantity", 0)
-    WHEN "combined"."source_type" = 'individual' THEN 1
+    WHEN "combined"."source_type" = 'individual_minifigure' THEN 1
     ELSE 0
 END) AS "total_minifigures"
 {% endif %}
@@ -83,21 +86,31 @@ ON "combined"."source_type" = 'set'
 AND "combined"."id" IS NOT DISTINCT FROM "bricktracker_minifigures"."id"
 AND "combined"."figure" IS NOT DISTINCT FROM "bricktracker_minifigures"."figure"
 
--- Left join with individual minifigures (for individual parts)
+-- Left join with individual minifigures (for individual minifigure parts)
 LEFT JOIN "bricktracker_individual_minifigures"
-ON "combined"."source_type" = 'individual'
+ON "combined"."source_type" = 'individual_minifigure'
 AND "combined"."id" IS NOT DISTINCT FROM "bricktracker_individual_minifigures"."id"
 
 -- Left join with individual minifigure owners (using dynamic columns)
 LEFT JOIN "bricktracker_individual_minifigure_owners"
-ON "combined"."source_type" = 'individual'
+ON "combined"."source_type" = 'individual_minifigure'
 AND "bricktracker_individual_minifigures"."id" IS NOT DISTINCT FROM "bricktracker_individual_minifigure_owners"."id"
+
+-- Left join with individual parts (for standalone parts)
+LEFT JOIN "bricktracker_individual_parts"
+ON "combined"."source_type" = 'individual_part'
+AND "combined"."id" IS NOT DISTINCT FROM "bricktracker_individual_parts"."id"
+
+-- Left join with individual part owners (using dynamic columns)
+LEFT JOIN "bricktracker_individual_part_owners"
+ON "combined"."source_type" = 'individual_part'
+AND "bricktracker_individual_parts"."id" IS NOT DISTINCT FROM "bricktracker_individual_part_owners"."id"
 {% endblock %}
 
 {% block where %}
 {% set conditions = [] %}
 {% if owner_id and owner_id != 'all' %}
-  {% set owner_condition = '(("combined"."source_type" = \'set\' AND "bricktracker_set_owners"."owner_' ~ owner_id ~ '" = 1) OR ("combined"."source_type" = \'individual\' AND "bricktracker_individual_minifigure_owners"."owner_' ~ owner_id ~ '" = 1))' %}
+  {% set owner_condition = '(("combined"."source_type" = \'set\' AND "bricktracker_set_owners"."owner_' ~ owner_id ~ '" = 1) OR ("combined"."source_type" = \'individual_minifigure\' AND "bricktracker_individual_minifigure_owners"."owner_' ~ owner_id ~ '" = 1) OR ("combined"."source_type" = \'individual_part\' AND "bricktracker_individual_part_owners"."owner_' ~ owner_id ~ '" = 1))' %}
   {% set _ = conditions.append(owner_condition) %}
 {% endif %}
 {% if color_id and color_id != 'all' %}

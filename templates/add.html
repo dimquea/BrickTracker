@@ -12,6 +12,12 @@
     <p class="mb-0">You can import multiple sets at once with <a href="{{ url_for('add.bulk') }}" class="btn btn-primary"><i class="ri-function-add-line"></i> Bulk add</a>.</p>
   </div>
   {% endif %}
+  {% if not bulk and not config['DISABLE_INDIVIDUAL_PARTS'] %}
+  <div class="alert alert-info" role="alert">
+    <h4 class="alert-heading">Adding individual parts?</h4>
+    <p class="mb-0">You can add standalone parts (not from a set) with <a href="{{ url_for('add.parts') }}" class="btn btn-info"><i class="ri-hammer-line"></i> Add parts</a>.</p>
+  </div>
+  {% endif %}
   <div class="row">
     <div class="col-12">
       <div class="card mb-3">

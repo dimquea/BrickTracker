@@ -36,3 +36,4 @@ offline/
 TODO.md
 run-local.sh
 test-server.sh
+data/

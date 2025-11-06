@@ -114,7 +114,19 @@ class RebrickablePart(BrickRecord):
             if self.fields.image is None:
                 file = RebrickableImage.nil_name()
             else:
-                file = self.fields.image_id
+                # Use image_id if available, otherwise extract from image URL
+                if hasattr(self.fields, 'image_id') and self.fields.image_id:
+                    file = self.fields.image_id
+                else:
+                    # Extract image_id from URL on-the-fly
+                    from urllib.parse import urlparse
+                    import os
+                    image_id, _ = os.path.splitext(
+                        os.path.basename(
+                            urlparse(self.fields.image).path
+                        )
+                    )
+                    file = image_id if image_id else RebrickableImage.nil_name()
 
             return RebrickableImage.static_url(file, 'PARTS_FOLDER')
         else:
@@ -204,6 +216,48 @@ class RebrickablePart(BrickRecord):
                         if len(bricklink_data['ext_descrs']) > 0 and len(bricklink_data['ext_descrs'][0]) > 0:
                             record['bricklink_color_name'] = bricklink_data['ext_descrs'][0][0]
 
+        # Cache color information in rebrickable_colors table for future lookups
+        # This builds the translation table automatically as sets are imported
+        if 'color' in data:
+            try:
+                from .sql import BrickSQL
+                sql = BrickSQL()
+
+                # Check if color already exists in cache
+                check_query = """
+                    SELECT COUNT(*) FROM "rebrickable_colors"
+                    WHERE "color_id" = :color_id
+                """
+                sql.cursor.execute(check_query, {'color_id': record['color_id']})
+                exists = sql.cursor.fetchone()[0] > 0
+
+                if not exists:
+                    # Insert color into cache
+                    insert_query = """
+                        INSERT OR IGNORE INTO "rebrickable_colors" (
+                            "color_id", "name", "rgb", "is_trans",
+                            "bricklink_color_id", "bricklink_color_name"
+                        ) VALUES (
+                            :color_id, :name, :rgb, :is_trans,
+                            :bricklink_color_id, :bricklink_color_name
+                        )
+                    """
+                    sql.cursor.execute(insert_query, {
+                        'color_id': record['color_id'],
+                        'name': record['color_name'],
+                        'rgb': record['color_rgb'],
+                        'is_trans': record['color_transparent'],
+                        'bricklink_color_id': record['bricklink_color_id'],
+                        'bricklink_color_name': record['bricklink_color_name']
+                    })
+                    # Commit is handled by parent transaction
+
+            except Exception as e:
+                # Don't fail part import if color caching fails
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.debug(f'Could not cache color {record["color_id"]}: {e}')
+
         # Extract BrickLink part number if available
         if 'part' in data and 'external_ids' in data['part']:
             part_external_ids = data['part']['external_ids']
@@ -226,7 +280,7 @@ class RebrickablePart(BrickRecord):
                 )
             )
 
-            if image_id is not None or image_id != '':
+            if image_id is not None and image_id != '':
                 record['image_id'] = image_id
 
         return record

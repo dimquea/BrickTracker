@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %} - Individual Part Lots{% endblock %}
+
+{% block main %}
+<div class="container-fluid">
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2><i class="ri-shopping-cart-line"></i> Individual Part Lots</h2>
+        <a href="{{ url_for('add.parts') }}" class="btn btn-primary">
+          <i class="ri-add-line"></i> Add Parts
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% if lots | length %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+    {% for item in lots %}
+      <div class="col">
+        {% include 'individual_part/lot_card.html' with context %}
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="row">
+    <div class="col-12">
+      <div class="alert alert-info" role="alert">
+        <i class="ri-information-line"></i> No lots found.
+        <a href="{{ url_for('add.parts') }}" class="alert-link">Add some parts</a> to get started!
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

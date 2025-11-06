@@ -1,8 +1,27 @@
+from datetime import datetime
 from sqlite3 import Row
 from typing import Any, ItemsView
 
 from .fields import BrickRecordFields
 from .sql import BrickSQL
+
+
+def format_timestamp(timestamp: float | None, format_key: str = 'PURCHASE_DATE_FORMAT') -> str:
+    """
+    Format a timestamp for display.
+
+    Args:
+        timestamp: Unix timestamp (float) or None
+        format_key: Config key for date format string
+
+    Returns:
+        Formatted date string or empty string if timestamp is None
+    """
+    if timestamp is not None:
+        from flask import current_app
+        time = datetime.fromtimestamp(timestamp)
+        return time.strftime(current_app.config.get(format_key, '%Y/%m/%d'))
+    return ''
 
 
 # SQLite record
