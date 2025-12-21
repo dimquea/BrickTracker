@@ -82,19 +82,19 @@ class BrickSet(RebrickableSet):
                 # All operations are atomic - if anything fails, nothing is committed
                 self.insert(commit=False)
 
-                # Save the owners
+                # Save the owners (deferred - will execute at final commit)
                 owners: list[str] = list(data.get('owners', []))
 
                 for id in owners:
                     owner = BrickSetOwnerList.get(id)
-                    owner.update_set_state(self, state=True)
+                    owner.update_set_state(self, state=True, commit=False)
 
-                # Save the tags
+                # Save the tags (deferred - will execute at final commit)
                 tags: list[str] = list(data.get('tags', []))
 
                 for id in tags:
                     tag = BrickSetTagList.get(id)
-                    tag.update_set_state(self, state=True)
+                    tag.update_set_state(self, state=True, commit=False)
 
             # Load the inventory
             if not BrickPartList.download(socket, self, refresh=refresh):
