@@ -182,7 +182,8 @@ class BrickMetadata(BrickRecord):
         /,
         *,
         json: Any | None = None,
-        state: Any | None = None
+        state: Any | None = None,
+        commit: bool = True
     ) -> Any:
         if state is None and json is not None:
             state = json.get('value', False)
@@ -191,13 +192,22 @@ class BrickMetadata(BrickRecord):
         parameters['set_id'] = brickset.fields.id
         parameters['state'] = state
 
-        rows, _ = BrickSQL().execute_and_commit(
-            self.update_set_state_query,
-            parameters=parameters,
-            name=self.as_column(),
-        )
+        if commit:
+            rows, _ = BrickSQL().execute_and_commit(
+                self.update_set_state_query,
+                parameters=parameters,
+                name=self.as_column(),
+            )
+        else:
+            rows, _ = BrickSQL().execute(
+                self.update_set_state_query,
+                parameters=parameters,
+                defer=True,
+                name=self.as_column(),
+            )
 
-        if rows != 1:
+        # When deferred, rows will be -1, so skip the check
+        if commit and rows != 1:
             raise DatabaseException('Could not update the {kind} state for set {set} ({id})'.format(
                 kind=self.kind,
                 set=brickset.fields.set,
