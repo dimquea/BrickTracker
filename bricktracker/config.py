@@ -12,6 +12,14 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'AUTHENTICATION_KEY', 'd': ''},
     # BrickLink minifigure links disabled - Rebrickable doesn't provide BrickLink minifigure IDs
     # {'n': 'BRICKLINK_LINK_MINIFIGURE_PATTERN', 'd': 'https://www.bricklink.com/v2/catalog/catalogitem.page?M={figure}'},  # noqa: E501
+    # Каталог BrickLink. Источник сделан настраиваемым намеренно:
+    # brickstore-database — личный репозиторий, и подменить адрес должно
+    # быть можно без правки кода. Задайте BRICKLINK_CATALOG_URL, чтобы
+    # качать архив напрямую и не обращаться к релизам вовсе.
+    {'n': 'BRICKLINK_CATALOG_ASSET', 'd': 'downloads.zip'},
+    {'n': 'BRICKLINK_CATALOG_PATH', 'd': 'data/bricklink-catalog.zip'},
+    {'n': 'BRICKLINK_CATALOG_RELEASE_URL', 'd': 'https://api.github.com/repos/rgriebl/brickstore-database/releases/latest'},  # noqa: E501
+    {'n': 'BRICKLINK_CATALOG_URL', 'd': ''},
     {'n': 'BRICKLINK_LINK_PART_PATTERN', 'd': 'https://www.bricklink.com/v2/catalog/catalogitem.page?P={part}&C={color}'},  # noqa: E501
     {'n': 'BRICKLINK_LINK_SET_PATTERN', 'd': 'https://www.bricklink.com/v2/catalog/catalogitem.page?S={set_num}'},  # noqa: E501
     {'n': 'BRICKLINK_LINKS', 'c': bool},
