@@ -1,4 +1,6 @@
 import json
+import logging
+import time
 from typing import Any, Callable, Generic, Type, TypeVar, TYPE_CHECKING
 from urllib.error import HTTPError
 
@@ -15,6 +17,12 @@ if TYPE_CHECKING:
     from .wish import BrickWish
 
 T = TypeVar('T', 'RebrickableSet', 'BrickPart', 'BrickMinifigure', 'BrickWish')
+
+logger = logging.getLogger(__name__)
+
+# Local patch: retry transport errors talking to the Rebrickable API.
+API_ATTEMPTS = 5
+API_BACKOFF = 2
 
 
 # An helper around the rebrick library, autoconverting
@@ -124,30 +132,54 @@ class Rebrickable(Generic[T]):
         # Inject the API key
         parameters['api_key'] = current_app.config['REBRICKABLE_API_KEY']
 
-        try:
-            return json.loads(
-                self.method(
-                    self.number,
-                    **parameters,
-                ).read()
-            )
+        # Local patch: the Rebrickable API is unreliable from some networks
+        # (IncompleteRead, connection resets mid-response). A single blip
+        # would otherwise abort the import of an entire set, so transport
+        # errors are retried with a backoff. HTTP status errors are not
+        # retried: a 404 is an answer, not a failure to get one.
+        for attempt in range(1, API_ATTEMPTS + 1):
+            try:
+                return json.loads(
+                    self.method(
+                        self.number,
+                        **parameters,
+                    ).read()
+                )
 
-        # HTTP errors
-        except HTTPError as e:
-            # Not found
-            if e.code == 404:
-                raise NotFoundException('{kind} {number} was not found on Rebrickable'.format(  # noqa: E501
-                    kind=self.kind,
-                    number=self.number,
-                ))
-            else:
+            # HTTP errors
+            except HTTPError as e:
+                # Not found
+                if e.code == 404:
+                    raise NotFoundException('{kind} {number} was not found on Rebrickable'.format(  # noqa: E501
+                        kind=self.kind,
+                        number=self.number,
+                    ))
+                else:
+                    # Re-raise as ErrorException
+                    raise ErrorException(e)
+
+            # Other errors
+            except Exception as e:
+                if attempt < API_ATTEMPTS:
+                    logger.warning(
+                        'Rebrickable {method} for {number} failed (attempt {a}/{n}): {e}'.format(  # noqa: E501
+                            method=self.method_name,
+                            number=self.number,
+                            a=attempt,
+                            n=API_ATTEMPTS,
+                            e=e,
+                        )
+                    )
+                    time.sleep(API_BACKOFF ** (attempt - 1))
+                    continue
+
                 # Re-raise as ErrorException
                 raise ErrorException(e)
 
-        # Other errors
-        except Exception as e:
-            # Re-raise as ErrorException
-            raise ErrorException(e)
+        # Unreachable: the loop either returns or raises
+        raise ErrorException('exhausted retries for {number}'.format(
+            number=self.number,
+        ))
 
     # Get the model parameters
     def model_parameters(self, /) -> dict[str, Any]:
