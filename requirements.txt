@@ -12,3 +12,4 @@ tzdata
 bs4
 fpdf2
 pillow
+packaging
