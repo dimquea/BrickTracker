@@ -20,11 +20,11 @@ admin_export_page = Blueprint(
 )
 
 
-# Export all sets to Rebrickable CSV format
-@admin_export_page.route('/sets/rebrickable-csv', methods=['GET'])
+# Export all sets to CSV
+@admin_export_page.route('/sets/csv', methods=['GET'])
 @login_required
 @exception_handler(__file__)
-def export_sets_rebrickable() -> Response:
+def export_sets_csv() -> Response:
 
     set_list = BrickSetList()
     all_sets = set_list.all()
@@ -47,15 +47,15 @@ def export_sets_rebrickable() -> Response:
     return Response(
         output.getvalue(),
         mimetype='text/csv',
-        headers={'Content-Disposition': 'attachment;filename=bricktracker_sets_rebrickable.csv'}
+        headers={'Content-Disposition': 'attachment;filename=bricktracker_sets.csv'}
     )
 
 
-# Export all parts to Rebrickable CSV format
-@admin_export_page.route('/parts/rebrickable-csv', methods=['GET'])
+# Export all parts to CSV
+@admin_export_page.route('/parts/csv', methods=['GET'])
 @login_required
 @exception_handler(__file__)
-def export_parts_rebrickable() -> Response:
+def export_parts_csv() -> Response:
 
     owner_id = request.args.get('owner')
     color_id = request.args.get('color')
@@ -85,46 +85,7 @@ def export_parts_rebrickable() -> Response:
     return Response(
         output.getvalue(),
         mimetype='text/csv',
-        headers={'Content-Disposition': 'attachment;filename=bricktracker_parts_rebrickable.csv'}
-    )
-
-
-# Export all parts to LEGO Pick-a-Brick CSV format
-@admin_export_page.route('/parts/lego-csv', methods=['GET'])
-@login_required
-@exception_handler(__file__)
-def export_parts_lego() -> Response:
-
-    owner_id = request.args.get('owner')
-    color_id = request.args.get('color')
-    theme_id = request.args.get('theme')
-    year = request.args.get('year')
-
-    part_list = BrickPartList()
-    part_list.all_filtered(owner_id, color_id, theme_id, year)
-
-    element_quantities = {}
-    for part in part_list.records:
-        if part.fields.element:
-            element_id = part.fields.element
-            if element_id in element_quantities:
-                element_quantities[element_id] += part.fields.quantity
-            else:
-                element_quantities[element_id] = part.fields.quantity
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    writer.writerow(['elementId', 'quantity'])
-
-    for element_id, quantity in sorted(element_quantities.items()):
-        writer.writerow([element_id, quantity])
-
-    output.seek(0)
-    return Response(
-        output.getvalue(),
-        mimetype='text/csv',
-        headers={'Content-Disposition': 'attachment;filename=bricktracker_parts_lego.csv'}
+        headers={'Content-Disposition': 'attachment;filename=bricktracker_parts.csv'}
     )
 
 
@@ -171,11 +132,11 @@ def export_parts_bricklink() -> Response:
     )
 
 
-# Export missing/damaged parts to Rebrickable CSV format
-@admin_export_page.route('/problems/rebrickable-csv', methods=['GET'])
+# Export missing/damaged parts to CSV
+@admin_export_page.route('/problems/csv', methods=['GET'])
 @login_required
 @exception_handler(__file__)
-def export_problems_rebrickable() -> Response:
+def export_problems_csv() -> Response:
 
     owner_id = request.args.get('owner')
     color_id = request.args.get('color')
@@ -207,47 +168,7 @@ def export_problems_rebrickable() -> Response:
     return Response(
         output.getvalue(),
         mimetype='text/csv',
-        headers={'Content-Disposition': 'attachment;filename=bricktracker_problems_rebrickable.csv'}
-    )
-
-
-# Export missing/damaged parts to LEGO Pick-a-Brick CSV format
-@admin_export_page.route('/problems/lego-csv', methods=['GET'])
-@login_required
-@exception_handler(__file__)
-def export_problems_lego() -> Response:
-
-    owner_id = request.args.get('owner')
-    color_id = request.args.get('color')
-    theme_id = request.args.get('theme')
-    year = request.args.get('year')
-
-    part_list = BrickPartList()
-    part_list.problem_filtered(owner_id, color_id, theme_id, year)
-
-    element_quantities = {}
-    for part in part_list.records:
-        qty = (part.fields.missing or 0) + (part.fields.damaged or 0)
-        if qty > 0 and part.fields.element:
-            element_id = part.fields.element
-            if element_id in element_quantities:
-                element_quantities[element_id] += qty
-            else:
-                element_quantities[element_id] = qty
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    writer.writerow(['elementId', 'quantity'])
-
-    for element_id, quantity in sorted(element_quantities.items()):
-        writer.writerow([element_id, quantity])
-
-    output.seek(0)
-    return Response(
-        output.getvalue(),
-        mimetype='text/csv',
-        headers={'Content-Disposition': 'attachment;filename=bricktracker_problems_lego.csv'}
+        headers={'Content-Disposition': 'attachment;filename=bricktracker_problems.csv'}
     )
 
 
@@ -342,11 +263,11 @@ def get_combined_parts_data(owner_id, color_id, theme_id, year):
     return combined_quantities
 
 
-# Export individual parts only to Rebrickable CSV format
-@admin_export_page.route('/parts/individual/rebrickable-csv', methods=['GET'])
+# Export individual parts only to CSV
+@admin_export_page.route('/parts/individual/csv', methods=['GET'])
 @login_required
 @exception_handler(__file__)
-def export_parts_individual_rebrickable() -> Response:
+def export_parts_individual_csv() -> Response:
 
     part_quantities = get_individual_parts_data()
 
@@ -362,15 +283,15 @@ def export_parts_individual_rebrickable() -> Response:
     return Response(
         output.getvalue(),
         mimetype='text/csv',
-        headers={'Content-Disposition': 'attachment;filename=bricktracker_individual_parts_rebrickable.csv'}
+        headers={'Content-Disposition': 'attachment;filename=bricktracker_individual_parts.csv'}
     )
 
 
-# Export combined parts (sets + individual) to Rebrickable CSV format
-@admin_export_page.route('/parts/combined/rebrickable-csv', methods=['GET'])
+# Export combined parts (sets + individual) to CSV
+@admin_export_page.route('/parts/combined/csv', methods=['GET'])
 @login_required
 @exception_handler(__file__)
-def export_parts_combined_rebrickable() -> Response:
+def export_parts_combined_csv() -> Response:
 
     owner_id = request.args.get('owner')
     color_id = request.args.get('color')
@@ -391,81 +312,7 @@ def export_parts_combined_rebrickable() -> Response:
     return Response(
         output.getvalue(),
         mimetype='text/csv',
-        headers={'Content-Disposition': 'attachment;filename=bricktracker_combined_parts_rebrickable.csv'}
-    )
-
-
-# Export individual parts only to LEGO Pick-a-Brick CSV format
-@admin_export_page.route('/parts/individual/lego-csv', methods=['GET'])
-@login_required
-@exception_handler(__file__)
-def export_parts_individual_lego() -> Response:
-
-    individual_part_list = IndividualPartList()
-    individual_part_list.all()
-
-    element_quantities = {}
-    for part in individual_part_list.records:
-        # Individual parts don't have element field in the query, so skip for now
-        # This would need the rebrickable_parts.element field added to the query
-        pass
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    writer.writerow(['elementId', 'quantity'])
-
-    for element_id, quantity in sorted(element_quantities.items()):
-        writer.writerow([element_id, quantity])
-
-    output.seek(0)
-    return Response(
-        output.getvalue(),
-        mimetype='text/csv',
-        headers={'Content-Disposition': 'attachment;filename=bricktracker_individual_parts_lego.csv'}
-    )
-
-
-# Export combined parts (sets + individual) to LEGO Pick-a-Brick CSV format
-@admin_export_page.route('/parts/combined/lego-csv', methods=['GET'])
-@login_required
-@exception_handler(__file__)
-def export_parts_combined_lego() -> Response:
-
-    owner_id = request.args.get('owner')
-    color_id = request.args.get('color')
-    theme_id = request.args.get('theme')
-    year = request.args.get('year')
-
-    # Get set-based parts
-    part_list = BrickPartList()
-    part_list.all_filtered(owner_id, color_id, theme_id, year)
-
-    element_quantities = {}
-    for part in part_list.records:
-        if part.fields.element:
-            element_id = part.fields.element
-            if element_id in element_quantities:
-                element_quantities[element_id] += part.fields.quantity
-            else:
-                element_quantities[element_id] = part.fields.quantity
-
-    # Note: Individual parts don't have element field in current implementation
-    # So they're excluded from LEGO format exports
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    writer.writerow(['elementId', 'quantity'])
-
-    for element_id, quantity in sorted(element_quantities.items()):
-        writer.writerow([element_id, quantity])
-
-    output.seek(0)
-    return Response(
-        output.getvalue(),
-        mimetype='text/csv',
-        headers={'Content-Disposition': 'attachment;filename=bricktracker_combined_parts_lego.csv'}
+        headers={'Content-Disposition': 'attachment;filename=bricktracker_combined_parts.csv'}
     )
 
 

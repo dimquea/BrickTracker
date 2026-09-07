@@ -1,6 +1,6 @@
 {{ accordion.header('Export', 'export', 'admin', expanded=open_export, icon='download-line') }}
   <div class="p-3">
-    <p class="text-muted">Export your sets, parts, or missing/damaged parts to various formats for use with Rebrickable, BrickLink, or LEGO Pick-a-Brick.</p>
+    <p class="text-muted">Export your sets, parts, or missing/damaged parts.</p>
 
     <!-- Export Sets Section -->
     <div class="card mb-3">
@@ -8,9 +8,9 @@
         <h6 class="mb-0"><i class="ri-stack-line"></i> Export Sets</h6>
       </div>
       <div class="card-body">
-        <p class="small text-muted">Export all your sets to Rebrickable format for tracking your collection.</p>
-        <a href="{{ url_for('admin_export.export_sets_rebrickable') }}" class="btn btn-sm btn-primary">
-          <i class="ri-file-text-line"></i> Download Sets (Rebrickable CSV)
+        <p class="small text-muted">Export all your sets as a simple CSV list.</p>
+        <a href="{{ url_for('admin_export.export_sets_csv') }}" class="btn btn-sm btn-primary">
+          <i class="ri-file-text-line"></i> Download Sets (CSV)
         </a>
       </div>
     </div>
@@ -23,27 +23,15 @@
       <div class="card-body">
         <p class="small text-muted">Export parts from your collection in different formats. Choose between set-based parts, individual parts/lots, or combined.</p>
         <div class="d-flex gap-2 flex-wrap">
-          <!-- Rebrickable CSV Dropdown -->
+          <!-- CSV Dropdown -->
           <div class="btn-group">
             <button type="button" class="btn btn-sm btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ri-file-text-line"></i> Rebrickable CSV
+              <i class="ri-file-text-line"></i> CSV
             </button>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{{ url_for('admin_export.export_parts_rebrickable') }}"><i class="ri-stack-line"></i> Set Parts Only</a></li>
-              <li><a class="dropdown-item" href="{{ url_for('admin_export.export_parts_individual_rebrickable') }}"><i class="ri-shapes-line"></i> Individual Parts/Lots Only</a></li>
-              <li><a class="dropdown-item" href="{{ url_for('admin_export.export_parts_combined_rebrickable') }}"><i class="ri-merge-cells-horizontal"></i> Combined (Sets + Individual)</a></li>
-            </ul>
-          </div>
-
-          <!-- LEGO Pick-a-Brick CSV Dropdown -->
-          <div class="btn-group">
-            <button type="button" class="btn btn-sm btn-warning dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="ri-file-text-line"></i> LEGO Pick-a-Brick CSV
-            </button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{{ url_for('admin_export.export_parts_lego') }}"><i class="ri-stack-line"></i> Set Parts Only</a></li>
-              <li><a class="dropdown-item" href="{{ url_for('admin_export.export_parts_individual_lego') }}"><i class="ri-shapes-line"></i> Individual Parts/Lots Only</a></li>
-              <li><a class="dropdown-item" href="{{ url_for('admin_export.export_parts_combined_lego') }}"><i class="ri-merge-cells-horizontal"></i> Combined (Sets + Individual)</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('admin_export.export_parts_csv') }}"><i class="ri-stack-line"></i> Set Parts Only</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('admin_export.export_parts_individual_csv') }}"><i class="ri-shapes-line"></i> Individual Parts/Lots Only</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('admin_export.export_parts_combined_csv') }}"><i class="ri-merge-cells-horizontal"></i> Combined (Sets + Individual)</a></li>
             </ul>
           </div>
 
@@ -70,11 +58,8 @@
       <div class="card-body">
         <p class="small text-muted">Export only missing or damaged parts to create wanted lists or shopping lists.</p>
         <div class="d-flex gap-2 flex-wrap">
-          <a href="{{ url_for('admin_export.export_problems_rebrickable') }}" class="btn btn-sm btn-success">
-            <i class="ri-file-text-line"></i> Rebrickable CSV
-          </a>
-          <a href="{{ url_for('admin_export.export_problems_lego') }}" class="btn btn-sm btn-warning">
-            <i class="ri-file-text-line"></i> LEGO Pick-a-Brick CSV
+          <a href="{{ url_for('admin_export.export_problems_csv') }}" class="btn btn-sm btn-success">
+            <i class="ri-file-text-line"></i> CSV
           </a>
           <a href="{{ url_for('admin_export.export_problems_bricklink') }}" class="btn btn-sm btn-info">
             <i class="ri-file-code-line"></i> BrickLink XML
@@ -87,8 +72,7 @@
     <div class="alert alert-info mt-3 mb-0">
       <h6 class="alert-heading"><i class="ri-information-line"></i> Format Information</h6>
       <ul class="mb-0 small">
-        <li><strong>Rebrickable CSV:</strong> Part,Color,Quantity format for direct import to Rebrickable</li>
-        <li><strong>LEGO Pick-a-Brick CSV:</strong> Element ID and quantity for LEGO's Pick-a-Brick service</li>
+        <li><strong>CSV:</strong> Part, colour and quantity, in BrickLink numbering</li>
         <li><strong>BrickLink XML:</strong> Wanted list format for importing to BrickLink</li>
       </ul>
     </div>
