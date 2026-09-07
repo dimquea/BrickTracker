@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Submit to backend
-            const response = await fetch('/individual-parts/quick-add', {
+            const response = await fetch(`${window.BK_ROOT || ""}/individual-parts/quick-add`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

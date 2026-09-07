@@ -152,7 +152,7 @@ function saveStaticConfig() {
   console.log('Saving static config:', updates);
 
   // Send to backend via fetch API
-  fetch('/admin/api/config/update-static', {
+  fetch(`${window.BK_ROOT || ""}/admin/api/config/update-static`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -257,7 +257,7 @@ function saveLiveConfiguration() {
   }
 
   // Send to backend via fetch API
-  fetch('/admin/api/config/update', {
+  fetch(`${window.BK_ROOT || ""}/admin/api/config/update`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

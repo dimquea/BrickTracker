@@ -185,7 +185,10 @@ class BrickSocket {
     setup() {
         if (this.socket === undefined) {
             this.socket = io.connect(`${window.location.origin}/${this.namespace}`, {
-                path: this.path,
+                // Local patch: behind a path-prefixing proxy the origin
+                // alone does not reach the application. Every socket goes
+                // through here, so this is the only place that needs it.
+                path: `${window.BK_ROOT || ""}${this.path}`,
                 // Adding Polling as iOS is having issues with websockets
                 transports: ["polling", "websocket"],
                 // Increase timeout for slow mobile connections
