@@ -1,10 +1,11 @@
 {% import 'macro/accordion.html' as accordion %}
 
-{{ accordion.header('Themes', 'theme', 'admin', expanded=open_theme, icon='price-tag-3-line') }}
+{{ accordion.header('Themes (BrickLink catalog)', 'theme', 'admin', expanded=open_theme, icon='price-tag-3-line') }}
 <h5 class="border-bottom">File</h5>
 {% if theme.exception %}<div class="alert alert-danger" role="alert">An exception occured while loading processing the themes: {{ theme.exception }}</div>{% endif %}
 <p>
-  The themes file is: <code>{{ config['THEMES_PATH'] }}</code>.
+  Themes come from the categories of the BrickLink catalog: <code>{{ config['BRICKLINK_CATALOG_PATH'] }}</code>.
+  The same file provides the sets, parts and minifigures, so updating it here updates all of them.
   {% if theme.size %}<span class="badge rounded-pill text-bg-info fw-normal"><i class="ri-hard-drive-line"></i> {{ theme.human_size() }}</span>{% endif %}
   {% if theme.mtime %}<span class="badge rounded-pill text-bg-light border fw-normal"><i class="ri-calendar-line"></i> {{ theme.human_time() }}</span>{% endif %}
 </p>
@@ -21,6 +22,6 @@
 <h5 class="border-bottom">Refresh</h5>
 <p>
   <a href="{{ url_for('admin_theme.refresh') }}" class="btn btn-primary" role="button"><i class="ri-refresh-line"></i> Refresh the themes cache</a>
-  <a href="{{ url_for('admin_theme.update') }}" class="btn btn-primary" role="button"><i class="ri-download-line"></i> Update the themes file</a>
+  <a href="{{ url_for('admin_theme.update') }}" class="btn btn-primary" role="button"><i class="ri-download-line"></i> Download the latest catalog</a>
 </p>
 {{ accordion.footer() }}

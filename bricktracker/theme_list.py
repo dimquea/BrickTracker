@@ -1,15 +1,11 @@
 from datetime import datetime, timezone
-import csv
-import gzip
 import logging
 import os
-from shutil import copyfileobj
 
 from flask import current_app, g
 import humanize
-import requests
 
-from .exceptions import ErrorException
+from .bricklink_catalog import BrickLinkCatalog
 from .theme import BrickTheme
 
 logger = logging.getLogger(__name__)
@@ -31,20 +27,23 @@ class BrickThemeList(object):
 
             BrickThemeList.themes = {}
 
-            # Try to read the themes from a CSV file
+            # Темы теперь берутся из категорий каталога BrickLink.
+            # Иерархии у них нет, в отличие от тем Rebrickable, поэтому
+            # родитель всегда пуст: дерево вырождается в плоский список,
+            # но фильтры и статистика работают как прежде.
             try:
-                with open(current_app.config['THEMES_PATH'], newline='') as themes_file:  # noqa: E501
-                    themes_reader = csv.reader(themes_file)
+                path = current_app.config['BRICKLINK_CATALOG_PATH']
 
-                    # Ignore the header
-                    next(themes_reader, None)
-
-                    for row in themes_reader:
-                        theme = BrickTheme(*row)
+                with BrickLinkCatalog() as catalog:
+                    for category in catalog.categories():
+                        theme = BrickTheme(
+                            int(category['CATEGORY']),
+                            category['CATEGORYNAME'],
+                        )
                         BrickThemeList.themes[theme.id] = theme
 
                 # File stats
-                stat = os.stat(current_app.config['THEMES_PATH'])
+                stat = os.stat(path)
                 BrickThemeList.size = stat.st_size
                 BrickThemeList.mtime = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)  # noqa: E501
 
@@ -84,21 +83,11 @@ class BrickThemeList(object):
             return ''
 
     # Update the file
+    #
+    # Категории живут внутри каталога, отдельного файла тем больше нет,
+    # поэтому обновляется каталог целиком.
     @staticmethod
     def update() -> None:
-        response = requests.get(
-            current_app.config['THEMES_FILE_URL'],
-            stream=True,
-        )
-
-        if not response.ok:
-            raise ErrorException('An error occured while downloading the themes file ({code})'.format(  # noqa: E501
-                code=response.status_code
-            ))
-
-        content = gzip.GzipFile(fileobj=response.raw)
-
-        with open(current_app.config['THEMES_PATH'], 'wb') as f:
-            copyfileobj(content, f)
+        BrickLinkCatalog.update()
 
         logger.info('Theme list updated')
