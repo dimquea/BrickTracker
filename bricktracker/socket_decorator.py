@@ -72,6 +72,38 @@ def rebrickable_socket(
     return outer
 
 
+# Fail if the BrickLink catalog is not available (authenticated, catalog)
+# Automatically makes it threaded
+#
+# Аналог rebrickable_socket для путей, переведённых на каталог BrickLink:
+# ключа API там не нужно, нужен скачанный дамп.
+def catalog_socket(
+    self: 'BrickSocket',
+    /,
+    *,
+    threaded: bool = True,
+) -> Callable[[SocketCallable], SocketCallable]:
+    def outer(function: SocketCallable, /) -> SocketCallable:
+        @wraps(function)
+        # Automatically authenticated
+        @authenticated_socket(self, threaded=False)
+        def wrapper(*args, **kwargs) -> SocketReturn:
+            from .bricklink_catalog import BrickLinkCatalog
+
+            if not BrickLinkCatalog().exists():
+                self.fail(message='The BrickLink catalog has not been downloaded yet. Update it from the admin page.')  # noqa: E501
+                return
+
+            # Apply threading
+            if threaded:
+                return threaded_socket(self)(function)(*args, **kwargs)
+            else:
+                return function(*args, **kwargs)
+
+        return wrapper
+    return outer
+
+
 # Start the function in a thread if the socket is threaded
 def threaded_socket(
     self: 'BrickSocket',

@@ -5,7 +5,7 @@ from typing import Any, Self, TYPE_CHECKING
 from flask import current_app
 
 from .minifigure import BrickMinifigure
-from .rebrickable import Rebrickable
+from .bricklink import BrickLink
 from .record_list import BrickRecordList
 if TYPE_CHECKING:
     from .set import BrickSet
@@ -282,7 +282,7 @@ class BrickMinifigureList(BrickRecordList[BrickMinifigure]):
                 set=brickset.fields.set,
             ))
 
-            minifigures = Rebrickable[BrickMinifigure](
+            minifigures = BrickLink[BrickMinifigure](
                 'get_set_minifigs',
                 brickset.fields.set,
                 BrickMinifigure,

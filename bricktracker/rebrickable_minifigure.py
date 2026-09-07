@@ -3,6 +3,7 @@ from typing import Any, TYPE_CHECKING
 
 from flask import current_app, url_for
 
+from .bricklink_catalog import image_url, ITEM_TYPE_MINIFIGURE
 from .exceptions import ErrorException
 from .rebrickable_image import RebrickableImage
 from .record import BrickRecord
@@ -99,6 +100,22 @@ class RebrickableMinifigure(BrickRecord):
         # BrickLink links disabled for minifigures - no ID mapping available
         # Left function for later, if I find a way to implement it. 
         return ''
+
+    # Normalize from the BrickLink catalog
+    @staticmethod
+    def from_bricklink(data: dict[str, Any], /, **_) -> dict[str, Any]:
+        figure = str(data['ITEMID'])
+
+        return {
+            'figure': figure,
+            # У Rebrickable здесь лежала числовая часть fig-######.
+            # Идентификаторы BrickLink буквенно-цифровые (oct054, sw1029),
+            # поэтому колонка хранит их целиком.
+            'number': figure,
+            'name': str(data.get('ITEMNAME', figure)),
+            'quantity': int(data.get('QTY', 1)),
+            'image': image_url(ITEM_TYPE_MINIFIGURE, figure),
+        }
 
     # Normalize from Rebrickable
     @staticmethod

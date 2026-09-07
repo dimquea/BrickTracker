@@ -5,7 +5,7 @@ import traceback
 from flask import current_app
 
 from .part import BrickPart
-from .rebrickable import Rebrickable
+from .bricklink import BrickLink
 from .record_list import BrickRecordList
 if TYPE_CHECKING:
     from .minifigure import BrickMinifigure
@@ -461,7 +461,7 @@ class BrickPartList(BrickRecordList[BrickPart]):
                 identifier=identifier,
             ))
 
-            inventory = Rebrickable[BrickPart](
+            inventory = BrickLink[BrickPart](
                 method,
                 identifier,
                 BrickPart,

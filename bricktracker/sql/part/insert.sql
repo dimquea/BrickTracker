@@ -6,7 +6,10 @@ INSERT INTO "bricktracker_parts" (
     "spare",
     "quantity",
     "element",
-    "rebrickable_inventory"
+    "rebrickable_inventory",
+    "counterpart",
+    "alternate",
+    "match_id"
 ) VALUES (
     :id,
     :figure,
@@ -15,5 +18,8 @@ INSERT INTO "bricktracker_parts" (
     :spare,
     :quantity,
     :element,
-    :rebrickable_inventory
+    :rebrickable_inventory,
+    :counterpart,
+    :alternate,
+    :match_id
 )

@@ -5,10 +5,11 @@ from typing import Any, Self, TYPE_CHECKING
 
 from flask import current_app, url_for
 
+from .bricklink import BrickLink
+from .bricklink_catalog import image_url, ITEM_TYPE_SET
 from .exceptions import ErrorException, NotFoundException
 from .instructions import BrickInstructions
 from .parser import parse_set
-from .rebrickable import Rebrickable
 from .rebrickable_image import RebrickableImage
 from .record import BrickRecord
 from .theme_list import BrickThemeList
@@ -108,16 +109,16 @@ class RebrickableSet(BrickRecord):
                     return IndividualMinifigure().load(socket, minifig_data)
 
             socket.auto_progress(
-                message='Set {set}: loading from Rebrickable'.format(
+                message='Set {set}: loading from the BrickLink catalog'.format(
                     set=set,
                 ),
             )
 
-            logger.debug('rebrick.lego.get_set("{set}")'.format(
+            logger.debug('BrickLink catalog get_set("{set}")'.format(
                 set=set,
             ))
 
-            Rebrickable[RebrickableSet](
+            BrickLink[RebrickableSet](
                 'get_set',
                 set,
                 RebrickableSet,
@@ -212,6 +213,30 @@ class RebrickableSet(BrickRecord):
     # Compute the url for the refresh button
     def url_for_refresh(self, /) -> str:
         return url_for('set.refresh', set=self.fields.set)
+
+    # Normalize from the BrickLink catalog
+    @staticmethod
+    def from_bricklink(data: dict[str, Any], /, **_) -> dict[str, Any]:
+        # У BrickLink идентификатор набора той же формы, что был у
+        # Rebrickable: номер, дефис, версия.
+        number, _, version = str(data['ITEMID']).partition('-')
+
+        return {
+            'set': str(data['ITEMID']),
+            'number': str(number),
+            'version': int(version) if version else 1,
+            'name': str(data['ITEMNAME']),
+            # У части позиций каталога года нет
+            'year': int(data['ITEMYEAR']) if data.get('ITEMYEAR') else 0,
+            'theme_id': int(data['CATEGORY']),
+            'number_of_parts': int(data['NUMBER_OF_PARTS']),
+            'image': image_url(ITEM_TYPE_SET, str(data['ITEMID'])),
+            'url': current_app.config['BRICKLINK_LINK_SET_PATTERN'].format(
+                set_num=str(data['ITEMID']),
+            ),
+            # В выгрузке даты изменения нет
+            'last_modified': '',
+        }
 
     # Normalize from Rebrickable
     @staticmethod

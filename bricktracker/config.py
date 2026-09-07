@@ -20,6 +20,9 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'BRICKLINK_CATALOG_PATH', 'd': 'data/bricklink-catalog.zip'},
     {'n': 'BRICKLINK_CATALOG_RELEASE_URL', 'd': 'https://api.github.com/repos/rgriebl/brickstore-database/releases/latest'},  # noqa: E501
     {'n': 'BRICKLINK_CATALOG_URL', 'd': ''},
+    # Адреса картинок в выгрузке не приходят, они складываются из типа
+    # позиции, цвета и артикула
+    {'n': 'BRICKLINK_IMAGE_PATTERN', 'd': 'https://img.bricklink.com/ItemImage/{type}N/{color}/{item}.png'},  # noqa: E501
     {'n': 'BRICKLINK_LINK_PART_PATTERN', 'd': 'https://www.bricklink.com/v2/catalog/catalogitem.page?P={part}&C={color}'},  # noqa: E501
     {'n': 'BRICKLINK_LINK_SET_PATTERN', 'd': 'https://www.bricklink.com/v2/catalog/catalogitem.page?S={set_num}'},  # noqa: E501
     {'n': 'BRICKLINK_LINKS', 'c': bool},

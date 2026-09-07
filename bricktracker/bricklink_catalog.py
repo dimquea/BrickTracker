@@ -28,6 +28,34 @@ DOWNLOAD_TIMEOUT = 60
 DOWNLOAD_CHUNK = 1 << 16
 
 
+# Адрес картинки позиции
+#
+# BrickLink не отдаёт адреса изображений в выгрузке: они складываются из
+# типа позиции, цвета и артикула. Для наборов и фигурок цвет нулевой.
+def image_url(item_type: str, item: str, /, *, color: int = 0) -> str:
+    return current_app.config['BRICKLINK_IMAGE_PATTERN'].format(
+        type=item_type,
+        color=color,
+        item=item,
+    )
+
+
+# Имя файла в локальном кэше изображений
+#
+# У детали картинка своя для каждого цвета, поэтому цвет входит в имя.
+def image_name(
+    item_type: str,
+    item: str,
+    /,
+    *,
+    color: int | None = None,
+) -> str:
+    if color is None:
+        return item
+
+    return '{item}_{color}'.format(item=item, color=color)
+
+
 # Каталог BrickLink, читаемый из архива выгрузок.
 #
 # Архив собирает и публикует проект brickstore-database: это официальные

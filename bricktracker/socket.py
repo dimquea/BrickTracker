@@ -9,7 +9,11 @@ from .instructions_list import BrickInstructionsList
 from .peeron_instructions import PeeronInstructions, PeeronPage
 from .peeron_pdf import PeeronPDF
 from .set import BrickSet
-from .socket_decorator import authenticated_socket, rebrickable_socket
+from .socket_decorator import (
+    authenticated_socket,
+    catalog_socket,
+    rebrickable_socket,
+)
 from .sql import close as sql_close
 
 logger = logging.getLogger(__name__)
@@ -219,7 +223,7 @@ class BrickSocket(object):
                 self.fail(message=f"Error downloading Peeron pages: {e}")
 
         @self.socket.on(MESSAGES['IMPORT_SET'], namespace=self.namespace)
-        @rebrickable_socket(self)
+        @catalog_socket(self)
         def import_set(data: dict[str, Any], /) -> None:
             logger.debug('Socket: IMPORT_SET={data} (from: {fr})'.format(
                 data=data,

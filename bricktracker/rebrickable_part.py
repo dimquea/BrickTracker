@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 from flask import current_app, url_for
 
+from .bricklink_catalog import image_name, image_url, ITEM_TYPE_PART
 from .exceptions import ErrorException
 from .rebrickable_image import RebrickableImage
 from .record import BrickRecord
@@ -156,6 +157,62 @@ class RebrickablePart(BrickRecord):
                 pass
 
         return ''
+
+    # Normalize from the BrickLink catalog
+    @staticmethod
+    def from_bricklink(
+        data: dict[str, Any],
+        /,
+        *,
+        brickset: 'BrickSet | None' = None,
+        minifigure: 'BrickMinifigure | None' = None,
+        **_,
+    ) -> dict[str, Any]:
+        reference = data.get('reference', {})
+        color = data.get('color_reference', {})
+
+        part = str(data['item'])
+        color_id = int(data['color'])
+
+        return {
+            'id': None,
+            'figure': None,
+            'part': part,
+            'color': color_id,
+            # Секция Extra: запасные детали
+            'spare': data['extra'],
+            'quantity': int(data['quantity']),
+            # Секция Counterpart: деталь, полученная из другой, например
+            # применением наклейки. Не отдельная физическая деталь.
+            'counterpart': data['counterpart'],
+            # Секция Alternate: взаимозаменяемые позиции, сгруппированные
+            # общим match_id
+            'alternate': data['alternate'],
+            'match_id': int(data['match_id']),
+            # Своего идентификатора строки инвентаря у BrickLink нет
+            'rebrickable_inventory': 0,
+            # Идентификаторы элементов LEGO в выгрузке отсутствуют
+            'element': None,
+            'color_id': color_id,
+            'color_name': color.get('COLORNAME', ''),
+            'color_rgb': color.get('COLORRGB', ''),
+            'color_transparent': color.get('COLORTYPE', '') == 'Transparent',
+            # Каталог теперь и есть BrickLink, так что переводить нечего
+            'bricklink_color_id': color_id,
+            'bricklink_color_name': color.get('COLORNAME', ''),
+            'bricklink_part_num': part,
+            'name': reference.get('ITEMNAME', part),
+            'category': int(reference['CATEGORY']) if reference.get('CATEGORY') else None,  # noqa: E501
+            'image': image_url(ITEM_TYPE_PART, part, color=color_id),
+            'image_id': image_name(ITEM_TYPE_PART, part, color=color_id),
+            'url': current_app.config['BRICKLINK_LINK_PART_PATTERN'].format(
+                part=part,
+                color=color_id,
+            ),
+            # Ссылки на базовую деталь для декорированных вариантов в
+            # выгрузке нет
+            'print': None,
+        }
 
     # Normalize from Rebrickable
     @staticmethod
