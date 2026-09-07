@@ -5,7 +5,7 @@
 
 ## Prerequisites
 - Docker and Docker Compose installed
-- A Rebrickable API key from https://rebrickable.com/users/profile/
+- No API key: catalog data comes from a downloadable archive. It has to be fetched once from the admin page after the first start, see [the BrickLink catalog](bricklink-catalog.md)
 - curl or wget (for downloading configuration files)
 
 ## Note on Environment Configuration
@@ -74,10 +74,10 @@ Please refer to [Environment Variables Reference](env.md) for a list of availabl
 
 2. If images aren't appearing:
    - Verify write permissions on static directories
-   - Ensure network connectivity to Rebrickable
+   - Ensure network connectivity to GitHub, where the catalog archive is published
 
 3. If you can't add sets:
-   - Verify your Rebrickable API key
+   - Verify the catalog has been downloaded (Admin → Themes)
    - Check the application logs for API errors
 
 4. Environment configuration issues:

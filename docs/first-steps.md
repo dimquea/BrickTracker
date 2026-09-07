@@ -36,7 +36,7 @@ If everything went well you should see no more error message and some counters.
 ## Add a set
 
 > **Important**
-> Make sure you have set up your Rebrickable API key (`BK_REBRICKABLE_KEY`) for this to work (see [common errors](common-errors.md)).
+> Make sure you have downloaded the BrickLink catalog for this to work. It is not fetched automatically: use **Admin → Themes (BrickLink catalog) → Download the latest catalog** once (see [the BrickLink catalog](bricklink-catalog.md)).
 
 > **Important**
 > If you are using the CORS allowed origin restriction (`BK_DOMAIN_NAME`), make sure it is matching your application URL (see [common errors](common-errors.md)).

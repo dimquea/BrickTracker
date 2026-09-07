@@ -14,6 +14,7 @@ This page helps you navigate the documentation of BrickTracker.
 ## Usage
 
 - [First steps](first-steps.md)
+- [The BrickLink catalog](bricklink-catalog.md)
 - [Managing your sets](set.md)
 - [Managing your set statuses](set-statuses.md)
 
