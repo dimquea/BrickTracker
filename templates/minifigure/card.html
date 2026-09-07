@@ -16,7 +16,8 @@
     {{ badge.total_missing(item.fields.total_missing, solo=solo, last=last) }}
     {{ badge.total_damaged(item.fields.total_damaged, solo=solo, last=last) }}
     {% if not last %}
-      {{ badge.rebrickable(item, solo=solo, last=last) }}
+      {{ badge.custom_catalog(item, solo=solo, last=last) }}
+      {{ badge.bricklink(item, solo=solo, last=last) }}
     {% endif %}
   </div>
   {% if solo %}

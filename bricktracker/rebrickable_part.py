@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from flask import current_app, url_for
 
 from .bricklink_catalog import image_name, image_url, ITEM_TYPE_PART
+from .custom_catalog import custom_catalog_url
 from .exceptions import ErrorException
 from .rebrickable_image import RebrickableImage
 from .record import BrickRecord
@@ -138,25 +139,13 @@ class RebrickablePart(BrickRecord):
         else:
             return ''
 
-    # Compute the url for the rebrickable page
-    def url_for_rebrickable(self, /) -> str:
-        if current_app.config['REBRICKABLE_LINKS']:
-            try:
-                if self.fields.url is not None:
-                    # The URL does not contain color info...
-                    return '{url}{color}'.format(
-                        url=self.fields.url,
-                        color=self.fields.color
-                    )
-                else:
-                    return current_app.config['REBRICKABLE_LINK_PART_PATTERN'].format(  # noqa: E501
-                        part=self.fields.part,
-                        color=self.fields.color,
-                    )
-            except Exception:
-                pass
-
-        return ''
+    # Compute the url for the custom catalog page
+    def url_for_custom_catalog(self, /) -> str:
+        return custom_catalog_url(
+            'CUSTOM_CATALOG_LINK_PART_PATTERN',
+            part=self.fields.part,
+            color=self.fields.color,
+        )
 
     # Normalize from the BrickLink catalog
     @staticmethod

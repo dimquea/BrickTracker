@@ -7,6 +7,7 @@ from flask import current_app, url_for
 
 from .bricklink import BrickLink
 from .bricklink_catalog import image_url, ITEM_TYPE_SET
+from .custom_catalog import custom_catalog_url
 from .exceptions import ErrorException, NotFoundException
 from .instructions import BrickInstructions
 from .parser import parse_set
@@ -206,12 +207,12 @@ class RebrickableSet(BrickRecord):
         else:
             return self.fields.image
 
-    # Compute the url for the rebrickable page
-    def url_for_rebrickable(self, /) -> str:
-        if current_app.config['REBRICKABLE_LINKS']:
-            return self.fields.url
-
-        return ''
+    # Compute the url for the custom catalog page
+    def url_for_custom_catalog(self, /) -> str:
+        return custom_catalog_url(
+            'CUSTOM_CATALOG_LINK_SET_PATTERN',
+            set_num=self.fields.set,
+        )
 
     # Compute the url for the bricklink page
     def url_for_bricklink(self, /) -> str:

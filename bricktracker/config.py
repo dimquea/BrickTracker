@@ -10,8 +10,7 @@ from typing import Any, Final
 CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'AUTHENTICATION_PASSWORD', 'd': ''},
     {'n': 'AUTHENTICATION_KEY', 'd': ''},
-    # BrickLink minifigure links disabled - Rebrickable doesn't provide BrickLink minifigure IDs
-    # {'n': 'BRICKLINK_LINK_MINIFIGURE_PATTERN', 'd': 'https://www.bricklink.com/v2/catalog/catalogitem.page?M={figure}'},  # noqa: E501
+    {'n': 'BRICKLINK_LINK_MINIFIGURE_PATTERN', 'd': 'https://www.bricklink.com/v2/catalog/catalogitem.page?M={figure}'},  # noqa: E501
     # Каталог BrickLink. Источник сделан настраиваемым намеренно:
     # brickstore-database — личный репозиторий, и подменить адрес должно
     # быть можно без правки кода. Задайте BRICKLINK_CATALOG_URL, чтобы
@@ -26,6 +25,13 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'BRICKLINK_LINK_PART_PATTERN', 'd': 'https://www.bricklink.com/v2/catalog/catalogitem.page?P={part}&C={color}'},  # noqa: E501
     {'n': 'BRICKLINK_LINK_SET_PATTERN', 'd': 'https://www.bricklink.com/v2/catalog/catalogitem.page?S={set_num}'},  # noqa: E501
     {'n': 'BRICKLINK_LINKS', 'c': bool},
+    # Произвольный сторонний каталог. Пустое название выключает ссылки
+    # целиком, пустой шаблон — только для своего типа позиций.
+    # Подстановки: деталь {part} и {color}, набор {set_num}, фигурка {figure}
+    {'n': 'CUSTOM_CATALOG_LINK_MINIFIGURE_PATTERN', 'd': ''},
+    {'n': 'CUSTOM_CATALOG_LINK_PART_PATTERN', 'd': ''},
+    {'n': 'CUSTOM_CATALOG_LINK_SET_PATTERN', 'd': ''},
+    {'n': 'CUSTOM_CATALOG_NAME', 'd': ''},
     {'n': 'DATABASE_PATH', 'd': 'data/app.db'},
     {'n': 'DATABASE_TIMESTAMP_FORMAT', 'd': '%Y-%m-%d-%H-%M-%S'},
     {'n': 'DEBUG', 'c': bool},
@@ -83,9 +89,6 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'REBRICKABLE_API_KEY', 'e': 'REBRICKABLE_API_KEY', 'd': ''},
     {'n': 'REBRICKABLE_IMAGE_NIL', 'd': 'https://rebrickable.com/static/img/nil.png'},  # noqa: E501
     {'n': 'REBRICKABLE_IMAGE_NIL_MINIFIGURE', 'd': 'https://rebrickable.com/static/img/nil_mf.jpg'},  # noqa: E501
-    {'n': 'REBRICKABLE_LINK_MINIFIGURE_PATTERN', 'd': 'https://rebrickable.com/minifigs/{figure}'},  # noqa: E501
-    {'n': 'REBRICKABLE_LINK_PART_PATTERN', 'd': 'https://rebrickable.com/parts/{part}/_/{color}'},  # noqa: E501
-    {'n': 'REBRICKABLE_LINK_INSTRUCTIONS_PATTERN', 'd': 'https://rebrickable.com/instructions/{path}'},  # noqa: E501
     {'n': 'REBRICKABLE_USER_AGENT', 'd': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},  # noqa: E501
     {'n': 'USER_AGENT', 'd': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},  # noqa: E501
     {'n': 'PEERON_DOWNLOAD_DELAY', 'd': 1000, 'c': int},
@@ -93,7 +96,6 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'PEERON_MIN_IMAGE_SIZE', 'd': 100, 'c': int},
     {'n': 'PEERON_SCAN_PATTERN', 'd': 'http://belay.peeron.com/scans/{set_number}-{version_number}/'},
     {'n': 'PEERON_THUMBNAIL_PATTERN', 'd': 'http://belay.peeron.com/thumbs/{set_number}-{version_number}/'},
-    {'n': 'REBRICKABLE_LINKS', 'e': 'LINKS', 'c': bool},
     {'n': 'REBRICKABLE_PAGE_SIZE', 'd': 100, 'c': int},
     {'n': 'RETIRED_SETS_FILE_URL', 'd': 'https://docs.google.com/spreadsheets/d/1rlYfEXtNKxUOZt2Mfv0H17DvK7bj6Pe0CuYwq6ay8WA/gviz/tq?tqx=out:csv&sheet=Sorted%20by%20Retirement%20Date'},  # noqa: E501
     {'n': 'RETIRED_SETS_PATH', 'd': 'data/retired_sets.csv'},
@@ -117,7 +119,7 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'STATISTICS_DEFAULT_EXPANDED', 'd': True, 'c': bool},
     {'n': 'DARK_MODE', 'c': bool},
     {'n': 'BADGE_ORDER_GRID', 'd': ['theme', 'year', 'parts', 'total_minifigures', 'owner'], 'c': list},
-    {'n': 'BADGE_ORDER_DETAIL', 'd': ['theme', 'tag', 'year', 'parts', 'instance_count', 'total_minifigures', 'total_missing', 'total_damaged', 'owner', 'storage', 'purchase_date', 'purchase_location', 'purchase_price', 'instructions', 'rebrickable', 'bricklink'], 'c': list},
+    {'n': 'BADGE_ORDER_DETAIL', 'd': ['theme', 'tag', 'year', 'parts', 'instance_count', 'total_minifigures', 'total_missing', 'total_damaged', 'owner', 'storage', 'purchase_date', 'purchase_location', 'purchase_price', 'instructions', 'custom_catalog', 'bricklink'], 'c': list},
     {'n': 'SHOW_NOTES_GRID', 'd': False, 'c': bool},
     {'n': 'SHOW_NOTES_DETAIL', 'd': True, 'c': bool},
 ]

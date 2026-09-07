@@ -145,11 +145,11 @@
   </td>
 {% endmacro %}
 
-{% macro rebrickable(item) %}
-  {% set url=item.url_for_rebrickable() %}
+{% macro custom_catalog(item) %}
+  {% set url=item.url_for_custom_catalog() %}
   {% if url %}
     <a data-search="exclude" href="{{ url }}" target="_blank" class="badge rounded-pill text-bg-light border fw-normal">
-      <i class="ri-external-link-line"></i> Rebrickable
+      <i class="ri-external-link-line"></i> {{ config['CUSTOM_CATALOG_NAME'] }}
     </a>
   {% endif %}
 {% endmacro %}

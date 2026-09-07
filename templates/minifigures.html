@@ -160,7 +160,8 @@
           {{ table.image(minifigure.url_for_image(), caption=minifigure.fields.name, alt=minifigure.fields.figure) }}
           <td data-sort="{{ minifigure.fields.name }}">
             <a class="text-reset" href="{{ minifigure.url() }}">{{ minifigure.fields.name }}</a>
-            {{ table.rebrickable(minifigure) }}
+            {{ table.custom_catalog(minifigure) }}
+            {{ table.bricklink(minifigure) }}
           </td>
           <td data-sort="{{ minifigure.fields.number_of_parts }}">{{ minifigure.fields.number_of_parts }}</td>
           <td data-sort="{{ minifigure.fields.total_quantity }}">{{ minifigure.fields.total_quantity }}</td>

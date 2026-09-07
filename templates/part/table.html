@@ -12,7 +12,7 @@
           <a class="text-reset" href="{{ item.url() }}">{{ item.fields.name }}</a>
           {% if item.fields.spare %}<span class="badge rounded-pill text-bg-warning fw-normal"><i class="ri-loop-left-line"></i> Spare</span>{% endif %}
           {% if all %}
-            {{ table.rebrickable(item) }}
+            {{ table.custom_catalog(item) }}
             {{ table.bricklink(item) }}
           {% endif %}
         </td>

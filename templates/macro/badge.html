@@ -213,8 +213,9 @@
   {{ badge(check=spare, solo=solo, last=last, color='warning', icon='loop-left-line', collapsible='Spare:', text=spare, alt='Spare') }}
 {% endmacro %}
 
-{% macro rebrickable(item, solo=false, last=false) %}
-  {{ badge(url=item.url_for_rebrickable(), solo=solo, last=last, blank=true, color='light border', icon='external-link-line', collapsible='Rebrickable', alt='Rebrickable') }}
+{% macro custom_catalog(item, solo=false, last=false) %}
+  {% set name = config['CUSTOM_CATALOG_NAME'] %}
+  {{ badge(url=item.url_for_custom_catalog(), solo=solo, last=last, blank=true, color='light border', icon='external-link-line', collapsible=name, alt=name) }}
 {% endmacro %}
 
 {% macro year(year, solo=false, last=false) %}
@@ -305,13 +306,13 @@
       {% if not last and not solo and item.instructions is defined %}
         {{ instructions(item, solo=solo, last=last) }}
       {% endif %}
-    {% elif badge_key == 'rebrickable' %}
-      {# Only items with url_for_rebrickable method (sets, parts, minifigures) #}
-      {% if not last and item.url_for_rebrickable is defined %}
-        {{ rebrickable(item, solo=solo, last=last) }}
+    {% elif badge_key == 'custom_catalog' %}
+      {# Only items with url_for_custom_catalog method (sets, parts, minifigures) #}
+      {% if not last and item.url_for_custom_catalog is defined %}
+        {{ custom_catalog(item, solo=solo, last=last) }}
       {% endif %}
     {% elif badge_key == 'bricklink' %}
-      {# Only items with url_for_bricklink method (sets, parts) #}
+      {# Only items with url_for_bricklink method (sets, parts, minifigures) #}
       {% if not last and item.url_for_bricklink is defined %}
         {{ bricklink(item, solo=solo, last=last) }}
       {% endif %}

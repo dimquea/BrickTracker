@@ -483,13 +483,6 @@
                 </label>
               </div>
 
-              <div class="form-check form-switch">
-                <input class="form-check-input config-toggle" type="checkbox" id="BK_REBRICKABLE_LINKS" data-var="BK_REBRICKABLE_LINKS" {{ is_locked('BK_REBRICKABLE_LINKS') }}>
-                <label class="form-check-label" for="BK_REBRICKABLE_LINKS">
-                  BK_REBRICKABLE_LINKS {{ config_badges('BK_REBRICKABLE_LINKS') }}
-                  <div class="text-muted small">Display Rebrickable links wherever applicable</div>
-                </label>
-              </div>
 
               <div class="form-check form-switch">
                 <input class="form-check-input config-toggle" type="checkbox" id="BK_SKIP_SPARE_PARTS" data-var="BK_SKIP_SPARE_PARTS" {{ is_locked('BK_SKIP_SPARE_PARTS') }}>
@@ -691,27 +684,43 @@
             </div>
 
             <div class="col-12">
-              <label for="BK_REBRICKABLE_LINK_MINIFIGURE_PATTERN" class="form-label">
-                BK_REBRICKABLE_LINK_MINIFIGURE_PATTERN {{ config_badges('BK_REBRICKABLE_LINK_MINIFIGURE_PATTERN') }}
-                <div class="text-muted small">Pattern for Rebrickable minifigure links (supports {figure})</div>
+              <label for="BK_BRICKLINK_LINK_MINIFIGURE_PATTERN" class="form-label">
+                BK_BRICKLINK_LINK_MINIFIGURE_PATTERN {{ config_badges('BK_BRICKLINK_LINK_MINIFIGURE_PATTERN') }}
+                <div class="text-muted small">Pattern for BrickLink minifigure links (supports {figure})</div>
               </label>
-              <input type="text" class="form-control config-text" id="BK_REBRICKABLE_LINK_MINIFIGURE_PATTERN" data-var="BK_REBRICKABLE_LINK_MINIFIGURE_PATTERN" {{ is_locked('BK_REBRICKABLE_LINK_MINIFIGURE_PATTERN') }}>
+              <input type="text" class="form-control config-text" id="BK_BRICKLINK_LINK_MINIFIGURE_PATTERN" data-var="BK_BRICKLINK_LINK_MINIFIGURE_PATTERN" {{ is_locked('BK_BRICKLINK_LINK_MINIFIGURE_PATTERN') }}>
             </div>
 
             <div class="col-12">
-              <label for="BK_REBRICKABLE_LINK_PART_PATTERN" class="form-label">
-                BK_REBRICKABLE_LINK_PART_PATTERN {{ config_badges('BK_REBRICKABLE_LINK_PART_PATTERN') }}
-                <div class="text-muted small">Pattern for Rebrickable part links (supports {part} and {color})</div>
+              <label for="BK_CUSTOM_CATALOG_NAME" class="form-label">
+                BK_CUSTOM_CATALOG_NAME {{ config_badges('BK_CUSTOM_CATALOG_NAME') }}
+                <div class="text-muted small">Name of an extra catalog to link to, shown on the button. Empty hides those links everywhere</div>
               </label>
-              <input type="text" class="form-control config-text" id="BK_REBRICKABLE_LINK_PART_PATTERN" data-var="BK_REBRICKABLE_LINK_PART_PATTERN" {{ is_locked('BK_REBRICKABLE_LINK_PART_PATTERN') }}>
+              <input type="text" class="form-control config-text" id="BK_CUSTOM_CATALOG_NAME" data-var="BK_CUSTOM_CATALOG_NAME" {{ is_locked('BK_CUSTOM_CATALOG_NAME') }}>
             </div>
 
             <div class="col-12">
-              <label for="BK_REBRICKABLE_LINK_INSTRUCTIONS_PATTERN" class="form-label">
-                BK_REBRICKABLE_LINK_INSTRUCTIONS_PATTERN {{ config_badges('BK_REBRICKABLE_LINK_INSTRUCTIONS_PATTERN') }}
-                <div class="text-muted small">Pattern for Rebrickable instruction links (supports {path})</div>
+              <label for="BK_CUSTOM_CATALOG_LINK_SET_PATTERN" class="form-label">
+                BK_CUSTOM_CATALOG_LINK_SET_PATTERN {{ config_badges('BK_CUSTOM_CATALOG_LINK_SET_PATTERN') }}
+                <div class="text-muted small">Pattern for set links in that catalog (supports {set_num}). Empty hides the link on sets</div>
               </label>
-              <input type="text" class="form-control config-text" id="BK_REBRICKABLE_LINK_INSTRUCTIONS_PATTERN" data-var="BK_REBRICKABLE_LINK_INSTRUCTIONS_PATTERN" {{ is_locked('BK_REBRICKABLE_LINK_INSTRUCTIONS_PATTERN') }}>
+              <input type="text" class="form-control config-text" id="BK_CUSTOM_CATALOG_LINK_SET_PATTERN" data-var="BK_CUSTOM_CATALOG_LINK_SET_PATTERN" {{ is_locked('BK_CUSTOM_CATALOG_LINK_SET_PATTERN') }}>
+            </div>
+
+            <div class="col-12">
+              <label for="BK_CUSTOM_CATALOG_LINK_PART_PATTERN" class="form-label">
+                BK_CUSTOM_CATALOG_LINK_PART_PATTERN {{ config_badges('BK_CUSTOM_CATALOG_LINK_PART_PATTERN') }}
+                <div class="text-muted small">Pattern for part links in that catalog (supports {part} and {color}). Empty hides the link on parts</div>
+              </label>
+              <input type="text" class="form-control config-text" id="BK_CUSTOM_CATALOG_LINK_PART_PATTERN" data-var="BK_CUSTOM_CATALOG_LINK_PART_PATTERN" {{ is_locked('BK_CUSTOM_CATALOG_LINK_PART_PATTERN') }}>
+            </div>
+
+            <div class="col-12">
+              <label for="BK_CUSTOM_CATALOG_LINK_MINIFIGURE_PATTERN" class="form-label">
+                BK_CUSTOM_CATALOG_LINK_MINIFIGURE_PATTERN {{ config_badges('BK_CUSTOM_CATALOG_LINK_MINIFIGURE_PATTERN') }}
+                <div class="text-muted small">Pattern for minifigure links in that catalog (supports {figure}). Empty hides the link on minifigures</div>
+              </label>
+              <input type="text" class="form-control config-text" id="BK_CUSTOM_CATALOG_LINK_MINIFIGURE_PATTERN" data-var="BK_CUSTOM_CATALOG_LINK_MINIFIGURE_PATTERN" {{ is_locked('BK_CUSTOM_CATALOG_LINK_MINIFIGURE_PATTERN') }}>
             </div>
 
             <div class="col-12">

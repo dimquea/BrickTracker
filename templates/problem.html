@@ -42,7 +42,7 @@
           <td data-sort="{{ item.fields.name }}">
             <a class="text-reset" href="{{ item.url() }}">{{ item.fields.name }}</a>
             {% if item.fields.spare %}<span class="badge rounded-pill text-bg-warning fw-normal"><i class="ri-loop-left-line"></i> Spare</span>{% endif %}
-            {{ table.rebrickable(item) }}
+            {{ table.custom_catalog(item) }}
             {{ table.bricklink(item) }}
           </td>
           <td data-sort="{{ item.fields.color_name }}">
@@ -185,7 +185,7 @@
           <td data-sort="{{ item.fields.name }}">
             <a class="text-reset" href="{{ item.url() }}">{{ item.fields.name }}</a>
             {% if item.fields.spare %}<span class="badge rounded-pill text-bg-warning fw-normal"><i class="ri-loop-left-line"></i> Spare</span>{% endif %}
-            {{ table.rebrickable(item) }}
+            {{ table.custom_catalog(item) }}
             {{ table.bricklink(item) }}
           </td>
           <td data-sort="{{ item.fields.color_name }}">

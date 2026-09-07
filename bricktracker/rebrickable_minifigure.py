@@ -4,6 +4,7 @@ from typing import Any, TYPE_CHECKING
 from flask import current_app, url_for
 
 from .bricklink_catalog import image_url, ITEM_TYPE_MINIFIGURE
+from .custom_catalog import custom_catalog_url
 from .exceptions import ErrorException
 from .rebrickable_image import RebrickableImage
 from .record import BrickRecord
@@ -81,24 +82,20 @@ class RebrickableMinifigure(BrickRecord):
             else:
                 return self.fields.image
 
-    # Compute the url for the rebrickable page
-    def url_for_rebrickable(self, /) -> str:
-        if current_app.config['REBRICKABLE_LINKS']:
-            try:
-                return current_app.config['REBRICKABLE_LINK_MINIFIGURE_PATTERN'].format(  # noqa: E501
-                    figure=self.fields.figure,
-                )
-            except Exception:
-                pass
-
-        return ''
+    # Compute the url for the custom catalog page
+    def url_for_custom_catalog(self, /) -> str:
+        return custom_catalog_url(
+            'CUSTOM_CATALOG_LINK_MINIFIGURE_PATTERN',
+            figure=self.fields.figure,
+        )
 
     # Compute the url for the bricklink page
-    # Note: BrickLink uses different minifigure IDs than Rebrickable (e.g., 'adv010' vs 'fig-000359')
-    # Rebrickable API doesn't provide BrickLink minifigure IDs, so we can't generate valid links
     def url_for_bricklink(self, /) -> str:
-        # BrickLink links disabled for minifigures - no ID mapping available
-        # Left function for later, if I find a way to implement it. 
+        if current_app.config['BRICKLINK_LINKS']:
+            return current_app.config['BRICKLINK_LINK_MINIFIGURE_PATTERN'].format(  # noqa: E501
+                figure=self.fields.figure,
+            )
+
         return ''
 
     # Normalize from the BrickLink catalog

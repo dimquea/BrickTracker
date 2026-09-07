@@ -33,7 +33,7 @@
       {% for item in table_collection %}
         <tr>
           {{ table.image(item.url_for_image(), caption=item.fields.name, alt=item.fields.set) }}
-          <td>{{ item.fields.set }} {{ table.rebrickable(item) }}</td>
+          <td>{{ item.fields.set }} {{ table.custom_catalog(item) }}</td>
           <td>{{ item.fields.name }}</td>
           <td>{{ item.fields.number_of_parts }}</td>
           <td>{{ item.fields.null_rgb }}</td>

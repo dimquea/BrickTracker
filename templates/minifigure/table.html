@@ -10,7 +10,8 @@
         <td data-sort="name">
           <a class="text-reset" href="{{ item.url() }}" style="max-width:auto">{{ item.fields.name }}</a>
           {% if all %}
-            {{ table.rebrickable(item) }}
+            {{ table.custom_catalog(item) }}
+            {{ table.bricklink(item) }}
           {% endif %}
         </td>
         <td data-sort="parts">{{ item.fields.number_of_parts }}</td>
