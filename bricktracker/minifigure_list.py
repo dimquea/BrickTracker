@@ -272,13 +272,13 @@ class BrickMinifigureList(BrickRecordList[BrickMinifigure]):
     ) -> bool:
         try:
             socket.auto_progress(
-                message='Set {set}: loading minifigures from Rebrickable'.format(  # noqa: E501
+                message='Set {set}: loading minifigures from the BrickLink catalog'.format(  # noqa: E501
                     set=brickset.fields.set,
                 ),
                 increment_total=True,
             )
 
-            logger.debug('rebrick.lego.get_set_minifigs("{set}")'.format(
+            logger.debug('BrickLink catalog get_set_minifigs("{set}")'.format(  # noqa: E501
                 set=brickset.fields.set,
             ))
 

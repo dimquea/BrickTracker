@@ -96,18 +96,6 @@ class RebrickableSet(BrickRecord):
             socket.auto_progress(message='Parsing set number')
             set = parse_set(str(data['set']))
 
-            # Check if this is actually a minifigure (starts with fig-)
-            # If so, redirect to the minifigure handler
-            if set.startswith('fig-'):
-                from .individual_minifigure import IndividualMinifigure
-                # Transform data: minifigure handler expects 'figure' key instead of 'set'
-                minifig_data = data.copy()
-                minifig_data['figure'] = minifig_data.pop('set')
-                if from_download:
-                    return IndividualMinifigure().download(socket, minifig_data)
-                else:
-                    return IndividualMinifigure().load(socket, minifig_data)
-
             socket.auto_progress(
                 message='Set {set}: loading from the BrickLink catalog'.format(
                     set=set,
@@ -118,12 +106,36 @@ class RebrickableSet(BrickRecord):
                 set=set,
             ))
 
-            BrickLink[RebrickableSet](
-                'get_set',
-                set,
-                RebrickableSet,
-                instance=self,
-            ).get()
+            try:
+                BrickLink[RebrickableSet](
+                    'get_set',
+                    set,
+                    RebrickableSet,
+                    instance=self,
+                ).get()
+
+            except NotFoundException:
+                # Поле ввода одно на наборы и фигурки, а у BrickLink они не
+                # различаются по форме идентификатора: sw1029 и 3180-1
+                # одинаково допустимы. Раньше признаком служил префикс
+                # fig- из нумерации Rebrickable. Теперь решает каталог:
+                # если набора нет, пробуем фигурку.
+                from .individual_minifigure import IndividualMinifigure
+
+                # Отметка для download(): позиция уже обработана целиком,
+                # продолжать импорт как набора нельзя — полей набора нет
+                self.handled_as_minifigure = True
+
+                minifigure_data = data.copy()
+                minifigure_data['figure'] = minifigure_data.pop('set')
+
+                if from_download:
+                    return IndividualMinifigure().download(
+                        socket,
+                        minifigure_data,
+                    )
+
+                return IndividualMinifigure().load(socket, minifigure_data)
 
             socket.emit('SET_LOADED', self.short(
                 from_download=from_download
@@ -131,7 +143,7 @@ class RebrickableSet(BrickRecord):
 
             if not from_download:
                 socket.complete(
-                    message='Set {set}: loaded from Rebrickable'.format(
+                    message='Set {set}: loaded from the BrickLink catalog'.format(  # noqa: E501
                         set=self.fields.set
                     )
                 )
@@ -140,7 +152,7 @@ class RebrickableSet(BrickRecord):
 
         except Exception as e:
             socket.fail(
-                message='Could not load the set from Rebrickable: {error}. Data: {data}'.format(  # noqa: E501
+                message='Could not load the set from the BrickLink catalog: {error}. Data: {data}'.format(  # noqa: E501
                     error=str(e),
                     data=data,
                 )

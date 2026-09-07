@@ -204,6 +204,20 @@ class BrickLink(Generic[T]):
 
         item['QTY'] = '1'
 
+        # Число деталей фигурки в справочнике не хранится
+        inventory = catalog.inventory(
+            ITEM_TYPE_MINIFIGURE,
+            self.identifier,
+        ) or []
+
+        item['NUMBER_OF_PARTS'] = str(sum(
+            entry['quantity']
+            for entry in inventory
+            if entry['item_type'] == ITEM_TYPE_PART
+            and not entry['extra']
+            and not entry['counterpart']
+        ))
+
         return item
 
     # Фигурки набора

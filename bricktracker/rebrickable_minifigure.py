@@ -35,7 +35,7 @@ class RebrickableMinifigure(BrickRecord):
     # Insert the minifigure from Rebrickable
     def insert_rebrickable(self, /) -> None:
         if self.brickset is None:
-            raise ErrorException('Importing a minifigure from Rebrickable outside of a set is not supported')  # noqa: E501
+            raise ErrorException('Importing a minifigure outside of a set is not supported')  # noqa: E501
 
         # Insert the Rebrickable minifigure to the database
         self.insert(
@@ -115,6 +115,9 @@ class RebrickableMinifigure(BrickRecord):
             'name': str(data.get('ITEMNAME', figure)),
             'quantity': int(data.get('QTY', 1)),
             'image': image_url(ITEM_TYPE_MINIFIGURE, figure),
+            # Внутри набора состав фигурки не читается, там его считает
+            # загрузчик деталей
+            'number_of_parts': int(data.get('NUMBER_OF_PARTS', 0) or 0),
         }
 
     # Normalize from Rebrickable

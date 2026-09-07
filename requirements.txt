@@ -6,7 +6,6 @@ gevent
 gunicorn
 humanize
 jinja2
-rebrick
 requests
 tzdata
 bs4

@@ -9,11 +9,7 @@ from .instructions_list import BrickInstructionsList
 from .peeron_instructions import PeeronInstructions, PeeronPage
 from .peeron_pdf import PeeronPDF
 from .set import BrickSet
-from .socket_decorator import (
-    authenticated_socket,
-    catalog_socket,
-    rebrickable_socket,
-)
+from .socket_decorator import authenticated_socket, catalog_socket
 from .sql import close as sql_close
 
 logger = logging.getLogger(__name__)
@@ -242,7 +238,7 @@ class BrickSocket(object):
             BrickSet().load(self, data)
 
         @self.socket.on(MESSAGES['IMPORT_MINIFIGURE'], namespace=self.namespace)
-        @rebrickable_socket(self)
+        @catalog_socket(self)
         def import_minifigure(data: dict[str, Any], /) -> None:
             logger.debug('Socket: IMPORT_MINIFIGURE={data} (from: {fr})'.format(
                 data=data,
@@ -283,7 +279,7 @@ class BrickSocket(object):
             IndividualPart().load_colors(self, data)
 
         @self.socket.on(MESSAGES['CREATE_LOT'], namespace=self.namespace)
-        @rebrickable_socket(self)
+        @catalog_socket(self)
         def create_lot(data: dict[str, Any], /) -> None:
             logger.debug('Socket: CREATE_LOT (from: {fr})'.format(
                 fr=request.sid,  # type: ignore
@@ -293,7 +289,7 @@ class BrickSocket(object):
             IndividualPartLot().create(self, data)
 
         @self.socket.on(MESSAGES['CREATE_BULK_INDIVIDUAL_PARTS'], namespace=self.namespace)
-        @rebrickable_socket(self)
+        @catalog_socket(self)
         def create_bulk_individual_parts(data: dict[str, Any], /) -> None:
             logger.debug('Socket: CREATE_BULK_INDIVIDUAL_PARTS (from: {fr})'.format(
                 fr=request.sid,  # type: ignore

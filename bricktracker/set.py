@@ -45,6 +45,10 @@ class BrickSet(RebrickableSet):
         if not self.load(socket, data, from_download=True):
             return False
 
+        # Введённый номер оказался фигуркой, и она уже импортирована
+        if getattr(self, 'handled_as_minifigure', False):
+            return True
+
         try:
             # Insert into the database
             socket.auto_progress(

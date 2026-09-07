@@ -8,7 +8,7 @@ from flask import current_app, url_for
 
 from .exceptions import NotFoundException, DatabaseException, ErrorException
 from .parser import parse_minifig
-from .rebrickable import Rebrickable
+from .bricklink import BrickLink
 from .rebrickable_minifigure import RebrickableMinifigure
 from .set_owner_list import BrickSetOwnerList
 from .set_purchase_location_list import BrickSetPurchaseLocationList
@@ -159,36 +159,21 @@ class IndividualMinifigure(RebrickableMinifigure):
     # Download parts (elements) for this individual minifigure
     def download_parts(self, socket: 'BrickSocket', /) -> bool:
         try:
-            # Check if we have cached parts data from load()
-            if hasattr(self, '_cached_parts_response'):
-                response = self._cached_parts_response
-                logger.debug('Using cached parts data from load()')
-            else:
-                # Need to fetch parts data
-                socket.auto_progress(
-                    message='Minifigure {figure}: loading parts from Rebrickable'.format(
-                        figure=self.fields.figure
-                    ),
-                    increment_total=True,
-                )
+            socket.auto_progress(
+                message='Minifigure {figure}: loading parts from the BrickLink catalog'.format(  # noqa: E501
+                    figure=self.fields.figure
+                ),
+                increment_total=True,
+            )
 
-                logger.debug('rebrick.lego.get_minifig_elements("{figure}")'.format(
-                    figure=self.fields.figure,
-                ))
+            from .part import BrickPart
 
-                # Load parts data from Rebrickable API
-                import json
-                from rebrick import lego
-
-                parameters = {
-                    'api_key': current_app.config['REBRICKABLE_API_KEY'],
-                    'page_size': current_app.config['REBRICKABLE_PAGE_SIZE'],
-                }
-
-                response = json.loads(lego.get_minifig_elements(
-                    self.fields.figure,
-                    **parameters
-                ).read())
+            parts = BrickLink[BrickPart](
+                'get_minifig_elements',
+                self.fields.figure,
+                BrickPart,
+                socket=socket,
+            ).list()
 
             socket.auto_progress(
                 message='Minifigure {figure}: saving parts to database'.format(
@@ -196,93 +181,55 @@ class IndividualMinifigure(RebrickableMinifigure):
                 ),
             )
 
-            # Insert each part into individual_minifigure_parts table
-            from .rebrickable_part import RebrickablePart
+            for part in parts:
+                record = part.sql_parameters()
 
-            if 'results' in response:
-                logger.debug('Processing {count} parts for minifigure {figure}'.format(
-                    count=len(response["results"]),
-                    figure=self.fields.figure
-                ))
+                # Справочная запись о детали
+                BrickSQL().execute(
+                    'rebrickable/part/insert',
+                    parameters=record,
+                    commit=False,
+                )
 
-                for idx, result in enumerate(response['results']):
-                    part_num = result['part']['part_num']
-                    color_id = result['color']['id']
+                if not current_app.config['USE_REMOTE_IMAGES']:
+                    from .rebrickable_image import RebrickableImage
+                    from .set import BrickSet
 
-                    logger.debug(
-                        'Part {current}/{total}: {part_num} (color: {color_id}, quantity: {quantity})'.format(
-                            current=idx+1,
-                            total=len(response["results"]),
-                            part_num=part_num,
-                            color_id=color_id,
-                            quantity=result["quantity"]
-                        )
-                    )
-
-                    # Insert rebrickable part data first
-                    part_data = RebrickablePart.from_rebrickable(result)
-                    logger.debug('Rebrickable part data keys: {keys}'.format(
-                        keys=list(part_data.keys())
-                    ))
-
-                    # Insert into rebrickable_parts if not exists
-                    BrickSQL().execute(
-                        'rebrickable/part/insert',
-                        parameters=part_data,
-                        commit=False,
-                    )
-
-                    # Download part image if not using remote images
-                    if not current_app.config['USE_REMOTE_IMAGES']:
-                        # Create a RebrickablePart instance for image download
-                        from .set import BrickSet
-                        try:
-                            part_instance = RebrickablePart(record=part_data)
-                            from .rebrickable_image import RebrickableImage
-                            RebrickableImage(
-                                BrickSet(),  # Dummy set
-                                minifigure=self,
-                                part=part_instance,
-                            ).download()
-                        except Exception as e:
-                            logger.warning(
-                                'Could not download image for part {part_num}: {error}'.format(
-                                    part_num=part_num,
-                                    error=e
-                                )
+                    try:
+                        RebrickableImage(
+                            BrickSet(),
+                            minifigure=self,
+                            part=part,
+                        ).download()
+                    except Exception as e:
+                        logger.warning(
+                            'Could not download image for part {part}: {error}'.format(  # noqa: E501
+                                part=record['part'],
+                                error=e,
                             )
+                        )
 
-                    # Insert into bricktracker_individual_minifigure_parts
-                    individual_part_params = {
+                BrickSQL().execute(
+                    'individual_minifigure/part/insert',
+                    parameters={
                         'id': self.fields.id,
-                        'part': part_num,
-                        'color': color_id,
-                        'spare': result.get('is_spare', False),
-                        'quantity': result['quantity'],
-                        'element': result.get('element_id'),
-                        'rebrickable_inventory': result['id'],
-                    }
-                    logger.debug('Individual part params: {params}'.format(
-                        params=individual_part_params
-                    ))
+                        'part': record['part'],
+                        'color': record['color'],
+                        'spare': record['spare'],
+                        'quantity': record['quantity'],
+                        'element': record['element'],
+                        'rebrickable_inventory': record['rebrickable_inventory'],
+                        'counterpart': record['counterpart'],
+                        'alternate': record['alternate'],
+                        'match_id': record['match_id'],
+                    },
+                    commit=False,
+                )
 
-                    BrickSQL().execute(
-                        'individual_minifigure/part/insert',
-                        parameters=individual_part_params,
-                        commit=False,
-                    )
-
-                logger.debug('Successfully inserted all {count} parts'.format(
-                    count=len(response["results"])
-                ))
-            else:
-                logger.warning('No results in parts response for minifigure {figure}'.format(
-                    figure=self.fields.figure
-                ))
-
-            # Clean up cached data
-            if hasattr(self, '_cached_parts_response'):
-                delattr(self, '_cached_parts_response')
+            logger.debug('Inserted {count} parts for minifigure {figure}'.format(  # noqa: E501
+                count=len(parts),
+                figure=self.fields.figure,
+            ))
 
             return True
 
@@ -364,84 +311,23 @@ class IndividualMinifigure(RebrickableMinifigure):
             figure = parse_minifig(str(data['figure']))
 
             socket.auto_progress(
-                message='Minifigure {figure}: loading from Rebrickable'.format(
+                message='Minifigure {figure}: loading from the BrickLink catalog'.format(  # noqa: E501
                     figure=figure,
                 ),
             )
 
-            logger.debug('rebrick.lego.get_minifig_elements("{figure}")'.format(
+            logger.debug('BrickLink catalog get_minifigure("{figure}")'.format(
                 figure=figure,
             ))
 
-            # Load from Rebrickable using get_minifig_elements
-            # This gives us both minifigure info and parts in one call
-            import json
-            from rebrick import lego
-
-            parameters = {
-                'api_key': current_app.config['REBRICKABLE_API_KEY'],
-                'page_size': current_app.config['REBRICKABLE_PAGE_SIZE'],
-            }
-
-            response = json.loads(lego.get_minifig_elements(
+            # Каталог отдаёт и саму фигурку, и её состав, поэтому
+            # прежняя связка из двух запросов не нужна
+            BrickLink[IndividualMinifigure](
+                'get_minifigure',
                 figure,
-                **parameters
-            ).read())
-
-            # Extract minifigure info from the first part's metadata
-            if 'results' in response and len(response['results']) > 0:
-                first_part = response['results'][0]
-
-                # Build minifigure data from the response
-                self.fields.figure = first_part['set_num']
-                self.fields.number_of_parts = response['count']
-
-                # We need to fetch the proper name and image from get_minifig()
-                # This is a small additional call but gives us the proper minifigure data
-                try:
-                    # get_minifig() only needs api_key, not page_size
-                    minifig_params = {
-                        'api_key': current_app.config['REBRICKABLE_API_KEY']
-                    }
-                    minifig_response = json.loads(lego.get_minifig(
-                        figure,
-                        **minifig_params
-                    ).read())
-                    self.fields.name = minifig_response.get('name', "Minifigure {figure}".format(figure=figure))
-
-                    # Use the minifig image from get_minifig() - this is the assembled minifig
-                    self.fields.image = minifig_response.get('set_img_url')
-
-                    # Extract number from figure (e.g., fig-005997 -> 5997)
-                    try:
-                        self.fields.number = int(figure.split('-')[1])
-                    except:
-                        self.fields.number = 0
-
-                except Exception as e:
-                    logger.warning('Could not fetch minifigure name: {error}'.format(
-                        error=e
-                    ))
-                    self.fields.name = "Minifigure {figure}".format(figure=figure)
-                    # Try to extract number anyway
-                    try:
-                        self.fields.number = int(figure.split('-')[1])
-                    except:
-                        self.fields.number = 0
-
-                    # Fallback: try to extract image from first part with element_id
-                    self.fields.image = None
-                    for result in response['results']:
-                        if result.get('element_id') and result['part'].get('part_img_url'):
-                            self.fields.image = result['part']['part_img_url']
-                            break
-
-                # Store the parts data for later use in download
-                self._cached_parts_response = response
-            else:
-                raise NotFoundException('Minifigure {figure} has no parts in Rebrickable'.format(
-                    figure=figure
-                ))
+                IndividualMinifigure,
+                instance=self,
+            ).get()
 
             # Download minifigure image during preview if not using remote images
             if not from_download and not current_app.config['USE_REMOTE_IMAGES'] and self.fields.image:
@@ -469,7 +355,7 @@ class IndividualMinifigure(RebrickableMinifigure):
 
             if not from_download:
                 socket.complete(
-                    message='Minifigure {figure}: loaded from Rebrickable'.format(
+                    message='Minifigure {figure}: loaded from the BrickLink catalog'.format(  # noqa: E501
                         figure=self.fields.figure
                     )
                 )
@@ -483,7 +369,7 @@ class IndividualMinifigure(RebrickableMinifigure):
                 socket.fail(message=error_msg)
             else:
                 socket.fail(
-                    message='Could not load the minifigure from Rebrickable: {error}. Data: {data}'.format(
+                    message='Could not load the minifigure from the BrickLink catalog: {error}. Data: {data}'.format(  # noqa: E501
                         error=error_msg,
                         data=data,
                     )

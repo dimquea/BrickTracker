@@ -6,6 +6,9 @@ INSERT OR IGNORE INTO "bricktracker_individual_minifigure_parts" (
     "quantity",
     "element",
     "rebrickable_inventory",
+    "counterpart",
+    "alternate",
+    "match_id",
     "missing",
     "damaged",
     "checked"
@@ -17,6 +20,9 @@ INSERT OR IGNORE INTO "bricktracker_individual_minifigure_parts" (
     :quantity,
     :element,
     :rebrickable_inventory,
+    :counterpart,
+    :alternate,
+    :match_id,
     0,
     0,
     0

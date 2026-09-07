@@ -449,14 +449,14 @@ class BrickPartList(BrickRecordList[BrickPart]):
 
         try:
             socket.auto_progress(
-                message='{kind} {identifier}: loading parts inventory from Rebrickable'.format(  # noqa: E501
+                message='{kind} {identifier}: loading parts inventory from the BrickLink catalog'.format(  # noqa: E501
                     kind=kind,
                     identifier=identifier,
                 ),
                 increment_total=True,
             )
 
-            logger.debug('rebrick.lego.{method}("{identifier}")'.format(
+            logger.debug('BrickLink catalog {method}("{identifier}")'.format(  # noqa: E501
                 method=method,
                 identifier=identifier,
             ))

@@ -22,7 +22,7 @@ class BrickMinifigure(RebrickableMinifigure):
     # Import a minifigure into the database
     def download(self, socket: 'BrickSocket', refresh: bool = False) -> bool:
         if self.brickset is None:
-            raise ErrorException('Importing a minifigure from Rebrickable outside of a set is not supported')  # noqa: E501
+            raise ErrorException('Importing a minifigure outside of a set is not supported')  # noqa: E501
 
         try:
             # Insert into the database

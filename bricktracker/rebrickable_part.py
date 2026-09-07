@@ -48,7 +48,7 @@ class RebrickablePart(BrickRecord):
     # Insert the part from Rebrickable
     def insert_rebrickable(self, /) -> None:
         if self.brickset is None:
-            raise ErrorException('Importing a part from Rebrickable outside of a set is not supported')  # noqa: E501
+            raise ErrorException('Importing a part outside of a set is not supported')  # noqa: E501
 
         # Insert the Rebrickable part to the database
         self.insert(

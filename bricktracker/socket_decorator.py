@@ -4,7 +4,6 @@ from typing import Callable, ParamSpec, TYPE_CHECKING, Union
 
 from flask import copy_current_request_context
 
-from .configuration_list import BrickConfigurationList
 from .login import LoginManager
 if TYPE_CHECKING:
     from .socket import BrickSocket
@@ -42,41 +41,11 @@ def authenticated_socket(
     return outer
 
 
-# Fail if not ready for Rebrickable (authenticated, API key)
-# Automatically makes it threaded
-def rebrickable_socket(
-    self: 'BrickSocket',
-    /,
-    *,
-    threaded: bool = True,
-) -> Callable[[SocketCallable], SocketCallable]:
-    def outer(function: SocketCallable, /) -> SocketCallable:
-        @wraps(function)
-        # Automatically authenticated
-        @authenticated_socket(self, threaded=False)
-        def wrapper(*args, **kwargs) -> SocketReturn:
-            # Needs the Rebrickable API key
-            try:
-                BrickConfigurationList.error_unless_is_set('REBRICKABLE_API_KEY')  # noqa: E501
-            except Exception as e:
-                self.fail(message=str(e))
-                return
-
-            # Apply threading
-            if threaded:
-                return threaded_socket(self)(function)(*args, **kwargs)
-            else:
-                return function(*args, **kwargs)
-
-        return wrapper
-    return outer
-
-
 # Fail if the BrickLink catalog is not available (authenticated, catalog)
 # Automatically makes it threaded
 #
-# Аналог rebrickable_socket для путей, переведённых на каталог BrickLink:
-# ключа API там не нужно, нужен скачанный дамп.
+# Пришёл на смену проверке ключа Rebrickable: ключа больше нет, а нужен
+# скачанный дамп каталога.
 def catalog_socket(
     self: 'BrickSocket',
     /,

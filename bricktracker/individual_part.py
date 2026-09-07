@@ -162,56 +162,49 @@ class IndividualPart(BrickRecord):
                 'bricklink_color_name': result[5]
             }
 
-        # Color not in cache, fetch from API
+        # Цвета нет в кэше: берём из каталога BrickLink
         try:
-            import rebrick
-            import json
+            from .bricklink_catalog import BrickLinkCatalog
 
-            rebrick.init(current_app.config['REBRICKABLE_API_KEY'])
-            color_response = rebrick.lego.get_color(color_id)
-            color_data = json.loads(color_response.read())
+            with BrickLinkCatalog() as catalog:
+                color_data = next(
+                    (
+                        color for color in catalog.colors()
+                        if int(color['COLOR']) == color_id
+                    ),
+                    None,
+                )
 
-            # Extract BrickLink color info
-            bricklink_color_id = None
-            bricklink_color_name = None
+            if color_data is None:
+                return None
 
-            if 'external_ids' in color_data and 'BrickLink' in color_data['external_ids']:
-                bricklink_info = color_data['external_ids']['BrickLink']
-                if 'ext_ids' in bricklink_info and bricklink_info['ext_ids']:
-                    bricklink_color_id = bricklink_info['ext_ids'][0]
-                if 'ext_descrs' in bricklink_info and bricklink_info['ext_descrs']:
-                    bricklink_color_name = bricklink_info['ext_descrs'][0][0] if bricklink_info['ext_descrs'][0] else None
+            name = color_data['COLORNAME']
+            is_trans = color_data['COLORTYPE'] == 'Transparent'
 
-            # Store in cache
             sql.execute('rebrickable_colors/insert', parameters={
-                'color_id': color_data['id'],
-                'name': color_data['name'],
-                'rgb': color_data.get('rgb'),
-                'is_trans': color_data.get('is_trans', False),
-                'bricklink_color_id': bricklink_color_id,
-                'bricklink_color_name': bricklink_color_name
+                'color_id': color_id,
+                'name': name,
+                'rgb': color_data['COLORRGB'],
+                'is_trans': is_trans,
+                # Каталог теперь и есть BrickLink, переводить нечего
+                'bricklink_color_id': color_id,
+                'bricklink_color_name': name,
             })
             sql.connection.commit()
 
-            logger.info('Cached color {color_id} ({color_name}) with BrickLink ID {bricklink_id}'.format(
-                color_id=color_id,
-                color_name=color_data["name"],
-                bricklink_id=bricklink_color_id
-            ))
-
             return {
-                'color_id': color_data['id'],
-                'name': color_data['name'],
-                'rgb': color_data.get('rgb'),
-                'is_trans': color_data.get('is_trans', False),
-                'bricklink_color_id': bricklink_color_id,
-                'bricklink_color_name': bricklink_color_name
+                'color_id': color_id,
+                'name': name,
+                'rgb': color_data['COLORRGB'],
+                'is_trans': is_trans,
+                'bricklink_color_id': color_id,
+                'bricklink_color_name': name,
             }
 
         except Exception as e:
-            logger.warning('Could not fetch color {color_id} from API: {error}'.format(
+            logger.warning('Could not read color {color_id} from the BrickLink catalog: {error}'.format(  # noqa: E501
                 color_id=color_id,
-                error=e
+                error=e,
             ))
             return None
 
@@ -276,117 +269,64 @@ class IndividualPart(BrickRecord):
             if not part_num:
                 raise ErrorException('Part number is required')
 
-            # Fetch available colors from Rebrickable
-            import rebrick
-            import json
+            from .bricklink_catalog import (
+                BrickLinkCatalog,
+                image_url,
+                ITEM_TYPE_PART,
+            )
 
-            rebrick.init(current_app.config['REBRICKABLE_API_KEY'])
-
-            # Setup progress tracking
             socket.progress_count = 0
-            socket.progress_total = 2  # Fetch part info + fetch colors
+            socket.progress_total = 2
 
-            try:
-                # Get part information for the name
-                socket.auto_progress(message='Fetching part information')
-                part_response = rebrick.lego.get_part(part_num)
-                part_data = json.loads(part_response.read())
-                part_name = part_data.get('name', part_num)
+            socket.auto_progress(message='Fetching part information')
 
-                # Get all available colors for this part
-                socket.auto_progress(message='Fetching available colors')
-                colors_response = rebrick.lego.get_part_colors(part_num)
-                colors_data = json.loads(colors_response.read())
-
-                # Extract the results
-                colors = colors_data.get('results', [])
-
-                if not colors:
-                    raise ErrorException(f'No colors found for part {part_num}')
-
-                # Download images locally if USE_REMOTE_IMAGES is False
-                if not current_app.config.get('USE_REMOTE_IMAGES', False):
-                    # Add image downloads to progress
-                    socket.progress_total += len(colors)
-
-                    for color in colors:
-                        image_url = color.get('part_img_url', '')
-                        element_id = color.get('elements', [])
-                        # Use first element_id if available, otherwise extract from URL
-                        if element_id and len(element_id) > 0:
-                            image_filename = str(element_id[0])
-                        else:
-                            # Fallback: extract from URL
-                            image_filename = None
-                            if image_url:
-                                image_filename, _ = os.path.splitext(os.path.basename(urlparse(image_url).path))
-
-                        if image_url and image_filename:
-                            socket.auto_progress(message='Downloading image for {color}'.format(
-                                color=color.get("color_name", "color")
-                            ))
-                            try:
-                                self.download_image(image_url, image_filename=image_filename)
-                            except Exception as e:
-                                logger.warning('Could not download image for part {part_num} color {color_id}: {error}'.format(
-                                    part_num=part_num,
-                                    color_id=color.get("color_id"),
-                                    error=e
-                                ))
-
-                # Emit the part colors loaded event
-                logger.info('Emitting {count} colors for part {part_num} ({part_name})'.format(
-                    count=len(colors),
-                    part_num=part_num,
-                    part_name=part_name
-                ))
-
-                socket.emit(
-                    'PART_COLORS_LOADED',
-                    {
-                        'part': part_num,
-                        'part_name': part_name,
-                        'colors': colors,
-                        'count': len(colors)
-                    }
+            with BrickLinkCatalog() as catalog:
+                reference = next(
+                    (
+                        item for item in catalog.items(ITEM_TYPE_PART)
+                        if item['ITEMID'] == part_num
+                    ),
+                    None,
                 )
 
-                logger.info('Successfully loaded {count} colors for part {part_num}'.format(
-                    count=len(colors),
-                    part_num=part_num
-                ))
-                return True
+                if reference is None:
+                    raise NotFoundException('Part {part_num} was not found in the BrickLink catalog'.format(  # noqa: E501
+                        part_num=part_num,
+                    ))
 
-            except Exception as e:
-                error_msg = str(e)
+                part_name = reference['ITEMNAME']
 
-                # Provide helpful error message for printed/decorated parts
-                if '404' in error_msg or 'Not Found' in error_msg:
-                    # Check if this might be a printed part (has letters/pattern code)
-                    base_part = ''.join(c for c in part_num if c.isdigit())
+                socket.auto_progress(message='Fetching available colors')
 
-                    if base_part and base_part != part_num:
-                        raise ErrorException(
-                            'Part {part_num} not found in Rebrickable. This appears to be a printed/decorated part. '
-                            'Try searching for the base part number: {base_part}'.format(
-                                part_num=part_num,
-                                base_part=base_part
-                            )
-                        )
-                    else:
-                        raise ErrorException(
-                            'Part {part_num} not found in Rebrickable. '
-                            'Please verify the part number is correct.'.format(
-                                part_num=part_num
-                            )
-                        )
-                else:
-                    raise ErrorException(
-                        'Could not fetch colors for part {part_num}: {error}'.format(
-                            part_num=part_num,
-                            error=error_msg
-                        )
-                    )
+                # В выгрузке нет перечня цветов, в которых выпускалась
+                # деталь: BrickLink держит его только на сайте. Поэтому
+                # предлагается весь список цветов, а не отфильтрованный.
+                # Картинки заранее не качаются — их 216 на деталь, и почти
+                # все оказались бы ненужными.
+                colors = [
+                    {
+                        'color_id': int(color['COLOR']),
+                        'color_name': color['COLORNAME'],
+                        'part_img_url': image_url(
+                            ITEM_TYPE_PART,
+                            part_num,
+                            color=int(color['COLOR']),
+                        ),
+                    }
+                    for color in catalog.colors()
+                ]
+
+            socket.emit(
+                'PART_COLORS_LOADED',
+                {
+                    'part': part_num,
+                    'part_name': part_name,
+                    'colors': colors,
+                    'count': len(colors),
+                }
+            )
+
+            return True
 
         except Exception as e:
             error_msg = str(e)
@@ -469,78 +409,67 @@ class IndividualPart(BrickRecord):
                         'name': part_name,
                         'image': image_url,
                         'image_id': image_id,
-                        'url': current_app.config['REBRICKABLE_LINK_PART_PATTERN'].format(part=part_num, color=color_id)
+                        'url': current_app.config['BRICKLINK_LINK_PART_PATTERN'].format(part=part_num, color=color_id)  # noqa: E501
                     })
                 else:
-                    # Fetch from Rebrickable (fallback for old workflow)
-                    socket.auto_progress(message='Fetching part info from Rebrickable')
-                    import rebrick
-                    import json
+                    # Данных с шага выбора цвета нет: берём из каталога
+                    socket.auto_progress(
+                        message='Fetching part info from the BrickLink catalog',  # noqa: E501
+                    )
 
-                    # Initialize rebrick with API key
-                    rebrick.init(current_app.config['REBRICKABLE_API_KEY'])
+                    from .bricklink_catalog import (
+                        BrickLinkCatalog,
+                        image_name,
+                        image_url as bricklink_image_url,
+                        ITEM_TYPE_PART,
+                    )
 
-                    try:
-                        # Get part information
-                        part_info = json.loads(rebrick.lego.get_part(part_num).read())
+                    with BrickLinkCatalog() as catalog:
+                        reference = next(
+                            (
+                                item for item in catalog.items(ITEM_TYPE_PART)
+                                if item['ITEMID'] == part_num
+                            ),
+                            None,
+                        )
 
-                        # Get color information (this also caches it in rebrickable_colors)
-                        # full_color_info already fetched above, but get again to be sure
-                        if not full_color_info:
-                            full_color_info = IndividualPart.get_or_fetch_color(color_id)
+                    if reference is None:
+                        raise NotFoundException('Part {part_num} was not found in the BrickLink catalog'.format(  # noqa: E501
+                            part_num=part_num,
+                        ))
 
-                        # Get part+color specific info (for the image and element_id)
-                        part_color_info = json.loads(rebrick.lego.get_part_color(part_num, color_id).read())
+                    if not full_color_info:
+                        full_color_info = IndividualPart.get_or_fetch_color(
+                            color_id,
+                        )
 
-                        # Get image URL
-                        image_url = part_color_info.get('part_img_url', part_info.get('part_img_url', ''))
+                    image_url = bricklink_image_url(
+                        ITEM_TYPE_PART,
+                        part_num,
+                        color=color_id,
+                    )
+                    image_id = image_name(
+                        ITEM_TYPE_PART,
+                        part_num,
+                        color=color_id,
+                    )
 
-                        # Extract image_id from element_ids or URL
-                        element_ids = part_color_info.get('elements', [])
-                        if element_ids and len(element_ids) > 0:
-                            image_id = str(element_ids[0])
-                        elif image_url:
-                            image_id, _ = os.path.splitext(os.path.basename(urlparse(image_url).path))
-                        else:
-                            image_id = None
-
-                        # Insert into rebrickable_parts with BrickLink color info
-                        sql.execute('rebrickable_parts/insert_with_preloaded_data', parameters={
-                            'part': part_info['part_num'],
-                            'color_id': full_color_info['color_id'] if full_color_info else color_id,
-                            'color_name': full_color_info['name'] if full_color_info else '',
-                            'color_rgb': full_color_info['rgb'] if full_color_info else None,
-                            'color_transparent': full_color_info['is_trans'] if full_color_info else None,
-                            'bricklink_color_id': full_color_info.get('bricklink_color_id') if full_color_info else None,
-                            'bricklink_color_name': full_color_info.get('bricklink_color_name') if full_color_info else None,
-                            'name': part_info['name'],
-                            'image': image_url,
-                            'image_id': image_id,
-                            'url': part_info['part_url']
-                        })
-
-                    except Exception as e:
-                        error_msg = str(e)
-
-                        # Provide helpful error message for printed/decorated parts
-                        if '404' in error_msg or 'Not Found' in error_msg:
-                            base_part = ''.join(c for c in part_num if c.isdigit())
-
-                            if base_part and base_part != part_num:
-                                raise ErrorException(
-                                    f'Part {part_num} with color {color_id} not found in Rebrickable. '
-                                    f'This appears to be a printed/decorated part. '
-                                    f'Try using the base part number: {base_part}'
-                                )
-                            else:
-                                raise ErrorException(
-                                    f'Part {part_num} with color {color_id} not found in Rebrickable. '
-                                    f'Please verify the part number is correct.'
-                                )
-                        else:
-                            raise ErrorException(
-                                f'Part {part_num} with color {color_id} not found in Rebrickable: {error_msg}'
-                            )
+                    sql.execute('rebrickable_parts/insert_with_preloaded_data', parameters={  # noqa: E501
+                        'part': part_num,
+                        'color_id': color_id,
+                        'color_name': full_color_info['name'] if full_color_info else '',  # noqa: E501
+                        'color_rgb': full_color_info['rgb'] if full_color_info else None,  # noqa: E501
+                        'color_transparent': full_color_info['is_trans'] if full_color_info else None,  # noqa: E501
+                        'bricklink_color_id': color_id,
+                        'bricklink_color_name': full_color_info['name'] if full_color_info else '',  # noqa: E501
+                        'name': reference['ITEMNAME'],
+                        'image': image_url,
+                        'image_id': image_id,
+                        'url': current_app.config['BRICKLINK_LINK_PART_PATTERN'].format(  # noqa: E501
+                            part=part_num,
+                            color=color_id,
+                        ),
+                    })
             else:
                 # Part already exists in rebrickable_parts, get the image URL
                 result = sql.fetchone('rebrickable_parts/select/image_by_part_color', parameters={'part': part_num, 'color_id': color_id})
