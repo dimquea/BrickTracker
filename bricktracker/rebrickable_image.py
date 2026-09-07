@@ -1,9 +1,12 @@
+import logging
 import os
+import time
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from flask import current_app, url_for
 import requests
+import urllib3
 from shutil import copyfileobj
 
 from .exceptions import DownloadException
@@ -11,6 +14,15 @@ if TYPE_CHECKING:
     from .rebrickable_minifigure import RebrickableMinifigure
     from .rebrickable_part import RebrickablePart
     from .rebrickable_set import RebrickableSet
+
+logger = logging.getLogger(__name__)
+
+# Local patch: the Rebrickable CDN is unreliable from some networks
+# (read timeouts, IncompleteRead, RemoteDisconnected). Without retries a
+# single failed image aborts the import of an entire set.
+DOWNLOAD_ATTEMPTS = 5
+DOWNLOAD_TIMEOUT = 30
+DOWNLOAD_BACKOFF = 2
 
 
 # A set, part or minifigure image from Rebrickable
@@ -58,16 +70,62 @@ class RebrickableImage(object):
         if not url:
             return
 
-        # Grab the image
-        response = requests.get(url, stream=True)
-        if response.ok:
-            with open(path, 'wb') as f:
-                copyfileobj(response.raw, f)
-        else:
-            raise DownloadException('could not get image {id} at {url}'.format(
-                id=self.id(),
-                url=url,
-            ))
+        # Grab the image, retrying on transient network errors.
+        # Written to a temporary file first so an interrupted download does
+        # not leave a truncated file that the os.path.exists() check above
+        # would later mistake for a valid cache entry.
+        temporary_path = '{path}.part'.format(path=path)
+
+        for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
+            try:
+                response = requests.get(
+                    url,
+                    stream=True,
+                    timeout=DOWNLOAD_TIMEOUT,
+                )
+
+                if not response.ok:
+                    raise DownloadException(
+                        'could not get image {id} at {url}'.format(
+                            id=self.id(),
+                            url=url,
+                        )
+                    )
+
+                with open(temporary_path, 'wb') as f:
+                    copyfileobj(response.raw, f)
+
+                os.replace(temporary_path, path)
+
+                return
+
+            except (
+                requests.RequestException,
+                urllib3.exceptions.HTTPError,
+                DownloadException,
+                OSError,
+            ) as e:
+                try:
+                    os.remove(temporary_path)
+                except OSError:
+                    pass
+
+                if attempt < DOWNLOAD_ATTEMPTS:
+                    time.sleep(DOWNLOAD_BACKOFF ** (attempt - 1))
+                    continue
+
+                # The image is only a local cache: the application already
+                # falls back to a placeholder when a file is absent, and a
+                # later set refresh will try again. Losing one image must not
+                # abort the import of a whole set.
+                logger.warning(
+                    'Giving up on image {id} at {url} after {n} attempts: {e}'.format(  # noqa: E501
+                        id=self.id(),
+                        url=url,
+                        n=DOWNLOAD_ATTEMPTS,
+                        e=e,
+                    )
+                )
 
     # Return the folder depending on the objects provided
     def folder(self, /) -> str:
