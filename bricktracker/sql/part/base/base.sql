@@ -9,6 +9,8 @@ SELECT
     "combined"."missing",
     "combined"."damaged",
     "combined"."checked",
+    "combined"."counterpart",
+    "combined"."alternate",
     "rebrickable_parts"."color_name",
     "rebrickable_parts"."color_rgb",
     "rebrickable_parts"."color_transparent",
@@ -51,6 +53,8 @@ FROM (
         "bricktracker_parts"."missing",
         "bricktracker_parts"."damaged",
         "bricktracker_parts"."checked",
+        "bricktracker_parts"."counterpart",
+        "bricktracker_parts"."alternate",
         'set' AS "source_type"
     FROM "bricktracker_parts"
 
@@ -68,6 +72,8 @@ FROM (
         "bricktracker_individual_minifigure_parts"."missing",
         "bricktracker_individual_minifigure_parts"."damaged",
         "bricktracker_individual_minifigure_parts"."checked",
+        "bricktracker_individual_minifigure_parts"."counterpart",
+        "bricktracker_individual_minifigure_parts"."alternate",
         'individual_minifigure' AS "source_type"
     FROM "bricktracker_individual_minifigure_parts"
     INNER JOIN "bricktracker_individual_minifigures"
@@ -87,6 +93,9 @@ FROM (
         "bricktracker_individual_parts"."missing",
         "bricktracker_individual_parts"."damaged",
         "bricktracker_individual_parts"."checked",
+        -- Свободные детали приходят не из инвентаря, секций у них нет
+        0 AS "counterpart",
+        0 AS "alternate",
         'individual_part' AS "source_type"
     FROM "bricktracker_individual_parts"
 ) AS "combined"

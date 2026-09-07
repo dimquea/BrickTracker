@@ -137,6 +137,21 @@
   {% endif %}
 {% endmacro %}
 
+{# Секции инвентаря BrickLink, к которым отнесена позиция.
+   Секция Extra показана отдельным значком Spare рядом. #}
+{% macro sections(item) %}
+  {% if item.fields.counterpart %}
+    <span class="badge rounded-pill text-bg-info fw-normal" data-bs-toggle="tooltip" title="Made from a part that is already counted, most often by applying a sticker to it. Not an additional piece.">
+      <i class="ri-sticky-note-line"></i> Counterpart
+    </span>
+  {% endif %}
+  {% if item.fields.alternate %}
+    <span class="badge rounded-pill text-bg-secondary fw-normal" data-bs-toggle="tooltip" title="Interchangeable with another part of this set.">
+      <i class="ri-arrow-left-right-line"></i> Alternate
+    </span>
+  {% endif %}
+{% endmacro %}
+
 {% macro image(image, caption=none, alt=none, accordion=false) %}
   <td class="py-0">
     <a data-lightbox data-caption="{{ caption }}" href="{{ image }}" target="_blank">
