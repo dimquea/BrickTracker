@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def get_peeron_user_agent():
     """Get the User-Agent string for Peeron requests from config"""
-    return current_app.config.get('REBRICKABLE_USER_AGENT',
+    return current_app.config.get('USER_AGENT',
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
 
 

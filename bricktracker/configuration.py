@@ -87,7 +87,6 @@ class BrickConfiguration(object):
     # Tells whether the value is secret
     def is_secret(self, /) -> bool:
         return self.name in [
-            'REBRICKABLE_API_KEY',
             'AUTHENTICATION_PASSWORD',
             'AUTHENTICATION_KEY'
         ]

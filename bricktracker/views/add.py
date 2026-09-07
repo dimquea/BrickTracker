@@ -1,7 +1,7 @@
 from flask import Blueprint, current_app, render_template, abort
 from flask_login import login_required
 
-from ..configuration_list import BrickConfigurationList
+from ..bricklink_catalog import error_unless_catalog
 from .exceptions import exception_handler
 from ..set_list import set_metadata_lists
 from ..set_status_list import BrickSetStatusList
@@ -15,7 +15,7 @@ add_page = Blueprint('add', __name__, url_prefix='/add')
 @login_required
 @exception_handler(__file__)
 def add() -> str:
-    BrickConfigurationList.error_unless_is_set('REBRICKABLE_API_KEY')
+    error_unless_catalog()
 
     return render_template(
         'add.html',
@@ -32,7 +32,7 @@ def add() -> str:
 @login_required
 @exception_handler(__file__)
 def bulk() -> str:
-    BrickConfigurationList.error_unless_is_set('REBRICKABLE_API_KEY')
+    error_unless_catalog()
 
     return render_template(
         'add.html',
@@ -54,7 +54,7 @@ def parts() -> str:
     if current_app.config.get('DISABLE_INDIVIDUAL_PARTS', False):
         abort(404)
 
-    BrickConfigurationList.error_unless_is_set('REBRICKABLE_API_KEY')
+    error_unless_catalog()
 
     return render_template(
         'add_parts.html',

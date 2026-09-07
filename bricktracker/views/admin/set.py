@@ -2,7 +2,7 @@ from flask import Blueprint, current_app, render_template, request
 from flask_login import login_required
 
 from ..exceptions import exception_handler
-from ...configuration_list import BrickConfigurationList
+from ...bricklink_catalog import error_unless_catalog
 from ...rebrickable_set_list import RebrickableSetList
 from ...socket import MESSAGES
 
@@ -27,7 +27,7 @@ def refresh() -> str:
 @login_required
 @exception_handler(__file__)
 def refresh_bulk() -> str:
-    BrickConfigurationList.error_unless_is_set('REBRICKABLE_API_KEY')
+    error_unless_catalog()
 
     # Get list of sets needing refresh
     refresh_needed = RebrickableSetList().need_refresh()

@@ -109,7 +109,7 @@ class BrickInstructions(object):
             # Use plain requests instead of cloudscraper
             session = requests.Session()
             session.headers.update({
-                'User-Agent': current_app.config['REBRICKABLE_USER_AGENT'],
+                'User-Agent': current_app.config['USER_AGENT'],
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.5',
                 'DNT': '1',
@@ -270,7 +270,7 @@ class BrickInstructions(object):
         # Use plain requests instead of cloudscraper
         session = requests.Session()
         session.headers.update({
-            'User-Agent': current_app.config['REBRICKABLE_USER_AGENT'],
+            'User-Agent': current_app.config['USER_AGENT'],
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.5',
             'DNT': '1',

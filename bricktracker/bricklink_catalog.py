@@ -10,7 +10,11 @@ from flask import current_app, g
 import humanize
 import requests
 
-from .exceptions import ErrorException, NotFoundException
+from .exceptions import (
+    ConfigurationMissingException,
+    ErrorException,
+    NotFoundException,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +58,19 @@ def image_name(
         return item
 
     return '{item}_{color}'.format(item=item, color=color)
+
+
+# Потребовать наличие каталога
+#
+# Пришло на смену проверке ключа Rebrickable на страницах, откуда
+# добавляют наборы: ключа больше нет, а без каталога добавлять нечего.
+def error_unless_catalog() -> None:
+    if not BrickLinkCatalog().exists():
+        # Именно ConfigurationMissingException, а не NotFoundException:
+        # страница существует, не хватает предусловия. Такой же тип
+        # использовался прежней проверкой ключа Rebrickable, и он даёт
+        # понятную страницу вместо 404.
+        raise ConfigurationMissingException('The BrickLink catalog has not been downloaded yet. Update it from the admin page.')  # noqa: E501
 
 
 # Каталог BrickLink, читаемый из архива выгрузок.

@@ -52,7 +52,6 @@ LIVE_CHANGEABLE_VARS: Final[List[str]] = [
     'BK_USE_REMOTE_IMAGES',
     'BK_PEERON_DOWNLOAD_DELAY',
     'BK_PEERON_MIN_IMAGE_SIZE',
-    'BK_REBRICKABLE_PAGE_SIZE',
     'BK_STATISTICS_SHOW_CHARTS',
     'BK_STATISTICS_DEFAULT_EXPANDED',
     'BK_DARK_MODE',
@@ -86,8 +85,6 @@ LIVE_CHANGEABLE_VARS: Final[List[str]] = [
     'BK_PEERON_THUMBNAIL_PATTERN',
     'BK_RETIRED_SETS_FILE_URL',
     'BK_RETIRED_SETS_PATH',
-    'BK_THEMES_FILE_URL',
-    'BK_THEMES_PATH'
 ]
 
 # Environment variables that require restart
@@ -105,7 +102,6 @@ RESTART_REQUIRED_VARS: Final[List[str]] = [
     'BK_SOCKET_PATH',
     'BK_NO_THREADED_SOCKET',
     'BK_TIMEZONE',
-    'BK_REBRICKABLE_API_KEY',
     'BK_INSTRUCTIONS_FOLDER',
     'BK_PARTS_FOLDER',
     'BK_SETS_FOLDER',
@@ -114,7 +110,6 @@ RESTART_REQUIRED_VARS: Final[List[str]] = [
     'BK_FILE_DATETIME_FORMAT',
     'BK_PURCHASE_DATE_FORMAT',
     'BK_PURCHASE_CURRENCY',
-    'BK_REBRICKABLE_USER_AGENT',
     'BK_USER_AGENT'
 ]
 
@@ -284,8 +279,8 @@ class ConfigManager:
         warnings = []
 
         # Check if critical variables are set
-        if not os.environ.get('BK_REBRICKABLE_API_KEY'):
-            warnings.append("BK_REBRICKABLE_API_KEY not set - some features may not work")
+        if not os.environ.get('BK_BRICKLINK_CATALOG_PATH', 'data/bricklink-catalog.zip'):
+            warnings.append("BK_BRICKLINK_CATALOG_PATH not set")
 
         # Check for conflicting settings
         if (os.environ.get('BK_PARTS_SERVER_SIDE_PAGINATION', '').lower() == 'false' and

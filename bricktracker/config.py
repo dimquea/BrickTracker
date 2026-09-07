@@ -86,17 +86,14 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'PURCHASE_CURRENCY', 'd': '€'},
     {'n': 'PURCHASE_LOCATION_DEFAULT_ORDER', 'd': '"bricktracker_metadata_purchase_locations"."name" ASC'},  # noqa: E501
     {'n': 'RANDOM', 'e': 'RANDOM', 'c': bool},
-    {'n': 'REBRICKABLE_API_KEY', 'e': 'REBRICKABLE_API_KEY', 'd': ''},
     {'n': 'REBRICKABLE_IMAGE_NIL', 'd': 'https://rebrickable.com/static/img/nil.png'},  # noqa: E501
     {'n': 'REBRICKABLE_IMAGE_NIL_MINIFIGURE', 'd': 'https://rebrickable.com/static/img/nil_mf.jpg'},  # noqa: E501
-    {'n': 'REBRICKABLE_USER_AGENT', 'd': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},  # noqa: E501
     {'n': 'USER_AGENT', 'd': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},  # noqa: E501
     {'n': 'PEERON_DOWNLOAD_DELAY', 'd': 1000, 'c': int},
     {'n': 'PEERON_INSTRUCTION_PATTERN', 'd': 'http://peeron.com/scans/{set_number}-{version_number}'},
     {'n': 'PEERON_MIN_IMAGE_SIZE', 'd': 100, 'c': int},
     {'n': 'PEERON_SCAN_PATTERN', 'd': 'http://belay.peeron.com/scans/{set_number}-{version_number}/'},
     {'n': 'PEERON_THUMBNAIL_PATTERN', 'd': 'http://belay.peeron.com/thumbs/{set_number}-{version_number}/'},
-    {'n': 'REBRICKABLE_PAGE_SIZE', 'd': 100, 'c': int},
     {'n': 'RETIRED_SETS_FILE_URL', 'd': 'https://docs.google.com/spreadsheets/d/1rlYfEXtNKxUOZt2Mfv0H17DvK7bj6Pe0CuYwq6ay8WA/gviz/tq?tqx=out:csv&sheet=Sorted%20by%20Retirement%20Date'},  # noqa: E501
     {'n': 'RETIRED_SETS_PATH', 'd': 'data/retired_sets.csv'},
     {'n': 'SETS_DEFAULT_ORDER', 'd': '"rebrickable_sets"."number" DESC, "rebrickable_sets"."version" ASC'},  # noqa: E501
@@ -110,8 +107,6 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'SOCKET_NAMESPACE', 'd': 'bricksocket'},
     {'n': 'SOCKET_PATH', 'd': '/bricksocket/'},
     {'n': 'STORAGE_DEFAULT_ORDER', 'd': '"bricktracker_metadata_storages"."name" ASC'},  # noqa: E501
-    {'n': 'THEMES_FILE_URL', 'd': 'https://cdn.rebrickable.com/media/downloads/themes.csv.gz'},  # noqa: E501
-    {'n': 'THEMES_PATH', 'd': 'data/themes.csv'},
     {'n': 'TIMEZONE', 'd': 'Etc/UTC'},
     {'n': 'USE_REMOTE_IMAGES', 'c': bool},
     {'n': 'WISHES_DEFAULT_ORDER', 'd': '"bricktracker_wishes"."rowid" DESC'},
