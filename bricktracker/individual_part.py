@@ -9,6 +9,7 @@ from flask import current_app, url_for
 import requests
 from shutil import copyfileobj
 
+from .bricklink_catalog import image_name, ITEM_TYPE_PART
 from .exceptions import NotFoundException, DatabaseException, ErrorException
 from .record import BrickRecord
 from .set_owner_list import BrickSetOwnerList
@@ -127,11 +128,22 @@ class IndividualPart(BrickRecord):
         else:
             from .rebrickable_image import RebrickableImage
 
-            if hasattr(self.fields, 'image') and self.fields.image:
-                image_id, _ = os.path.splitext(os.path.basename(urlparse(self.fields.image).path))
+            # Имя файла берём из каталога, как это делают детали в
+            # составе набора. Выводить его из адреса картинки нельзя:
+            # у BrickLink цвет лежит в пути, а не в имени, поэтому все
+            # цвета одной детали получали бы одно имя и затирали друг
+            # друга в кэше.
+            image_id = getattr(self.fields, 'image_id', None)
 
-                if image_id:
-                    return RebrickableImage.static_url(image_id, 'PARTS_FOLDER')
+            if not image_id:
+                image_id = image_name(
+                    ITEM_TYPE_PART,
+                    self.fields.part,
+                    color=self.fields.color,
+                )
+
+            if image_id:
+                return RebrickableImage.static_url(image_id, 'PARTS_FOLDER')
 
             return RebrickableImage.static_url(RebrickableImage.nil_name(), 'PARTS_FOLDER')
 
@@ -213,11 +225,16 @@ class IndividualPart(BrickRecord):
         if not image_url:
             return
 
-        # Use provided filename or extract from URL
+        # Имя задаётся явно, иначе складывается из детали и цвета.
+        # Выводить его из адреса нельзя: цвет туда не попадает.
         if image_filename:
             image_id = image_filename
         else:
-            image_id, _ = os.path.splitext(os.path.basename(urlparse(image_url).path))
+            image_id = image_name(
+                ITEM_TYPE_PART,
+                self.fields.part,
+                color=self.fields.color,
+            )
 
         if not image_id:
             return
@@ -388,14 +405,14 @@ class IndividualPart(BrickRecord):
 
                     image_url = color_data.get('part_img_url', '')
 
-                    # Extract image_id from element_id or URL
-                    element_ids = color_data.get('elements', [])
-                    if element_ids and len(element_ids) > 0:
-                        image_id = str(element_ids[0])
-                    elif image_url:
-                        image_id, _ = os.path.splitext(os.path.basename(urlparse(image_url).path))
-                    else:
-                        image_id = None
+                    # Имя в кэше складывается из детали и цвета:
+                    # идентификаторов элементов у BrickLink нет, а адрес
+                    # картинки цвета в имени не содержит
+                    image_id = image_name(
+                        ITEM_TYPE_PART,
+                        part_num,
+                        color=color_id,
+                    )
 
                     # Insert into rebrickable_parts using the pre-loaded data
                     sql.execute('rebrickable_parts/insert_with_preloaded_data', parameters={
@@ -419,9 +436,7 @@ class IndividualPart(BrickRecord):
 
                     from .bricklink_catalog import (
                         BrickLinkCatalog,
-                        image_name,
                         image_url as bricklink_image_url,
-                        ITEM_TYPE_PART,
                     )
 
                     with BrickLinkCatalog() as catalog:
@@ -658,14 +673,11 @@ class IndividualPart(BrickRecord):
                         color_name = cart_item.get('color_name', '')
                         image_url = color_info.get('part_img_url', '')
 
-                        # Extract image_id from element_ids or URL
-                        element_ids = color_info.get('elements', [])
-                        if element_ids and len(element_ids) > 0:
-                            image_id = str(element_ids[0])
-                        elif image_url:
-                            image_id, _ = os.path.splitext(os.path.basename(urlparse(image_url).path))
-                        else:
-                            image_id = None
+                        image_id = image_name(
+                            ITEM_TYPE_PART,
+                            part_num,
+                            color=color_id,
+                        )
 
                         # Use full_color_info for RGB and transparency data (same as single-part add)
                         sql.execute('rebrickable_parts/insert_part_color', parameters={
