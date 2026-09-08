@@ -329,8 +329,9 @@ class IndividualMinifigure(RebrickableMinifigure):
                 instance=self,
             ).get()
 
-            # Download minifigure image during preview if not using remote images
-            if not from_download and not current_app.config['USE_REMOTE_IMAGES'] and self.fields.image:
+            # Как и у набора: картинка нужна до отправки short(), в том
+            # числе на пути импорта, иначе оттуда уйдёт удалённый адрес
+            if not current_app.config['USE_REMOTE_IMAGES'] and self.fields.image:  # noqa: E501
                 from .rebrickable_image import RebrickableImage
                 from .set import BrickSet
                 try:

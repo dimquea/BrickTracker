@@ -138,13 +138,14 @@ class RebrickableSet(BrickRecord):
 
                 return IndividualMinifigure().load(socket, minifigure_data)
 
-            # Предпросмотр показывает локальную картинку, когда включено
-            # кэширование, значит её надо получить до показа. Загрузка
-            # фигурки делает то же самое.
-            if (
-                not from_download
-                and not current_app.config['USE_REMOTE_IMAGES']
-            ):
+            # Картинку надо получить до того, как отдать адрес наружу:
+            # short() отдаёт локальный путь, только если файл уже есть.
+            # Условия «только предпросмотр» здесь нет намеренно — при
+            # массовом добавлении short() тоже отправляется, и без этого
+            # он отдавал бы удалённый адрес. Лишней работы не возникает:
+            # download() ничего не делает, если файл на месте, а импорт
+            # всё равно скачал бы его следом.
+            if not current_app.config['USE_REMOTE_IMAGES']:
                 try:
                     RebrickableImage(self).download()
                 except Exception as e:
