@@ -138,6 +138,21 @@ class RebrickableSet(BrickRecord):
 
                 return IndividualMinifigure().load(socket, minifigure_data)
 
+            # Предпросмотр показывает локальную картинку, когда включено
+            # кэширование, значит её надо получить до показа. Загрузка
+            # фигурки делает то же самое.
+            if (
+                not from_download
+                and not current_app.config['USE_REMOTE_IMAGES']
+            ):
+                try:
+                    RebrickableImage(self).download()
+                except Exception as e:
+                    logger.warning('Could not download the preview image for set {set}: {error}'.format(  # noqa: E501
+                        set=self.fields.set,
+                        error=e,
+                    ))
+
             socket.emit('SET_LOADED', self.short(
                 from_download=from_download
             ))
@@ -181,14 +196,22 @@ class RebrickableSet(BrickRecord):
 
     # Return a short form of the Rebrickable set
     def short(self, /, *, from_download: bool = False) -> dict[str, Any]:
-        # Use nil image URL if set image is null
-        image_url = self.fields.image
-        if image_url is None:
-            # Return path to nil.png from parts folder
+        # Раньше здесь всегда отдавался удалённый адрес, в обход
+        # url_for_image(), из-за чего предпросмотр набора игнорировал
+        # USE_REMOTE_IMAGES, а предпросмотр фигурки — нет.
+        if self.fields.image is None:
             image_url = RebrickableImage.static_url(
                 RebrickableImage.nil_name(),
                 'PARTS_FOLDER'
             )
+        elif (
+            not current_app.config['USE_REMOTE_IMAGES']
+            and not RebrickableImage(self).cached()
+        ):
+            # Скачать не удалось: удалённый адрес лучше битой ссылки
+            image_url = self.fields.image
+        else:
+            image_url = self.url_for_image()
 
         return {
             'download': from_download,

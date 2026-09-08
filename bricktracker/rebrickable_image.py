@@ -136,6 +136,14 @@ class RebrickableImage(object):
                     )
                 )
 
+    # Есть ли картинка в локальном кэше
+    #
+    # Нужно предпросмотру: он показывает локальный адрес, только если файл
+    # действительно есть, иначе отдаёт удалённый. Иначе неудачная загрузка
+    # превращается в битую картинку вместо рабочей.
+    def cached(self, /) -> bool:
+        return os.path.exists(self.path())
+
     # Return the folder depending on the objects provided
     def folder(self, /) -> str:
         if self.part is not None:

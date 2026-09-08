@@ -382,9 +382,26 @@ class IndividualMinifigure(RebrickableMinifigure):
 
     # Return a short form of the minifigure
     def short(self, /, *, from_download: bool = False) -> dict[str, Any]:
+        from .rebrickable_image import RebrickableImage
+        from .set import BrickSet
+
+        # Локальный адрес — только если картинка действительно скачалась,
+        # иначе предпросмотр покажет битую ссылку вместо рабочей удалённой
+        if (
+            not current_app.config['USE_REMOTE_IMAGES']
+            and self.fields.image
+            and not RebrickableImage(
+                BrickSet(),
+                minifigure=self,
+            ).cached()
+        ):
+            image = self.fields.image
+        else:
+            image = self.url_for_image()
+
         return {
             'download': from_download,
-            'image': self.url_for_image(),
+            'image': image,
             'name': self.fields.name,
             'figure': self.fields.figure,
         }
