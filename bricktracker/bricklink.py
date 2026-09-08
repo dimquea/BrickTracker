@@ -240,23 +240,37 @@ class BrickLink(Generic[T]):
                 set=self.identifier,
             ))
 
-        entries = [
-            entry for entry in inventory
-            if entry['item_type'] == ITEM_TYPE_MINIFIGURE
-        ]
+        # Одна и та же фигурка встречается в инвентаре несколько раз,
+        # когда часть экземпляров лежит в секции Extra: у col26-2 это две
+        # обычных фигурки плюс одна запасная. У деталей запасные живут
+        # отдельной строкой, потому что spare входит в первичный ключ, а у
+        # фигурок такой колонки нет, и две строки столкнулись бы на нём.
+        #
+        # Поэтому количества складываются: различие «обычная или запасная»
+        # хранить негде, а вот сколько штук лежит в коробке — это как раз
+        # то, ради чего ведётся учёт.
+        quantities: dict[str, int] = {}
+
+        for entry in inventory:
+            if entry['item_type'] != ITEM_TYPE_MINIFIGURE:
+                continue
+
+            quantities[entry['item']] = (
+                quantities.get(entry['item'], 0) + entry['quantity']
+            )
 
         reference = self.reference(
             catalog,
             ITEM_TYPE_MINIFIGURE,
-            {entry['item'] for entry in entries},
+            set(quantities),
         )
 
         records: list[dict[str, Any]] = []
 
-        for entry in entries:
-            item = dict(reference.get(entry['item'], {}))
-            item.setdefault('ITEMID', entry['item'])
-            item['QTY'] = str(entry['quantity'])
+        for figure, quantity in quantities.items():
+            item = dict(reference.get(figure, {}))
+            item.setdefault('ITEMID', figure)
+            item['QTY'] = str(quantity)
             records.append(item)
 
         return records
@@ -271,6 +285,19 @@ class BrickLink(Generic[T]):
         inventory = catalog.inventory(item_type, self.identifier)
 
         if inventory is None:
+            # У фигурки инвентаря может не быть: BrickLink заводит как
+            # фигурки и цельнолитые предметы — кубки, микрофигурки, —
+            # которые сами по себе одна деталь. Это не ошибка, у них
+            # просто нет состава.
+            if item_type == ITEM_TYPE_MINIFIGURE:
+                logger.debug('Minifigure {figure} has no inventory: it is a single piece'.format(  # noqa: E501
+                    figure=self.identifier,
+                ))
+
+                return []
+
+            # А вот набор импортируется ради содержимого, и молча завести
+            # пустой хуже, чем сказать
             raise NotFoundException('{identifier} has no inventory in the BrickLink catalog'.format(  # noqa: E501
                 identifier=self.identifier,
             ))
