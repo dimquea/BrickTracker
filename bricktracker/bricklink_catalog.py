@@ -4,6 +4,7 @@ from xml.etree import ElementTree
 import json
 import logging
 import os
+import time
 import zipfile
 
 from flask import current_app, g
@@ -36,9 +37,20 @@ DOWNLOAD_CHUNK = 1 << 16
 # что приложение держит в памяти.
 INDEX_FIELDS = ('ITEMNAME', 'CATEGORY', 'ITEMYEAR')
 
+# Как часто разбор справочника уступает управление и на сколько
+#
+# Пауза именно ненулевая: gevent.sleep(0) переключается только между
+# готовыми greenlet-ами, а тот, которым gunicorn отмечается живым, ждёт
+# таймера. Чтобы таймеры прокрутились, hub должен пройти полный оборот.
+INDEX_YIELD_EVERY = 5000
+INDEX_YIELD_SECONDS = 0.001
+
 # Разобранные справочники, общие на процесс. Ключ включает приметы файла,
 # поэтому после update() индекс собирается заново, а не отдаёт старое.
 _INDEX: dict[tuple[Any, ...], dict[str, tuple[str, ...]]] = {}
+
+# Открытый архив, общий на процесс, с тем же ключом
+_ARCHIVE: dict[tuple[Any, ...], zipfile.ZipFile] = {}
 
 
 # Адрес картинки позиции
@@ -93,18 +105,16 @@ def error_unless_catalog() -> None:
 # Assistant это заметно.
 class BrickLinkCatalog(object):
     path: str
-    opened: zipfile.ZipFile | None
 
     def __init__(self, /, *, path: str | None = None):
         if path is None:
             path = current_app.config['BRICKLINK_CATALOG_PATH']
 
         self.path = path
-        self.opened = None
 
-    # Экземпляр держит архив открытым, поэтому его стоит закрывать. После
-    # update() файл подменяется, и открытый ранее экземпляр использовать
-    # нельзя — нужен новый.
+    # Архив общий на процесс и живёт до подмены файла, так что закрывать
+    # экземпляру нечего. Менеджер контекста оставлен: вызывающий код им
+    # размечает работу с каталогом, и читать его так понятнее.
     def __enter__(self, /) -> 'BrickLinkCatalog':
         return self
 
@@ -112,9 +122,7 @@ class BrickLinkCatalog(object):
         self.close()
 
     def close(self, /) -> None:
-        if self.opened is not None:
-            self.opened.close()
-            self.opened = None
+        pass
 
     # -- Файл каталога ----------------------------------------------------
 
@@ -226,23 +234,38 @@ class BrickLinkCatalog(object):
 
     # Открыть архив
     #
-    # Открытый архив запоминается: в нём около 53 000 записей, и разбор
-    # оглавления при каждом обращении стоит порядка секунды.
+    # Открытый архив общий на процесс: в нём около 53 000 записей, и разбор
+    # оглавления стоит порядка секунды. Экземпляр создаётся на каждое
+    # обращение к каталогу, то есть на каждую фигурку набора, так что
+    # секунда набегала двадцать семь раз подряд.
+    #
+    # Ключ тот же, что у справочника: после update() файл подменяется, и
+    # прежний архив закрывается, а не отдаётся дальше.
     def archive(self, /) -> zipfile.ZipFile:
-        if self.opened is not None:
-            return self.opened
-
         if not self.exists():
             raise NotFoundException('The BrickLink catalog has not been downloaded yet')  # noqa: E501
 
+        key = self.signature()
+
+        opened = _ARCHIVE.get(key)
+
+        if opened is not None:
+            return opened
+
+        for stale_key, stale in list(_ARCHIVE.items()):
+            stale.close()
+            del _ARCHIVE[stale_key]
+
         try:
-            self.opened = zipfile.ZipFile(self.path)
+            opened = zipfile.ZipFile(self.path)
         except zipfile.BadZipFile as e:
             raise ErrorException('The BrickLink catalog is not readable: {error}'.format(  # noqa: E501
                 error=e,
             ))
 
-        return self.opened
+        _ARCHIVE[key] = opened
+
+        return opened
 
     # Разобрать один член архива в список записей
     #
@@ -318,12 +341,22 @@ class BrickLinkCatalog(object):
             type=item_type,
         ))
 
-        index: dict[str, tuple[str, ...]] = {
-            item['ITEMID']: tuple(
+        index: dict[str, tuple[str, ...]] = {}
+
+        for number, item in enumerate(self.items(item_type), start=1):
+            index[item['ITEMID']] = tuple(
                 item.get(field, '') for field in INDEX_FIELDS
             )
-            for item in self.items(item_type)
-        }
+
+            # Уступаем управление циклу gevent
+            #
+            # Разбор справочника деталей — это несколько секунд подряд без
+            # единой точки переключения, а на медленном железе и десятки.
+            # Всё это время greenlet, которым gunicorn отмечается живым, не
+            # получает управления. Под gevent time.sleep пропатчен и
+            # переключает задачи, без него это короткая пауза.
+            if number % INDEX_YIELD_EVERY == 0:
+                time.sleep(INDEX_YIELD_SECONDS)
 
         _INDEX[key] = index
 

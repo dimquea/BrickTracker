@@ -15,6 +15,13 @@ from .sql import close as sql_close
 logger = logging.getLogger(__name__)
 
 # Messages valid through the socket
+# На сколько импорт уступает управление циклу gevent
+#
+# Пауза ненулевая намеренно: gevent.sleep(0) переключается только между
+# готовыми greenlet-ами, а тот, которым gunicorn отмечается живым, ждёт
+# таймера, и без полного оборота цикла он его не дождётся.
+YIELD_SECONDS: Final[float] = 0.001
+
 MESSAGES: Final[dict[str, str]] = {
     'COMPLETE': 'complete',
     'CONNECT': 'connect',
@@ -376,6 +383,21 @@ class BrickSocket(object):
             namespace=self.namespace,
             to=to,
         )
+
+        # Уступаем управление циклу gevent
+        #
+        # Импорт набора почти не делает того, на чём gevent переключает
+        # задачи: разбор каталога и работа с SQLite — это процессор и
+        # сишные вызовы, а картинки, если они уже в кэше, не качаются.
+        # Получается один длинный кусок кода без единой точки переключения,
+        # и greenlet, которым gunicorn отмечается живым, просто не
+        # получает управления. Через timeout секунд арбитр решает, что
+        # воркер завис, и убивает его — на 10188-1 с его 27 фигурками это
+        # случалось на 97 процентах.
+        #
+        # Заодно накопленные сообщения о ходе дела наконец уходят клиенту
+        # по мере работы, а не пачкой в конце.
+        self.socket.sleep(YIELD_SECONDS)
 
     # Send a failed
     def fail(self, /, **data: Any) -> None:
