@@ -13,4 +13,8 @@ then
 fi
 
 # Execute the WSGI server
-exec gunicorn --bind "${BK_HOST}:${BK_PORT}" "wsgi:application" --worker-class "gevent" --workers 1 "$@"
+# Таймаут больше стандартных 30 секунд: разбор справочника каталога
+# упирается в процессор и не отпускает цикл gevent, а на медленном
+# железе это заметно дольше тридцати секунд. Воркер один, ждать
+# некому.
+exec gunicorn --bind "${BK_HOST}:${BK_PORT}" "wsgi:application" --worker-class "gevent" --workers 1 --timeout 300 "$@"

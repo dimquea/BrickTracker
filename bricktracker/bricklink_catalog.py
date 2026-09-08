@@ -31,6 +31,15 @@ ITEM_TYPES_FILE = 'itemtypes.xml'
 DOWNLOAD_TIMEOUT = 60
 DOWNLOAD_CHUNK = 1 << 16
 
+# Поля справочника, которые кто-либо читает. Остальные (ALTITEMIDS,
+# ITEMWEIGHT, IMAGECOLOR) в индекс не попадают: он и так самое тяжёлое,
+# что приложение держит в памяти.
+INDEX_FIELDS = ('ITEMNAME', 'CATEGORY', 'ITEMYEAR')
+
+# Разобранные справочники, общие на процесс. Ключ включает приметы файла,
+# поэтому после update() индекс собирается заново, а не отдаёт старое.
+_INDEX: dict[tuple[Any, ...], dict[str, tuple[str, ...]]] = {}
+
 
 # Адрес картинки позиции
 #
@@ -275,6 +284,66 @@ class BrickLinkCatalog(object):
     # Справочник позиций одного типа
     def items(self, item_type: str, /) -> Iterator[dict[str, str]]:
         return self.parse('items/{type}.xml'.format(type=item_type))
+
+    # Приметы файла каталога: по ним индекс понимает, что архив сменился
+    def signature(self, /) -> tuple[Any, ...]:
+        stat = os.stat(self.path)
+
+        return (self.path, stat.st_size, stat.st_mtime_ns)
+
+    # Справочник позиций одного типа, разобранный один раз на процесс
+    #
+    # items/P.xml — это 96 504 записи и около пяти секунд разбора. Раньше
+    # он читался заново на каждый поиск, то есть на каждую фигурку набора:
+    # у 10188-1 с его 27 фигурками набегало под три минуты сплошного
+    # разбора, и gunicorn успевал убить воркера по таймауту раньше, чем
+    # набор дочитывался.
+    #
+    # Плата — около 40 МБ памяти на справочник деталей, которые процесс
+    # держит до перезапуска. Меньше было бы только с индексом на диске, но
+    # он попал бы в резервную копию базы, а она и так не маленькая.
+    def index(self, item_type: str, /) -> dict[str, tuple[str, ...]]:
+        key = self.signature() + (item_type,)
+
+        cached = _INDEX.get(key)
+
+        if cached is not None:
+            return cached
+
+        # Архив сменился: разобранное по прежнему файлу больше не нужно
+        for stale in [k for k in _INDEX if k[:-1] != key[:-1]]:
+            del _INDEX[stale]
+
+        logger.debug('Indexing BrickLink catalog items of type {type}'.format(
+            type=item_type,
+        ))
+
+        index: dict[str, tuple[str, ...]] = {
+            item['ITEMID']: tuple(
+                item.get(field, '') for field in INDEX_FIELDS
+            )
+            for item in self.items(item_type)
+        }
+
+        _INDEX[key] = index
+
+        return index
+
+    # Справочная запись об одной позиции
+    #
+    # Словарь собирается заново на каждое обращение: вызывающие дописывают
+    # в него своё (NUMBER_OF_PARTS, QTY), и общий на всех экземпляр они бы
+    # испортили.
+    def item(self, item_type: str, item_id: str, /) -> dict[str, str] | None:
+        entry = self.index(item_type).get(item_id)
+
+        if entry is None:
+            return None
+
+        found = {'ITEMTYPE': item_type, 'ITEMID': item_id}
+        found.update(zip(INDEX_FIELDS, entry))
+
+        return found
 
     # Инвентарь позиции: состав набора, фигурки или сборной детали
     #

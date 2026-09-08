@@ -136,11 +136,12 @@ class BrickLink(Generic[T]):
 
     # -- Чтение каталога --------------------------------------------------
 
-    # Справочная запись о позиции
+    # Справочные записи о позициях
     #
-    # Справочники большие: items/P.xml это 96 504 записи. Поэтому проход
-    # делается один и сразу по всем нужным идентификаторам, а не по одному
-    # на каждую деталь.
+    # Справочник разбирается один раз на процесс и остаётся в памяти
+    # (BrickLinkCatalog.index), поэтому здесь остаётся только разложить
+    # найденное по идентификаторам. Отсутствующие позиции просто не
+    # попадают в ответ — решает вызывающий, ошибка это или нет.
     @staticmethod
     def reference(
         catalog: BrickLinkCatalog,
@@ -148,18 +149,13 @@ class BrickLink(Generic[T]):
         wanted: set[str],
         /,
     ) -> dict[str, dict[str, str]]:
-        if not wanted:
-            return {}
-
         found: dict[str, dict[str, str]] = {}
 
-        for item in catalog.items(item_type):
-            if item['ITEMID'] in wanted:
-                found[item['ITEMID']] = item
+        for identifier in wanted:
+            item = catalog.item(item_type, identifier)
 
-                # Ранний выход: справочник перебирать дальше незачем
-                if len(found) == len(wanted):
-                    break
+            if item is not None:
+                found[identifier] = item
 
         return found
 

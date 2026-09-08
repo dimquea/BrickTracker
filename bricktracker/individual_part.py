@@ -298,13 +298,7 @@ class IndividualPart(BrickRecord):
             socket.auto_progress(message='Fetching part information')
 
             with BrickLinkCatalog() as catalog:
-                reference = next(
-                    (
-                        item for item in catalog.items(ITEM_TYPE_PART)
-                        if item['ITEMID'] == part_num
-                    ),
-                    None,
-                )
+                reference = catalog.item(ITEM_TYPE_PART, part_num)
 
                 if reference is None:
                     raise NotFoundException('Part {part_num} was not found in the BrickLink catalog'.format(  # noqa: E501
@@ -440,13 +434,7 @@ class IndividualPart(BrickRecord):
                     )
 
                     with BrickLinkCatalog() as catalog:
-                        reference = next(
-                            (
-                                item for item in catalog.items(ITEM_TYPE_PART)
-                                if item['ITEMID'] == part_num
-                            ),
-                            None,
-                        )
+                        reference = catalog.item(ITEM_TYPE_PART, part_num)
 
                     if reference is None:
                         raise NotFoundException('Part {part_num} was not found in the BrickLink catalog'.format(  # noqa: E501
