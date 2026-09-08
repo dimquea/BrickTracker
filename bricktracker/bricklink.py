@@ -268,6 +268,7 @@ class BrickLink(Generic[T]):
 
             merged[figure] = {
                 'quantity': entry['quantity'],
+                'counterpart': entry['counterpart'],
                 'alternate': entry['alternate'],
                 'match_id': entry['match_id'],
             }
@@ -284,6 +285,7 @@ class BrickLink(Generic[T]):
             item = dict(reference.get(figure, {}))
             item.setdefault('ITEMID', figure)
             item['QTY'] = str(entry['quantity'])
+            item['COUNTERPART'] = 'Y' if entry['counterpart'] else 'N'
             item['ALTERNATE'] = 'Y' if entry['alternate'] else 'N'
             item['MATCHID'] = str(entry['match_id'])
             records.append(item)

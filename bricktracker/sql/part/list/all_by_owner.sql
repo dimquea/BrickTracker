@@ -29,15 +29,15 @@ SUM("combined"."damaged") AS "total_damaged",
 {% block total_quantity %}
 {% if owner_id and owner_id != 'all' %}
 SUM(CASE
-    WHEN "combined"."source_type" = 'set' AND "bricktracker_set_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."quantity" * IFNULL("bricktracker_minifigures"."quantity", 1)
-    WHEN "combined"."source_type" = 'individual_minifigure' AND "individual_minifigure_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."quantity"
-    WHEN "combined"."source_type" = 'individual_part' AND ("individual_part_owners"."owner_{{ owner_id }}" = 1 OR "individual_part_lot_owners"."owner_{{ owner_id }}" = 1) THEN "combined"."quantity"
+    WHEN "combined"."source_type" = 'set' AND "bricktracker_set_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."counted" * IFNULL("bricktracker_minifigures"."quantity", 1)
+    WHEN "combined"."source_type" = 'individual_minifigure' AND "individual_minifigure_owners"."owner_{{ owner_id }}" = 1 THEN "combined"."counted"
+    WHEN "combined"."source_type" = 'individual_part' AND ("individual_part_owners"."owner_{{ owner_id }}" = 1 OR "individual_part_lot_owners"."owner_{{ owner_id }}" = 1) THEN "combined"."counted"
     ELSE 0
 END) AS "total_quantity",
 {% else %}
 SUM(CASE
-    WHEN "combined"."source_type" = 'set' THEN "combined"."quantity" * IFNULL("bricktracker_minifigures"."quantity", 1)
-    ELSE "combined"."quantity"
+    WHEN "combined"."source_type" = 'set' THEN "combined"."counted" * IFNULL("bricktracker_minifigures"."quantity", 1)
+    ELSE "combined"."counted"
 END) AS "total_quantity",
 {% endif %}
 {% endblock %}

@@ -31,7 +31,7 @@ LEFT JOIN (
 LEFT JOIN (
     SELECT
         "bricktracker_minifigures"."id",
-        SUM(CASE WHEN "bricktracker_minifigures"."alternate" = 0 THEN "bricktracker_minifigures"."quantity" ELSE 0 END) AS "minifigure_count"
+        SUM(CASE WHEN "bricktracker_minifigures"."alternate" = 0 AND "bricktracker_minifigures"."counterpart" = 0 THEN "bricktracker_minifigures"."quantity" ELSE 0 END) AS "minifigure_count"
     FROM "bricktracker_minifigures"
     GROUP BY "bricktracker_minifigures"."id"
 ) "minifigure_stats" ON "bricktracker_sets"."id" = "minifigure_stats"."id"

@@ -111,6 +111,11 @@ class RebrickableMinifigure(BrickRecord):
             'number': figure,
             'name': str(data.get('ITEMNAME', figure)),
             'quantity': int(data.get('QTY', 1)),
+            # Секция Counterpart: фигурка, собранная из уже посчитанных
+            # деталей. У 21108-1 это gb001i рядом с gb001 — тот же Игон
+            # без рюкзака. Не пятая фигурка набора, а другой взгляд на
+            # первую.
+            'counterpart': data.get('COUNTERPART', 'N') == 'Y',
             # Секция Alternate: взаимозаменяемые позиции с общим match_id
             'alternate': data.get('ALTERNATE', 'N') == 'Y',
             'match_id': int(data.get('MATCHID', 0) or 0),

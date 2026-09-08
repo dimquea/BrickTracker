@@ -13,6 +13,7 @@ SELECT
     "bricktracker_minifigures"."quantity",
     "bricktracker_minifigures"."missing",
     "bricktracker_minifigures"."damaged",
+    "bricktracker_minifigures"."counterpart",
     "bricktracker_minifigures"."alternate",
     "bricktracker_minifigures"."match_id",
     "rebrickable_minifigures"."figure",

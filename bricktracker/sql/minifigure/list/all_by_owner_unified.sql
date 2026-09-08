@@ -66,6 +66,12 @@ FROM (
     ON "bricktracker_minifigures"."id" IS NOT DISTINCT FROM "problem_join"."id"
     AND "rebrickable_minifigures"."figure" IS NOT DISTINCT FROM "problem_join"."figure"
     {% set conditions = [] %}
+    {# Ни альтернатива, ни counterpart не пополняют коллекцию: первая
+       заменяет собой основную фигурку набора, второй собран из уже
+       посчитанных деталей. В наборе они видны справкой, в общем списке
+       фигурок им делать нечего #}
+    {% set _ = conditions.append('"bricktracker_minifigures"."alternate" = 0') %}
+    {% set _ = conditions.append('"bricktracker_minifigures"."counterpart" = 0') %}
     {% if owner_id and owner_id != 'all' %}
       {% set _ = conditions.append('"bricktracker_set_owners"."owner_' ~ owner_id ~ '" = 1') %}
     {% endif %}

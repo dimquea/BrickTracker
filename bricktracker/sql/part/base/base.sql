@@ -55,6 +55,13 @@ FROM (
         "bricktracker_parts"."checked",
         "bricktracker_parts"."counterpart",
         "bricktracker_parts"."alternate",
+        -- Количество, которое идёт в счёт. Позиции секций Counterpart и
+        -- Alternate показываются, но не считаются: первая получена из уже
+        -- посчитанной детали, вторая заменяет собой основную
+        CASE WHEN "bricktracker_parts"."counterpart" = 0
+              AND "bricktracker_parts"."alternate" = 0
+             THEN "bricktracker_parts"."quantity"
+             ELSE 0 END AS "counted",
         'set' AS "source_type"
     FROM "bricktracker_parts"
 
@@ -74,6 +81,10 @@ FROM (
         "bricktracker_individual_minifigure_parts"."checked",
         "bricktracker_individual_minifigure_parts"."counterpart",
         "bricktracker_individual_minifigure_parts"."alternate",
+        CASE WHEN "bricktracker_individual_minifigure_parts"."counterpart" = 0
+              AND "bricktracker_individual_minifigure_parts"."alternate" = 0
+             THEN "bricktracker_individual_minifigure_parts"."quantity"
+             ELSE 0 END AS "counted",
         'individual_minifigure' AS "source_type"
     FROM "bricktracker_individual_minifigure_parts"
     INNER JOIN "bricktracker_individual_minifigures"
@@ -96,6 +107,7 @@ FROM (
         -- Свободные детали приходят не из инвентаря, секций у них нет
         0 AS "counterpart",
         0 AS "alternate",
+        "bricktracker_individual_parts"."quantity" AS "counted",
         'individual_part' AS "source_type"
     FROM "bricktracker_individual_parts"
 ) AS "combined"

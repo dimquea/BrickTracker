@@ -31,7 +31,11 @@
           <td>
             <a class="text-reset" href="{{ minifigure.url() }}">{{ minifigure.fields.name }}</a>
             <span class="badge rounded-pill text-bg-light border fw-normal">{{ minifigure.fields.figure }}</span>
-            {% if minifigure.fields.alternate %}
+            {% if minifigure.fields.counterpart %}
+              <span class="badge rounded-pill text-bg-info fw-normal" data-bs-toggle="tooltip" title="Made of parts already counted in another minifigure of this set.">
+                <i class="ri-sticky-note-line"></i> Counterpart
+              </span>
+            {% elif minifigure.fields.alternate %}
               <span class="badge rounded-pill text-bg-secondary fw-normal" data-bs-toggle="tooltip" title="Interchangeable with another minifigure of this set.">
                 <i class="ri-arrow-left-right-line"></i> Alternate
               </span>

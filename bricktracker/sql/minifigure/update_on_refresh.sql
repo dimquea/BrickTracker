@@ -5,6 +5,7 @@
 UPDATE "bricktracker_minifigures"
 SET
     "quantity" = :quantity,
+    "counterpart" = :counterpart,
     "alternate" = :alternate,
     "match_id" = :match_id
 WHERE "id" = :id

@@ -63,13 +63,21 @@
           <a class="btn border bg-secondary-text" href="{{ details }}">{% if icon %}<i class="ri-{{ icon }}"></i>{% endif %} Details</a>
         </p>
       {% endif %}
-      {% if problem and problem.fields.alternate %}
-        {# Альтернатива не приходила с набором, а могла прийти вместо
-           другой фигурки. Отмечать её отсутствующей нечего. #}
+      {% if problem and (problem.fields.alternate or problem.fields.counterpart) %}
+        {# Ни альтернатива, ни counterpart не приходили с набором
+           отдельной фигуркой: первая могла прийти вместо другой, второй
+           собран из деталей, уже посчитанных в основной. Отмечать их
+           отсутствующими нечего. #}
         <div class="border-bottom p-2 text-center">
-          <span class="badge rounded-pill text-bg-secondary fw-normal" data-bs-toggle="tooltip" title="Interchangeable with another minifigure of this set: the set came with one of them, not both.">
-            <i class="ri-arrow-left-right-line"></i> Alternate
-          </span>
+          {% if problem.fields.counterpart %}
+            <span class="badge rounded-pill text-bg-info fw-normal" data-bs-toggle="tooltip" title="Made of parts that are already counted in another minifigure of this set, most often the same figure without its accessories. Not an additional minifigure.">
+              <i class="ri-sticky-note-line"></i> Counterpart
+            </span>
+          {% else %}
+            <span class="badge rounded-pill text-bg-secondary fw-normal" data-bs-toggle="tooltip" title="Interchangeable with another minifigure of this set: the set came with one of them, not both.">
+              <i class="ri-arrow-left-right-line"></i> Alternate
+            </span>
+          {% endif %}
           <span class="small text-muted ms-1">shown for reference, not counted</span>
         </div>
       {% elif problem %}

@@ -1,7 +1,7 @@
 {% extends 'minifigure/base/base.sql' %}
 
 {% block total_quantity %}
-SUM(CASE WHEN "bricktracker_minifigures"."alternate" = 0 THEN "bricktracker_minifigures"."quantity" ELSE 0 END) AS "total_quantity",
+SUM(CASE WHEN "bricktracker_minifigures"."alternate" = 0 AND "bricktracker_minifigures"."counterpart" = 0 THEN "bricktracker_minifigures"."quantity" ELSE 0 END) AS "total_quantity",
 {% endblock %}
 
 {% block where %}

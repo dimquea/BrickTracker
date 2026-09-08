@@ -50,6 +50,12 @@ FROM (
     ON "bricktracker_minifigures"."id" IS NOT DISTINCT FROM "problem_join"."id"
     AND "rebrickable_minifigures"."figure" IS NOT DISTINCT FROM "problem_join"."figure"
     WHERE 1=1
+    -- Ни альтернатива, ни counterpart не пополняют коллекцию: первая
+    -- заменяет собой основную фигурку набора, второй собран из уже
+    -- посчитанных деталей. В наборе они видны справкой, в общем списке
+    -- фигурок им делать нечего
+    AND "bricktracker_minifigures"."alternate" = 0
+    AND "bricktracker_minifigures"."counterpart" = 0
     {% if theme_id and theme_id != 'all' %}
     AND "filter_rs"."theme_id" = {{ theme_id }}
     {% endif %}

@@ -9,7 +9,7 @@ SUM("combined"."damaged") AS "total_damaged",
 {% endblock %}
 
 {% block total_quantity %}
-SUM("combined"."quantity" * IFNULL("minifigure_quantities"."quantity", 1)) AS "total_quantity",
+SUM("combined"."counted" * IFNULL("minifigure_quantities"."quantity", 1)) AS "total_quantity",
 {% endblock %}
 
 {% block total_sets %}
@@ -26,7 +26,11 @@ LEFT JOIN (
     SELECT
         "bricktracker_minifigures"."id",
         "bricktracker_minifigures"."figure",
-        "bricktracker_minifigures"."quantity"
+        -- Альтернатива и counterpart не пополняют коллекцию
+        CASE WHEN "bricktracker_minifigures"."alternate" = 0
+              AND "bricktracker_minifigures"."counterpart" = 0
+             THEN "bricktracker_minifigures"."quantity"
+             ELSE 0 END AS "quantity"
     FROM "bricktracker_minifigures"
 
     UNION ALL

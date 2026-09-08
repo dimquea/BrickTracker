@@ -20,11 +20,16 @@ set_stats AS (
 ),
 
 -- Part statistics aggregation (set-based parts)
+--
+-- Позиции секций Counterpart и Alternate в счёт не идут: первая получена
+-- из уже посчитанной детали (наклейка на плитку, детали counterpart-
+-- фигурки), вторая заменяет собой основную, а не добавляется к ней.
+-- Отметки missing и damaged считаются как есть: их ставил пользователь.
 set_part_stats AS (
     SELECT
-        COUNT(*) AS total_part_instances,
-        COALESCE(SUM("quantity"), 0) AS total_parts_count,
-        COUNT(DISTINCT "part") AS unique_parts,
+        COUNT(CASE WHEN "counterpart" = 0 AND "alternate" = 0 THEN 1 END) AS total_part_instances,
+        COALESCE(SUM(CASE WHEN "counterpart" = 0 AND "alternate" = 0 THEN "quantity" ELSE 0 END), 0) AS total_parts_count,
+        COUNT(DISTINCT CASE WHEN "counterpart" = 0 AND "alternate" = 0 THEN "part" END) AS unique_parts,
         COALESCE(SUM("missing"), 0) AS total_missing_parts,
         COALESCE(SUM("damaged"), 0) AS total_damaged_parts
     FROM "bricktracker_parts"
@@ -50,6 +55,7 @@ part_stats AS (
         set_part_stats.total_parts_count + COALESCE(individual_part_stats.total_individual_parts_count, 0) AS total_parts_count,
         (SELECT COUNT(DISTINCT "part") FROM (
             SELECT "part" FROM "bricktracker_parts"
+            WHERE "counterpart" = 0 AND "alternate" = 0
             UNION
             SELECT "part" FROM "bricktracker_individual_parts"
         )) AS unique_parts,
@@ -59,11 +65,15 @@ part_stats AS (
 ),
 
 -- Minifigure statistics aggregation (set-based minifigures)
+--
+-- Как и у деталей, альтернатива и counterpart в счёт не идут: первая
+-- заменяет собой основную фигурку набора, второй собран из уже
+-- посчитанных деталей.
 set_minifig_stats AS (
     SELECT
-        COUNT(*) AS total_minifigure_instances,
-        COALESCE(SUM("quantity"), 0) AS total_minifigures_count,
-        COUNT(DISTINCT "figure") AS unique_minifigures
+        COUNT(CASE WHEN "counterpart" = 0 AND "alternate" = 0 THEN 1 END) AS total_minifigure_instances,
+        COALESCE(SUM(CASE WHEN "counterpart" = 0 AND "alternate" = 0 THEN "quantity" ELSE 0 END), 0) AS total_minifigures_count,
+        COUNT(DISTINCT CASE WHEN "counterpart" = 0 AND "alternate" = 0 THEN "figure" END) AS unique_minifigures
     FROM "bricktracker_minifigures"
 ),
 

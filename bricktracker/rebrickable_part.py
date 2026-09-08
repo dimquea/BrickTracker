@@ -173,10 +173,21 @@ class RebrickablePart(BrickRecord):
             'quantity': int(data['quantity']),
             # Секция Counterpart: деталь, полученная из другой, например
             # применением наклейки. Не отдельная физическая деталь.
-            'counterpart': data['counterpart'],
+            #
+            # Признак наследуется от фигурки: детали counterpart-фигурки
+            # (gb001i у 21108-1) — это те же детали, что уже посчитаны в
+            # основной, считать их второй раз не за что.
+            'counterpart': bool(data['counterpart']) or (
+                minifigure is not None
+                and bool(getattr(minifigure.fields, 'counterpart', False))
+            ),
             # Секция Alternate: взаимозаменяемые позиции, сгруппированные
-            # общим match_id
-            'alternate': data['alternate'],
+            # общим match_id. Наследуется по той же причине: альтернативная
+            # фигурка заменяет основную, а не добавляется к ней.
+            'alternate': bool(data['alternate']) or (
+                minifigure is not None
+                and bool(getattr(minifigure.fields, 'alternate', False))
+            ),
             'match_id': int(data['match_id']),
             # Своего идентификатора строки инвентаря у BrickLink нет
             'rebrickable_inventory': 0,
