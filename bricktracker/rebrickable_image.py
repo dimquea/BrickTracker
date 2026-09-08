@@ -78,17 +78,26 @@ class RebrickableImage(object):
 
         for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
             try:
+                # Заголовок обязателен: BrickLink отвечает отказом на
+                # запросы с User-Agent библиотеки. Тот же приём уже
+                # используется при скачивании инструкций.
                 response = requests.get(
                     url,
                     stream=True,
                     timeout=DOWNLOAD_TIMEOUT,
+                    headers={
+                        'User-Agent': current_app.config['USER_AGENT'],
+                    },
                 )
 
                 if not response.ok:
+                    # Код ответа в сообщении: без него отказ по User-Agent
+                    # неотличим от отсутствующей картинки
                     raise DownloadException(
-                        'could not get image {id} at {url}'.format(
+                        'could not get image {id} at {url} ({code})'.format(
                             id=self.id(),
                             url=url,
+                            code=response.status_code,
                         )
                     )
 
