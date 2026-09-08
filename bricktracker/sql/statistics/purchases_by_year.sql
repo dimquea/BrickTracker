@@ -37,7 +37,7 @@ set_purchases AS (
     LEFT JOIN (
         SELECT
             "bricktracker_minifigures"."id",
-            SUM("bricktracker_minifigures"."quantity") AS "minifigure_count",
+            SUM(CASE WHEN "bricktracker_minifigures"."alternate" = 0 THEN "bricktracker_minifigures"."quantity" ELSE 0 END) AS "minifigure_count",
             COUNT(DISTINCT "bricktracker_minifigures"."figure") AS "unique_minifigures"
         FROM "bricktracker_minifigures"
         GROUP BY "bricktracker_minifigures"."id"

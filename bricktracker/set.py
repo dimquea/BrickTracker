@@ -156,8 +156,10 @@ class BrickSet(RebrickableSet):
             # If refreshing, prepare temp table for tracking parts across both set and minifigs
             if refresh:
                 sql = BrickSQL()
-                sql.execute('part/create_temp_refresh_tracking_table', defer=False)
-                sql.execute('part/clear_temp_refresh_tracking_table', defer=False)
+                sql.execute('part/create_temp_refresh_tracking_table', defer=False)  # noqa: E501
+                sql.execute('part/clear_temp_refresh_tracking_table', defer=False)  # noqa: E501
+                sql.execute('minifigure/create_temp_refresh_tracking_table', defer=False)  # noqa: E501
+                sql.execute('minifigure/clear_temp_refresh_tracking_table', defer=False)  # noqa: E501
 
             # Load the inventory
             if not BrickPartList.download(socket, self, refresh=refresh):
@@ -172,6 +174,13 @@ class BrickSet(RebrickableSet):
                 # Delete orphaned parts (parts that weren't in the API response)
                 BrickSQL().execute(
                     'part/delete_untracked_parts',
+                    parameters={'id': self.fields.id},
+                    defer=False
+                )
+
+                # И фигурки, выпавшие из инвентаря
+                BrickSQL().execute(
+                    'minifigure/delete_untracked_minifigures',
                     parameters={'id': self.fields.id},
                     defer=False
                 )

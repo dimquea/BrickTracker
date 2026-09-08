@@ -111,6 +111,9 @@ class RebrickableMinifigure(BrickRecord):
             'number': figure,
             'name': str(data.get('ITEMNAME', figure)),
             'quantity': int(data.get('QTY', 1)),
+            # Секция Alternate: взаимозаменяемые позиции с общим match_id
+            'alternate': data.get('ALTERNATE', 'N') == 'Y',
+            'match_id': int(data.get('MATCHID', 0) or 0),
             'image': image_url(ITEM_TYPE_MINIFIGURE, figure),
             # Внутри набора состав фигурки не читается, там его считает
             # загрузчик деталей

@@ -63,7 +63,11 @@ ON "bricktracker_sets"."id" IS NOT DISTINCT FROM "problem_join"."id"
 LEFT JOIN (
     SELECT
        "bricktracker_minifigures"."id",
-       SUM("bricktracker_minifigures"."quantity") AS "total"
+       -- Альтернатива не добавляется к набору, а заменяет собой
+       -- основную позицию, поэтому в счёт не идёт
+       SUM(CASE WHEN "bricktracker_minifigures"."alternate" = 0
+                THEN "bricktracker_minifigures"."quantity"
+                ELSE 0 END) AS "total"
     FROM "bricktracker_minifigures"
     GROUP BY "bricktracker_minifigures"."id"
 ) "minifigures_join"

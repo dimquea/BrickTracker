@@ -1,9 +1,13 @@
 INSERT INTO "bricktracker_minifigures" (
     "id",
     "figure",
-    "quantity"
+    "quantity",
+    "alternate",
+    "match_id"
 ) VALUES (
     :id,
     :figure,
-    :quantity
+    :quantity,
+    :alternate,
+    :match_id
 )

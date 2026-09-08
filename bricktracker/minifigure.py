@@ -4,6 +4,7 @@ from typing import Self, TYPE_CHECKING
 
 from .exceptions import ErrorException, NotFoundException
 from .part_list import BrickPartList
+from .sql import BrickSQL
 from .rebrickable_minifigure import RebrickableMinifigure
 if TYPE_CHECKING:
     from .set import BrickSet
@@ -46,7 +47,31 @@ class BrickMinifigure(RebrickableMinifigure):
             # This must happen before inserting into bricktracker_minifigures due to FK constraint
             self.insert_rebrickable()
 
-            if not refresh:
+            if refresh:
+                params = self.sql_parameters()
+
+                # Отмечаем, что фигурка встретилась: всё неотмеченное
+                # будет удалено после обхода
+                BrickSQL().execute(
+                    'minifigure/track_refresh_minifigure',
+                    parameters=params,
+                    defer=False,
+                )
+
+                # Сначала пробуем обновить: так сохраняются отметки
+                # missing и damaged. Раньше при обновлении строки фигурок
+                # не трогались вовсе, и расхождение с каталогом было не
+                # починить ничем, кроме переустановки набора.
+                rows, _ = BrickSQL().execute(
+                    'minifigure/update_on_refresh',
+                    parameters=params,
+                    defer=False,
+                )
+
+                # Не обновилось — значит фигурки ещё не было
+                if rows == 0:
+                    self.insert(commit=False)
+            else:
                 # Insert into bricktracker_minifigures database (child record)
                 self.insert(commit=False)
 

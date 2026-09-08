@@ -192,6 +192,9 @@ class BrickLink(Generic[T]):
             if entry['item_type'] == ITEM_TYPE_PART
             and not entry['extra']
             and not entry['counterpart']
+            # Альтернатива не добавляется к набору, а заменяет собой
+            # основную позицию, поэтому в состав не входит
+            and not entry['alternate']
         ))
 
         return item
@@ -223,6 +226,9 @@ class BrickLink(Generic[T]):
             if entry['item_type'] == ITEM_TYPE_PART
             and not entry['extra']
             and not entry['counterpart']
+            # Альтернатива не добавляется к набору, а заменяет собой
+            # основную позицию, поэтому в состав не входит
+            and not entry['alternate']
         ))
 
         return item
@@ -249,28 +255,41 @@ class BrickLink(Generic[T]):
         # Поэтому количества складываются: различие «обычная или запасная»
         # хранить негде, а вот сколько штук лежит в коробке — это как раз
         # то, ради чего ведётся учёт.
-        quantities: dict[str, int] = {}
+        # Складываются экземпляры одной и той же фигурки, а не разные
+        # фигурки: альтернатива остаётся отдельной записью со своим
+        # признаком, иначе набор показывал бы её как ещё одну фигурку.
+        merged: dict[str, dict[str, Any]] = {}
 
         for entry in inventory:
             if entry['item_type'] != ITEM_TYPE_MINIFIGURE:
                 continue
 
-            quantities[entry['item']] = (
-                quantities.get(entry['item'], 0) + entry['quantity']
-            )
+            figure = entry['item']
+
+            if figure in merged:
+                merged[figure]['quantity'] += entry['quantity']
+                continue
+
+            merged[figure] = {
+                'quantity': entry['quantity'],
+                'alternate': entry['alternate'],
+                'match_id': entry['match_id'],
+            }
 
         reference = self.reference(
             catalog,
             ITEM_TYPE_MINIFIGURE,
-            set(quantities),
+            set(merged),
         )
 
         records: list[dict[str, Any]] = []
 
-        for figure, quantity in quantities.items():
+        for figure, entry in merged.items():
             item = dict(reference.get(figure, {}))
             item.setdefault('ITEMID', figure)
-            item['QTY'] = str(quantity)
+            item['QTY'] = str(entry['quantity'])
+            item['ALTERNATE'] = 'Y' if entry['alternate'] else 'N'
+            item['MATCHID'] = str(entry['match_id'])
             records.append(item)
 
         return records
