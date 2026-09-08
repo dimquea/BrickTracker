@@ -2,11 +2,71 @@
 {% import 'macro/form.html' as form %}
 {% import 'macro/table.html' as table %}
 
-{% block title %} - Problematic parts{% endblock %}
+{% block title %} - Problems{% endblock %}
 
 {% block main %}
+{% if problem_minifigures | length %}
+<div class="container-fluid pb-3">
+  <h5 class="border-bottom pb-2 mb-3"><i class="ri-group-line"></i> Problematic minifigures</h5>
+  <div class="table-responsive-sm">
+    <table data-table="false" class="table table-striped align-middle mb-0" id="problem-minifigures">
+      <thead>
+        <tr>
+          <th class="no-sort" scope="col"><i class="ri-image-line fw-normal"></i> Image</th>
+          <th scope="col"><i class="ri-pencil-line fw-normal"></i> Name</th>
+          <th scope="col"><i class="ri-hashtag fw-normal"></i> Set</th>
+          <th scope="col"><i class="ri-functions fw-normal"></i> Quantity</th>
+          {% if not config['HIDE_TABLE_MISSING_PARTS'] %}
+            <th scope="col"><i class="ri-question-line fw-normal"></i> Missing</th>
+          {% endif %}
+          {% if not config['HIDE_TABLE_DAMAGED_PARTS'] %}
+            <th scope="col"><i class="ri-error-warning-line fw-normal"></i> Damaged</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for minifigure in problem_minifigures %}
+        <tr>
+          {{ table.image(minifigure.url_for_image(), caption=minifigure.fields.name, alt=minifigure.fields.figure) }}
+          <td>
+            <a class="text-reset" href="{{ minifigure.url() }}">{{ minifigure.fields.name }}</a>
+            <span class="badge rounded-pill text-bg-light border fw-normal">{{ minifigure.fields.figure }}</span>
+            {% if minifigure.fields.alternate %}
+              <span class="badge rounded-pill text-bg-secondary fw-normal" data-bs-toggle="tooltip" title="Interchangeable with another minifigure of this set.">
+                <i class="ri-arrow-left-right-line"></i> Alternate
+              </span>
+            {% endif %}
+            {{ table.custom_catalog(minifigure) }}
+            {{ table.bricklink(minifigure) }}
+          </td>
+          <td>
+            <a class="text-reset" href="{{ url_for('set.details', id=minifigure.fields.id) }}">{{ minifigure.fields.set_name }}</a>
+            <span class="badge rounded-pill text-bg-light border fw-normal">{{ minifigure.fields.set }}</span>
+          </td>
+          <td>{{ minifigure.fields.quantity }}</td>
+          {% if not config['HIDE_TABLE_MISSING_PARTS'] %}
+            <td class="table-td-input">
+              {{ form.input('Missing', minifigure.fields.id ~ '-' ~ minifigure.fields.figure, 'problem-minifigure-missing', minifigure.url_for_problem('missing'), minifigure.fields.missing, read_only=read_only) }}
+            </td>
+          {% endif %}
+          {% if not config['HIDE_TABLE_DAMAGED_PARTS'] %}
+            <td class="table-td-input">
+              {{ form.input('Damaged', minifigure.fields.id ~ '-' ~ minifigure.fields.figure, 'problem-minifigure-damaged', minifigure.url_for_problem('damaged'), minifigure.fields.damaged, read_only=read_only) }}
+            </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
 {% if table_collection | length %}
 <div class="container-fluid">
+  {% if problem_minifigures | length %}
+  <h5 class="border-bottom pb-2 mb-3"><i class="ri-shapes-line"></i> Problematic parts</h5>
+  {% endif %}
   <div class="row row-cols-lg-auto g-1 justify-content-center align-items-center pb-2">
     <div class="col-12 flex-grow-1">
       <label class="visually-hidden" for="table-search">Search</label>
@@ -212,14 +272,18 @@
   {% endif %}
 
 </div>
+{% elif problem_minifigures | length %}
+  <div class="container-fluid">
+    <p class="text-muted text-center mb-0">No problematic parts, only the minifigures above.</p>
+  </div>
 {% else %}
   <div class="container-fluid">
     <div class="row justify-content-center">
       <div class="col-md-6">
         <div class="text-center">
           <i class="ri-error-warning-line" style="font-size: 4rem; color: #6c757d;"></i>
-          <h3 class="mt-3">No problematic parts found</h3>
-          <p class="text-muted">Great! All your parts are in perfect condition.</p>
+          <h3 class="mt-3">Nothing to report</h3>
+          <p class="text-muted">Great! All your parts and minifigures are in perfect condition.</p>
         </div>
       </div>
     </div>

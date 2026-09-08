@@ -125,12 +125,20 @@ class BrickMinifigure(RebrickableMinifigure):
 
     # Url to update a problem count
     def url_for_problem(self, problem: str, /) -> str:
-        if self.brickset is None:
+        if self.brickset is not None:
+            id = self.brickset.fields.id
+        else:
+            # Список проблем приходит из bricktracker_minifigures, где
+            # id — это как раз набор, и отдельный BrickSet под каждую
+            # строку заводить незачем
+            id = getattr(self.fields, 'id', None)
+
+        if id is None:
             return ''
 
         return url_for(
             'set.problem_minifigure',
-            id=self.brickset.fields.id,
+            id=id,
             figure=self.fields.figure,
             problem=problem,
         )

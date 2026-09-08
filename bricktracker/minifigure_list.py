@@ -25,6 +25,7 @@ class BrickMinifigureList(BrickRecordList[BrickMinifigure]):
     damaged_part_query: str = 'minifigure/list/damaged_part'
     last_query: str = 'minifigure/list/last'
     missing_part_query: str = 'minifigure/list/missing_part'
+    problem_query: str = 'minifigure/list/problem'
     select_query: str = 'minifigure/list/from_set'
     using_part_query: str = 'minifigure/list/using_part'
 
@@ -234,6 +235,18 @@ class BrickMinifigureList(BrickRecordList[BrickMinifigure]):
 
         # Load the minifigures from the database
         self.list(override_query=self.missing_part_query)
+
+        return self
+
+    # Minifigures marked as missing or damaged
+    #
+    # Строка на пару набор-фигурка: отметка стоит именно на паре, и
+    # странице проблем важно, в каком наборе фигурки не хватает.
+    def problem(self, /) -> Self:
+        self.list(
+            override_query=self.problem_query,
+            order='"bricktracker_sets"."set" ASC, "rebrickable_minifigures"."name" ASC',  # noqa: E501
+        )
 
         return self
 

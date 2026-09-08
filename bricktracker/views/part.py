@@ -172,9 +172,15 @@ def problem() -> str:
     # Get list of tags for filter dropdown (problem parts only)
     tags = BrickSQL().fetchall('part/tags/list_problem', **filter_context)
 
+    # Фигурки с отметками идут отдельной секцией: у фигурки нет цвета, а
+    # именно цвет держит сортировку и фильтры таблицы деталей, да и
+    # считается фигурка не как деталь
+    problem_minifigures = BrickMinifigureList().problem()
+
     return render_template(
         'problem.html',
         table_collection=parts,
+        problem_minifigures=problem_minifigures.records,
         pagination=pagination_context,
         search_query=search_query,
         sort_field=sort_field,
