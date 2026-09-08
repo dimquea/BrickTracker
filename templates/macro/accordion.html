@@ -1,3 +1,4 @@
+{% import 'macro/form.html' as form with context %}
 {% macro header(title, id, parent, quantity=none, expanded=false, icon=none, class=none, danger=none, image=none, alt=none, hamburger_menu=none) %}
   {% if danger %}
     {% set icon='alert-fill' %}
@@ -43,9 +44,14 @@
   {% endif %}
 {% endmacro %}
 
-{% macro table(table_collection, title, id, parent, target, quantity=none, icon=none, image=none, alt=none, details=none, read_only=none, hamburger_menu=none, filters=false) %}
+{# always: показывать даже с пустой коллекцией. Нужно для фигурок из
+   одной детали — кубков, микрофигурок: своих деталей у них нет, и без
+   этого они не появлялись на странице набора вовсе.
+   problem: объект, которому можно проставить отсутствие и повреждение
+   целиком, а не по деталям. #}
+{% macro table(table_collection, title, id, parent, target, quantity=none, icon=none, image=none, alt=none, details=none, read_only=none, hamburger_menu=none, filters=false, always=false, problem=none) %}
   {% set size=table_collection | length %}
-  {% if size %}
+  {% if size or always %}
     {{ header(title, id, parent, quantity=quantity, icon=icon, class='p-0', image=image, alt=alt, hamburger_menu=hamburger_menu) }}
       {% if details %}
         <p class="border-top border-bottom p-2 text-center">
@@ -57,9 +63,37 @@
           <a class="btn border bg-secondary-text" href="{{ details }}">{% if icon %}<i class="ri-{{ icon }}"></i>{% endif %} Details</a>
         </p>
       {% endif %}
-      {% with solo=true, all=false, accordion_id=id, read_only=read_only, hamburger_menu=hamburger_menu, filters=filters %}
-        {% include target %}
-      {% endwith %}
+      {% if problem and problem.fields.alternate %}
+        {# Альтернатива не приходила с набором, а могла прийти вместо
+           другой фигурки. Отмечать её отсутствующей нечего. #}
+        <div class="border-bottom p-2 text-center">
+          <span class="badge rounded-pill text-bg-secondary fw-normal" data-bs-toggle="tooltip" title="Interchangeable with another minifigure of this set: the set came with one of them, not both.">
+            <i class="ri-arrow-left-right-line"></i> Alternate
+          </span>
+          <span class="small text-muted ms-1">shown for reference, not counted</span>
+        </div>
+      {% elif problem %}
+        <div class="border-bottom p-2">
+          <div class="row g-2 align-items-center">
+            <div class="col-auto small text-muted">Whole minifigure:</div>
+            <div class="col-6 col-md-3">
+              {{ form.input('Missing', problem.fields.figure, id ~ '-minifigure-missing', problem.url_for_problem('missing'), problem.fields.missing, read_only=read_only, icon='question-line') }}
+            </div>
+            <div class="col-6 col-md-3">
+              {{ form.input('Damaged', problem.fields.figure, id ~ '-minifigure-damaged', problem.url_for_problem('damaged'), problem.fields.damaged, read_only=read_only, icon='error-warning-line') }}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+      {% if size %}
+        {% with solo=true, all=false, accordion_id=id, read_only=read_only, hamburger_menu=hamburger_menu, filters=filters %}
+          {% include target %}
+        {% endwith %}
+      {% else %}
+        <p class="p-3 mb-0 text-center text-muted small">
+          <i class="ri-information-line"></i> A single moulded piece, so it has no parts of its own.
+        </p>
+      {% endif %}
     {{ footer() }}
   {% endif %}
 {% endmacro %}

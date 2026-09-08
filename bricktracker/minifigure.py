@@ -1,6 +1,8 @@
 import logging
 import traceback
-from typing import Self, TYPE_CHECKING
+from typing import Any, Self, TYPE_CHECKING
+
+from flask import url_for
 
 from .exceptions import ErrorException, NotFoundException
 from .part_list import BrickPartList
@@ -89,6 +91,49 @@ class BrickMinifigure(RebrickableMinifigure):
             return False
 
         return True
+
+    # Update a problem count on the minifigure
+    #
+    # Тот же смысл, что у детали: сколько экземпляров отсутствует или
+    # повреждено. Набор нередко достаётся без фигурок, и до появления
+    # этих колонок отметить это было негде: пометить недостающими все
+    # детали фигурки — не то же самое, а у цельнолитых деталей нет вовсе.
+    def update_problem(self, problem: str, json: Any | None, /) -> int:
+        amount: str | int = json.get('value', '')  # type: ignore
+
+        try:
+            if amount == '':
+                amount = 0
+
+            amount = int(amount)
+
+            if amount < 0:
+                amount = 0
+        except Exception:
+            raise ErrorException('"{amount}" is not a valid integer'.format(
+                amount=amount,
+            ))
+
+        setattr(self.fields, problem, amount)
+
+        BrickSQL().execute_and_commit(
+            'minifigure/update/{problem}'.format(problem=problem),
+            parameters=self.sql_parameters(),
+        )
+
+        return amount
+
+    # Url to update a problem count
+    def url_for_problem(self, problem: str, /) -> str:
+        if self.brickset is None:
+            return ''
+
+        return url_for(
+            'set.problem_minifigure',
+            id=self.brickset.fields.id,
+            figure=self.fields.figure,
+            problem=problem,
+        )
 
     # Parts
     def generic_parts(self, /) -> BrickPartList:

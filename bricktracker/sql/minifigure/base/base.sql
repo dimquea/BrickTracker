@@ -1,5 +1,10 @@
 SELECT
     "bricktracker_minifigures"."quantity",
+    -- Отметки и признак секции нужны карточке фигурки в наборе
+    "bricktracker_minifigures"."missing",
+    "bricktracker_minifigures"."damaged",
+    "bricktracker_minifigures"."alternate",
+    "bricktracker_minifigures"."match_id",
     "rebrickable_minifigures"."figure",
     "rebrickable_minifigures"."number",
     "rebrickable_minifigures"."number_of_parts",

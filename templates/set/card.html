@@ -132,7 +132,7 @@
         {% endif %}
         {{ accordion.table(item.parts(), 'Parts', 'parts-inventory', 'set-details', 'part/table.html', icon='shapes-line', hamburger_menu=g.login.is_authenticated(), filters=true)}}
         {% for minifigure in item.minifigures() %}
-          {{ accordion.table(minifigure.parts(), minifigure.fields.name, minifigure.fields.figure, 'set-details', 'part/table.html', quantity=minifigure.fields.quantity, icon='group-line', image=minifigure.url_for_image(), alt=minifigure.fields.figure, details=minifigure.url(), hamburger_menu=g.login.is_authenticated())}}
+          {{ accordion.table(minifigure.parts(), minifigure.fields.name, minifigure.fields.figure, 'set-details', 'part/table.html', quantity=minifigure.fields.quantity, icon='group-line', image=minifigure.url_for_image(), alt=minifigure.fields.figure, details=minifigure.url(), hamburger_menu=g.login.is_authenticated(), always=true, problem=minifigure)}}
         {% endfor %}
         {% include 'set/management.html' %}
       {% endif %}

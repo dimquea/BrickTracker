@@ -312,6 +312,32 @@ def details(*, id: str) -> str:
 
 
 # Update problematic pieces of a set
+# Update a problem count on a minifigure of a set
+@set_page.route('/<id>/minifigures/<figure>/<problem>', methods=['POST'])
+@login_required
+@exception_handler(__file__, json=True)
+def problem_minifigure(
+    *,
+    id: str,
+    figure: str,
+    problem: str,
+) -> Response:
+    brickset = BrickSet().select_specific(id)
+    brickminifigure = BrickMinifigure().select_specific(brickset, figure)
+
+    amount = brickminifigure.update_problem(problem, request.json)
+
+    logger.info('Set {set} ({id}): updated minifigure {figure} {problem} count to {amount}'.format(  # noqa: E501
+        set=brickset.fields.set,
+        id=brickset.fields.id,
+        figure=figure,
+        problem=problem,
+        amount=amount,
+    ))
+
+    return jsonify({'value': amount})
+
+
 @set_page.route('/<id>/parts/<part>/<int:color>/<int:spare>/<problem>', defaults={'figure': None}, methods=['POST'])  # noqa: E501
 @set_page.route('/<id>/minifigures/<figure>/parts/<part>/<int:color>/<int:spare>/<problem>', methods=['POST'])  # noqa: E501
 @login_required
