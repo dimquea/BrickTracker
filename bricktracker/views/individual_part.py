@@ -14,7 +14,11 @@ from flask import (
 )
 from flask_login import login_required
 
+from datetime import datetime
+
 from .exceptions import exception_handler
+from .upload import upload_helper
+from ..bricklink_import import BrickLinkImport
 from ..individual_part import IndividualPart
 from ..individual_part_list import IndividualPartList
 from ..individual_part_lot import IndividualPartLot
@@ -56,6 +60,89 @@ def list() -> str:
         writes_disabled=writes_disabled,
         **set_metadata_lists(as_class=True)
     )
+
+
+# Import a BrickLink XML list of parts
+@individual_part_page.route('/import', methods=['GET'])
+@require_individual_parts_write
+@login_required
+@exception_handler(__file__)
+def upload() -> str:
+    return render_template(
+        'individual_part/import.html',
+        **set_metadata_lists(as_class=True),
+    )
+
+
+# Actually import the file
+@individual_part_page.route('/import', methods=['POST'])
+@require_individual_parts_write
+@login_required
+@exception_handler(__file__, post_redirect='individual_part.upload')
+def do_upload() -> str | Response:
+    file = upload_helper(
+        'file',
+        'individual_part.upload',
+        extensions=['.xml'],
+    )
+
+    if isinstance(file, Response):
+        return file
+
+    imported = BrickLinkImport()
+    imported.parse(file.read())
+
+    # Лот заводится, только если его назвали: без имени партия ничем не
+    # отличается от просто добавленных деталей
+    lot = None
+    name = request.form.get('lot_name', '').strip()
+
+    if name:
+        lot = {
+            'name': name,
+            'description': request.form.get('lot_description') or None,
+            'storage': request.form.get('storage') or None,
+            'purchase_location': request.form.get('purchase_location') or None,
+            'purchase_date': parse_purchase_date(
+                request.form.get('purchase_date'),
+            ),
+            'purchase_price': parse_purchase_price(
+                request.form.get('purchase_price'),
+            ),
+        }
+
+    added = imported.apply(lot=lot)
+
+    # Отчёт показывается всегда, даже когда всё прошло: пропущенные
+    # строки — единственный способ узнать, что часть файла не доехала
+    return render_template(
+        'individual_part/import.html',
+        added=added,
+        skipped=imported.skipped,
+        done=True,
+        **set_metadata_lists(as_class=True),
+    )
+
+
+# Дата и цена приходят из формы строками
+def parse_purchase_date(value: str | None, /) -> float | None:
+    if not value:
+        return None
+
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').timestamp()
+    except ValueError:
+        return None
+
+
+def parse_purchase_price(value: str | None, /) -> float | None:
+    if not value:
+        return None
+
+    try:
+        return float(value)
+    except ValueError:
+        return None
 
 
 # Quick add individual part from set parts table

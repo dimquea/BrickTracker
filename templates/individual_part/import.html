@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Import parts{% endblock %}
+
+{% block main %}
+<h1 class="h3 border-bottom pb-2 mb-3"><i class="ri-upload-2-line"></i> Import parts from BrickLink XML</h1>
+
+{% if done %}
+  <div class="alert {% if added %}alert-success{% else %}alert-warning{% endif %}" role="alert">
+    <h5 class="alert-heading"><i class="ri-check-line"></i> Imported {{ added }} {% if added == 1 %}entry{% else %}entries{% endif %}</h5>
+    {% if not added %}Nothing was added.{% endif %}
+  </div>
+
+  {% if skipped %}
+    <div class="alert alert-warning" role="alert">
+      <h5 class="alert-heading"><i class="ri-error-warning-line"></i> Skipped {{ skipped | length }}</h5>
+      <p class="mb-2 small">These entries were left out. Nothing about them was stored.</p>
+      <div class="table-responsive-sm">
+        <table class="table table-sm table-striped mb-0">
+          <thead><tr><th>Item</th><th>Reason</th></tr></thead>
+          <tbody>
+            {% for entry in skipped %}
+              <tr><td><code>{{ entry.item }}</code></td><td>{{ entry.reason }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+
+  <p>
+    <a href="{{ url_for('individual_part.list') }}" class="btn btn-primary"><i class="ri-shapes-line"></i> Individual parts</a>
+    <a href="{{ url_for('individual_part.upload') }}" class="btn btn-secondary"><i class="ri-upload-2-line"></i> Import another file</a>
+  </p>
+{% else %}
+  <p class="text-muted">
+    Takes a BrickLink Wanted List XML file, the format this application exports and the one
+    BrickStore and BrickLink itself produce. Every part in it is added to your individual parts.
+  </p>
+  <p class="text-muted small">
+    Minifigures and sets in the file are reported rather than imported: they are held differently
+    and are added from their own pages. Anything the catalog does not recognise is reported too.
+  </p>
+
+  <form method="POST" action="{{ url_for('individual_part.do_upload') }}" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label for="file" class="form-label">BrickLink XML file</label>
+      <input class="form-control" type="file" id="file" name="file" accept=".xml" required>
+    </div>
+
+    <h5 class="border-bottom pt-2">Lot <span class="text-muted fw-normal fs-6">optional</span></h5>
+    <p class="text-muted small">
+      Name a lot and everything from this file goes into it, sharing where and when it was bought.
+      Leave the name empty to add the parts on their own.
+    </p>
+
+    <div class="row g-3 mb-3">
+      <div class="col-12 col-md-6">
+        <label for="lot_name" class="form-label">Lot name</label>
+        <input type="text" class="form-control" id="lot_name" name="lot_name" placeholder="Bulk lot, flea market">
+      </div>
+      <div class="col-12 col-md-6">
+        <label for="lot_description" class="form-label">Description</label>
+        <input type="text" class="form-control" id="lot_description" name="lot_description">
+      </div>
+      <div class="col-12 col-md-4">
+        <label for="storage" class="form-label">Storage</label>
+        <select class="form-select" id="storage" name="storage">
+          <option value="">—</option>
+          {% for storage in brickset_storages %}
+            <option value="{{ storage.fields.id }}">{{ storage.fields.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <label for="purchase_location" class="form-label">Purchase location</label>
+        <select class="form-select" id="purchase_location" name="purchase_location">
+          <option value="">—</option>
+          {% for location in brickset_purchase_locations %}
+            <option value="{{ location.fields.id }}">{{ location.fields.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label for="purchase_date" class="form-label">Purchase date</label>
+        <input type="date" class="form-control" id="purchase_date" name="purchase_date">
+      </div>
+      <div class="col-6 col-md-2">
+        <label for="purchase_price" class="form-label">Price</label>
+        <input type="number" step="0.01" min="0" class="form-control" id="purchase_price" name="purchase_price">
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary"><i class="ri-upload-2-line"></i> Import</button>
+    <a href="{{ url_for('individual_part.list') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+{% endif %}
+{% endblock %}

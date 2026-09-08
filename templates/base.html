@@ -53,6 +53,7 @@
                         {% endif %}
                         {% if has_parts %}
                         <li><a class="dropdown-item" href="{{ url_for('add.parts') }}"><i class="ri-hammer-line"></i> Add parts</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('individual_part.upload') }}"><i class="ri-upload-2-line"></i> Import parts (BrickLink XML)</a></li>
                         {% endif %}
                       </ul>
                     </li>
