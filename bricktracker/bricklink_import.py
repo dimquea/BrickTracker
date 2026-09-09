@@ -14,6 +14,7 @@ from .bricklink_catalog import (
     ITEM_TYPE_PART,
 )
 from .exceptions import ErrorException
+from .rebrickable_image import fetch, RebrickableImage
 from .sql import BrickSQL
 
 logger = logging.getLogger(__name__)
@@ -36,9 +37,13 @@ class BrickLinkImport(object):
     # Строки, которые не удалось разобрать или принять, с причиной
     skipped: list[dict[str, str]]
 
+    # Позиции, для которых не удалось сложить картинку в кэш
+    images_failed: list[str]
+
     def __init__(self, /):
         self.entries = []
         self.skipped = []
+        self.images_failed = []
 
     # -- Разбор -----------------------------------------------------------
 
@@ -121,6 +126,11 @@ class BrickLinkImport(object):
     # Возвращает число добавленных позиций. Всё, что не нашлось в каталоге,
     # уходит в skipped: коллекция не должна пополняться артикулами, о
     # которых мы ничего не знаем.
+    #
+    # Картинки складываются в кэш здесь же. Раньше импорт их не трогал
+    # вовсе: в каталожную строку записывался адрес, а файла не появлялось,
+    # и на странице висела битая картинка — кроме тех деталей, чей цвет
+    # уже встречался в наборах коллекции.
     def apply(self, /, *, lot: dict[str, Any] | None = None) -> int:
         if not self.entries:
             return 0
@@ -163,6 +173,9 @@ class BrickLinkImport(object):
                 color,
             )
 
+            if not self.cache_image(part, color):
+                self.images_failed.append(part)
+
             sql.execute(
                 'individual_part/insert_with_lot',
                 parameters={
@@ -180,6 +193,23 @@ class BrickLinkImport(object):
         sql.connection.commit()
 
         return added
+
+    # Сложить картинку детали в локальный кэш
+    #
+    # При удалённых картинках кэш не нужен: страница ходит прямо в
+    # BrickLink.
+    @staticmethod
+    def cache_image(part: str, color: int, /) -> bool:
+        if current_app.config['USE_REMOTE_IMAGES']:
+            return True
+
+        identifier = image_name(ITEM_TYPE_PART, part, color=color)
+
+        return fetch(
+            image_url(ITEM_TYPE_PART, part, color=color),
+            RebrickableImage.file_path(identifier, 'PARTS_FOLDER'),
+            name=identifier,
+        )
 
     # Завести лот под партию
     @staticmethod

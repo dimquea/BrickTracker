@@ -25,6 +25,95 @@ DOWNLOAD_TIMEOUT = 30
 DOWNLOAD_BACKOFF = 2
 
 
+# Скачать картинку в локальный кэш
+#
+# Общая часть для картинок каталога и картинок отдельных деталей: до
+# вынесения у последних была своя загрузка без заголовка, и BrickLink
+# отвечал на неё отказом — картинки просто не появлялись.
+#
+# Возвращает True, если файл на месте: либо был, либо только что скачался.
+def fetch(url: str | None, path: str, /, *, name: str = '') -> bool:
+    # Ничего не делаем, если файл уже есть
+    if os.path.exists(path):
+        return True
+
+    if not url:
+        return False
+
+    if not name:
+        name = os.path.basename(path)
+
+    directory = os.path.dirname(path)
+
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+
+    # Пишем через временный файл, чтобы оборванная загрузка не оставила
+    # обрезанный файл, который проверка выше потом примет за готовый
+    temporary_path = '{path}.part'.format(path=path)
+
+    for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
+        try:
+            # Заголовок обязателен: BrickLink отвечает отказом на запросы
+            # с User-Agent библиотеки. Тот же приём уже используется при
+            # скачивании инструкций.
+            response = requests.get(
+                url,
+                stream=True,
+                timeout=DOWNLOAD_TIMEOUT,
+                headers={
+                    'User-Agent': current_app.config['USER_AGENT'],
+                },
+            )
+
+            if not response.ok:
+                # Код ответа в сообщении: без него отказ по User-Agent
+                # неотличим от отсутствующей картинки
+                raise DownloadException(
+                    'could not get image {name} at {url} ({code})'.format(
+                        name=name,
+                        url=url,
+                        code=response.status_code,
+                    )
+                )
+
+            with open(temporary_path, 'wb') as f:
+                copyfileobj(response.raw, f)
+
+            os.replace(temporary_path, path)
+
+            return True
+
+        except (
+            requests.RequestException,
+            urllib3.exceptions.HTTPError,
+            DownloadException,
+            OSError,
+        ) as e:
+            try:
+                os.remove(temporary_path)
+            except OSError:
+                pass
+
+            if attempt < DOWNLOAD_ATTEMPTS:
+                time.sleep(DOWNLOAD_BACKOFF ** (attempt - 1))
+                continue
+
+            # Картинка — всего лишь локальный кэш: приложение показывает
+            # заглушку, когда файла нет, а следующий refresh попробует
+            # ещё раз. Одна потерянная картинка не должна ронять импорт.
+            logger.warning(
+                'Giving up on image {name} at {url} after {n} attempts: {e}'.format(  # noqa: E501
+                    name=name,
+                    url=url,
+                    n=DOWNLOAD_ATTEMPTS,
+                    e=e,
+                )
+            )
+
+    return False
+
+
 # A set, part or minifigure image from Rebrickable
 class RebrickableImage(object):
     set: 'RebrickableSet'
@@ -59,82 +148,7 @@ class RebrickableImage(object):
 
     # Import the image from Rebrickable
     def download(self, /) -> None:
-        path = self.path()
-
-        # Avoid doing anything if the file exists
-        if os.path.exists(path):
-            return
-
-        # Get the URL (this handles nil images via url() method)
-        url = self.url()
-        if not url:
-            return
-
-        # Grab the image, retrying on transient network errors.
-        # Written to a temporary file first so an interrupted download does
-        # not leave a truncated file that the os.path.exists() check above
-        # would later mistake for a valid cache entry.
-        temporary_path = '{path}.part'.format(path=path)
-
-        for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
-            try:
-                # Заголовок обязателен: BrickLink отвечает отказом на
-                # запросы с User-Agent библиотеки. Тот же приём уже
-                # используется при скачивании инструкций.
-                response = requests.get(
-                    url,
-                    stream=True,
-                    timeout=DOWNLOAD_TIMEOUT,
-                    headers={
-                        'User-Agent': current_app.config['USER_AGENT'],
-                    },
-                )
-
-                if not response.ok:
-                    # Код ответа в сообщении: без него отказ по User-Agent
-                    # неотличим от отсутствующей картинки
-                    raise DownloadException(
-                        'could not get image {id} at {url} ({code})'.format(
-                            id=self.id(),
-                            url=url,
-                            code=response.status_code,
-                        )
-                    )
-
-                with open(temporary_path, 'wb') as f:
-                    copyfileobj(response.raw, f)
-
-                os.replace(temporary_path, path)
-
-                return
-
-            except (
-                requests.RequestException,
-                urllib3.exceptions.HTTPError,
-                DownloadException,
-                OSError,
-            ) as e:
-                try:
-                    os.remove(temporary_path)
-                except OSError:
-                    pass
-
-                if attempt < DOWNLOAD_ATTEMPTS:
-                    time.sleep(DOWNLOAD_BACKOFF ** (attempt - 1))
-                    continue
-
-                # The image is only a local cache: the application already
-                # falls back to a placeholder when a file is absent, and a
-                # later set refresh will try again. Losing one image must not
-                # abort the import of a whole set.
-                logger.warning(
-                    'Giving up on image {id} at {url} after {n} attempts: {e}'.format(  # noqa: E501
-                        id=self.id(),
-                        url=url,
-                        n=DOWNLOAD_ATTEMPTS,
-                        e=e,
-                    )
-                )
+        fetch(self.url(), self.path(), name=self.id())
 
     # Есть ли картинка в локальном кэше
     #
@@ -226,6 +240,22 @@ class RebrickableImage(object):
         )
 
         return filename
+
+    # Путь к файлу картинки по имени и папке
+    #
+    # То же, что path(), но без объектов: нужен тем, у кого нет ни набора,
+    # ни детали каталога — отдельным деталям и импорту из XML.
+    @staticmethod
+    def file_path(name: str, folder_name: str, /) -> str:
+        folder: str = current_app.config[folder_name]
+
+        if folder.startswith('/'):
+            base_path = folder
+        else:
+            base_path = os.path.join(current_app.root_path, folder)
+
+        # Всё складывается в jpg, даже если пришло png
+        return os.path.join(base_path, '{name}.jpg'.format(name=name))
 
     # Return the static URL for an image given a name and folder
     @staticmethod

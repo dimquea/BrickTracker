@@ -27,6 +27,18 @@
     </div>
   {% endif %}
 
+  {% if images_failed %}
+    <div class="alert alert-warning" role="alert">
+      <h5 class="alert-heading"><i class="ri-image-line"></i> No image for {{ images_failed | length }} of them</h5>
+      <p class="mb-0 small">
+        The parts themselves are imported and counted; only their pictures are missing, so they
+        show as broken images. BrickLink refuses some part and colour combinations. Refreshing a
+        set that uses the same part fetches the picture, and so does the fix_images script.
+      </p>
+      <p class="mb-0 small mt-2"><code>{{ images_failed | join(', ') }}</code></p>
+    </div>
+  {% endif %}
+
   <p>
     <a href="{{ url_for('individual_part.list') }}" class="btn btn-primary"><i class="ri-shapes-line"></i> Individual parts</a>
     <a href="{{ url_for('individual_part.upload') }}" class="btn btn-secondary"><i class="ri-upload-2-line"></i> Import another file</a>

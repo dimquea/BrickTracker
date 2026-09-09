@@ -6,8 +6,6 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 from flask import current_app, url_for
-import requests
-from shutil import copyfileobj
 
 from .bricklink_catalog import image_name, ITEM_TYPE_PART
 from .exceptions import NotFoundException, DatabaseException, ErrorException
@@ -239,38 +237,16 @@ class IndividualPart(BrickRecord):
         if not image_id:
             return
 
-        # Build path (same pattern as RebrickableImage)
-        parts_folder = current_app.config['PARTS_FOLDER']
-        extension = 'jpg'  # Everything is saved as jpg
+        # Путь и загрузка общие с картинками каталога: своя загрузка
+        # обходилась без заголовка User-Agent, а BrickLink на такие
+        # запросы отвечает отказом, и картинка просто не появлялась
+        from .rebrickable_image import fetch, RebrickableImage
 
-        # If folder is an absolute path (starts with /), use it directly
-        # Otherwise, make it relative to app root (current_app.root_path)
-        if parts_folder.startswith('/'):
-            base_path = parts_folder
-        else:
-            base_path = os.path.join(current_app.root_path, parts_folder)
-
-        path = os.path.join(base_path, f'{image_id}.{extension}')
-
-        # Avoid downloading if file exists
-        if os.path.exists(path):
-            return
-
-        # Create directory if it doesn't exist
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-
-        # Download the image
-        try:
-            response = requests.get(image_url, stream=True)
-            if response.ok:
-                with open(path, 'wb') as f:
-                    copyfileobj(response.raw, f)
-                logger.info('Downloaded image to {path}'.format(path=path))
-        except Exception as e:
-            logger.warning('Could not download image from {url}: {error}'.format(
-                url=image_url,
-                error=e
-            ))
+        fetch(
+            image_url,
+            RebrickableImage.file_path(image_id, 'PARTS_FOLDER'),
+            name=image_id,
+        )
 
     # Load available colors for a part
     def load_colors(self, socket: 'BrickSocket', data: dict[str, Any], /) -> bool:

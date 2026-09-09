@@ -119,6 +119,7 @@ def do_upload() -> str | Response:
         'individual_part/import.html',
         added=added,
         skipped=imported.skipped,
+        images_failed=imported.images_failed,
         done=True,
         **set_metadata_lists(as_class=True),
     )
