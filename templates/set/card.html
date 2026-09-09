@@ -13,6 +13,9 @@
       data-has-missing-instructions="{{ (item.instructions | length == 0) | int }}"
     {% endif %}
     data-has-minifigures="{{ (item.fields.total_minifigures > 0) | int }}" data-minifigures="{{ item.fields.total_minifigures }}"
+    {% if not config['HIDE_ALL_MINIFIGURES'] %}
+      data-has-missing-minifigures="{{ (item.fields.total_missing_minifigures | default(0) > 0) | int }}" data-missing-minifigures="{{ item.fields.total_missing_minifigures | default(0) }}"
+    {% endif %}
     {% if not config['HIDE_TABLE_MISSING_PARTS'] %}
       data-has-missing="{{ (item.fields.total_missing > 0) | int }}" data-missing="{{ item.fields.total_missing }}"
     {% endif %}

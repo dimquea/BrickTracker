@@ -14,6 +14,9 @@
         {% if not config['HIDE_TABLE_DAMAGED_PARTS'] %}
           <option value="has-damaged" {% if current_status_filter == 'has-damaged' or current_status_filter == '-has-damaged' %}selected{% endif %}>Damaged pieces</option>
         {% endif %}
+        {% if not config['HIDE_ALL_MINIFIGURES'] %}
+          <option value="has-missing-minifigures" {% if current_status_filter == 'has-missing-minifigures' or current_status_filter == '-has-missing-minifigures' %}selected{% endif %}>Missing minifigures</option>
+        {% endif %}
         {% if not config['HIDE_SET_INSTRUCTIONS'] %}
           <option value="has-missing-instructions" {% if current_status_filter == 'has-missing-instructions' or current_status_filter == '-has-missing-instructions' %}selected{% endif %}>Missing instructions</option>
         {% endif %}

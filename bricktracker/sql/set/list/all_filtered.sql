@@ -48,6 +48,10 @@ AND IFNULL("problem_join"."total_missing", 0) = 0
 AND IFNULL("problem_join"."total_damaged", 0) > 0
 {% elif status_filter == '-has-damaged' %}
 AND IFNULL("problem_join"."total_damaged", 0) = 0
+{% elif status_filter == 'has-missing-minifigures' %}
+AND IFNULL("minifigures_join"."total_missing", 0) > 0
+{% elif status_filter == '-has-missing-minifigures' %}
+AND IFNULL("minifigures_join"."total_missing", 0) = 0
 {% elif status_filter == 'has-storage' %}
 AND "bricktracker_sets"."storage" IS NOT NULL AND "bricktracker_sets"."storage" != ''
 {% elif status_filter == '-has-storage' %}

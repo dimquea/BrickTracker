@@ -82,6 +82,20 @@ AND NOT EXISTS (
     WHERE bs_filter."set" = "rebrickable_sets"."set"
     AND "bricktracker_parts"."damaged" > 0
 )
+{% elif status_filter == 'has-missing-minifigures' %}
+AND EXISTS (
+    SELECT 1 FROM "bricktracker_sets" bs_filter
+    JOIN "bricktracker_minifigures" ON bs_filter."id" = "bricktracker_minifigures"."id"
+    WHERE bs_filter."set" = "rebrickable_sets"."set"
+    AND "bricktracker_minifigures"."missing" > 0
+)
+{% elif status_filter == '-has-missing-minifigures' %}
+AND NOT EXISTS (
+    SELECT 1 FROM "bricktracker_sets" bs_filter
+    JOIN "bricktracker_minifigures" ON bs_filter."id" = "bricktracker_minifigures"."id"
+    WHERE bs_filter."set" = "rebrickable_sets"."set"
+    AND "bricktracker_minifigures"."missing" > 0
+)
 {% endif %}
 {% endif %}
 {% endblock %}

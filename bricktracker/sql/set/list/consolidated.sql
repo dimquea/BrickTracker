@@ -13,6 +13,7 @@ SELECT
     IFNULL(SUM("problem_join"."total_missing"), 0) AS "total_missing",
     IFNULL(SUM("problem_join"."total_damaged"), 0) AS "total_damaged",
     IFNULL(MAX("minifigures_join"."total"), 0) AS "total_minifigures",
+    IFNULL(SUM("minifigures_join"."total_missing"), 0) AS "total_missing_minifigures",
     -- Keep one representative instance for display purposes
     GROUP_CONCAT("bricktracker_sets"."id", '|') AS "instance_ids",
     REPLACE(GROUP_CONCAT(DISTINCT "bricktracker_sets"."storage"), ',', '|') AS "storage",
@@ -69,7 +70,10 @@ LEFT JOIN (
        SUM(CASE WHEN "bricktracker_minifigures"."alternate" = 0
                  AND "bricktracker_minifigures"."counterpart" = 0
                 THEN "bricktracker_minifigures"."quantity"
-                ELSE 0 END) AS "total"
+                ELSE 0 END) AS "total",
+       -- Отметки на самой фигурке: набор без фигурки — отдельная беда,
+       -- в счёт недостающих деталей она не попадает
+       SUM("bricktracker_minifigures"."missing") AS "total_missing"
     FROM "bricktracker_minifigures"
     GROUP BY "bricktracker_minifigures"."id"
 ) "minifigures_join"
@@ -189,6 +193,10 @@ AND IFNULL(SUM("problem_join"."total_missing"), 0) = 0
 AND IFNULL(SUM("problem_join"."total_damaged"), 0) > 0
 {% elif status_filter == '-has-damaged' %}
 AND IFNULL(SUM("problem_join"."total_damaged"), 0) = 0
+{% elif status_filter == 'has-missing-minifigures' %}
+AND IFNULL(SUM("minifigures_join"."total_missing"), 0) > 0
+{% elif status_filter == '-has-missing-minifigures' %}
+AND IFNULL(SUM("minifigures_join"."total_missing"), 0) = 0
 {% endif %}
 {% endif %}
 {% if duplicate_filter %}

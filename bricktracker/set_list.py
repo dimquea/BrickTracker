@@ -452,7 +452,12 @@ class BrickSetList(BrickRecordList[BrickSet]):
             theme_list = BrickThemeList()
             themes = set()
             for record in theme_records:
-                theme_id = record.get('theme_id')
+                # sqlite3.Row не словарь и .get() не знает: обращение
+                # роняло весь разбор, а он завёрнут в except, который
+                # молча откатывался на «все темы без учёта фильтров».
+                # Поэтому список тем не сужался ни под один фильтр, кроме
+                # тех, что не возвращают ни строки.
+                theme_id = record['theme_id']
                 if theme_id:
                     theme = theme_list.get(theme_id)
                     if theme and hasattr(theme, 'name'):
