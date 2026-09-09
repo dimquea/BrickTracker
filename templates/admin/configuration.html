@@ -439,6 +439,132 @@
                   </label>
                   <input type="number" class="form-control config-number" id="BK_PROBLEMS_PAGINATION_SIZE_DESKTOP" data-var="BK_PROBLEMS_PAGINATION_SIZE_DESKTOP" min="1" max="100">
                 </div>
+                <div class="col-12">
+                  <label for="BK_PROBLEMS_PAGINATION_SIZE_MOBILE" class="form-label">
+                    BK_PROBLEMS_PAGINATION_SIZE_MOBILE {{ config_badges('BK_PROBLEMS_PAGINATION_SIZE_MOBILE') }}
+                    <div class="text-muted small">Problem parts per page on mobile</div>
+                  </label>
+                  <input type="number" class="form-control config-number" id="BK_PROBLEMS_PAGINATION_SIZE_MOBILE" data-var="BK_PROBLEMS_PAGINATION_SIZE_MOBILE" min="1" max="50">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client side pagination -->
+          <h6 class="fw-bold text-secondary mb-3">Client side pagination</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="BK_DEFAULT_TABLE_PER_PAGE" class="form-label">
+                BK_DEFAULT_TABLE_PER_PAGE {{ config_badges('BK_DEFAULT_TABLE_PER_PAGE') }}
+                <div class="text-muted small">Default number of items per page in tables</div>
+              </label>
+              <input type="number" class="form-control config-number" id="BK_DEFAULT_TABLE_PER_PAGE" data-var="BK_DEFAULT_TABLE_PER_PAGE" min="1" max="500">
+            </div>
+          </div>
+
+          <!-- Features & External Services -->
+          <h6 class="fw-bold text-primary border-bottom pb-1 mb-3 mt-4">Features & External Services</h6>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-check form-switch">
+                <input class="form-check-input config-toggle" type="checkbox" id="BK_RANDOM" data-var="BK_RANDOM" {{ is_locked('BK_RANDOM') }}>
+                <label class="form-check-label" for="BK_RANDOM">
+                  BK_RANDOM {{ config_badges('BK_RANDOM') }}
+                  <div class="text-muted small">Shuffle the lists on the front page</div>
+                </label>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input config-toggle" type="checkbox" id="BK_BRICKLINK_LINKS" data-var="BK_BRICKLINK_LINKS" {{ is_locked('BK_BRICKLINK_LINKS') }}>
+                <label class="form-check-label" for="BK_BRICKLINK_LINKS">
+                  BK_BRICKLINK_LINKS {{ config_badges('BK_BRICKLINK_LINKS') }}
+                  <div class="text-muted small">Display BrickLink links wherever applicable</div>
+                </label>
+              </div>
+
+
+              <div class="form-check form-switch">
+                <input class="form-check-input config-toggle" type="checkbox" id="BK_SKIP_SPARE_PARTS" data-var="BK_SKIP_SPARE_PARTS" {{ is_locked('BK_SKIP_SPARE_PARTS') }}>
+                <label class="form-check-label" for="BK_SKIP_SPARE_PARTS">
+                  BK_SKIP_SPARE_PARTS {{ config_badges('BK_SKIP_SPARE_PARTS') }}
+                  <div class="text-muted small">Skip importing spare parts when downloading sets from Rebrickable</div>
+                </label>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input config-toggle" type="checkbox" id="BK_HIDE_SPARE_PARTS" data-var="BK_HIDE_SPARE_PARTS" {{ is_locked('BK_HIDE_SPARE_PARTS') }}>
+                <label class="form-check-label" for="BK_HIDE_SPARE_PARTS">
+                  BK_HIDE_SPARE_PARTS {{ config_badges('BK_HIDE_SPARE_PARTS') }}
+                  <div class="text-muted small">Hide spare parts from parts lists (spare parts must still be in database)</div>
+                </label>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-check form-switch">
+                <input class="form-check-input config-toggle" type="checkbox" id="BK_USE_REMOTE_IMAGES" data-var="BK_USE_REMOTE_IMAGES" {{ is_locked('BK_USE_REMOTE_IMAGES') }}>
+                <label class="form-check-label" for="BK_USE_REMOTE_IMAGES">
+                  BK_USE_REMOTE_IMAGES {{ config_badges('BK_USE_REMOTE_IMAGES') }}
+                  <div class="text-muted small">Use remote images from Rebrickable CDN instead of local storage</div>
+                </label>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input config-toggle" type="checkbox" id="BK_STATISTICS_SHOW_CHARTS" data-var="BK_STATISTICS_SHOW_CHARTS" {{ is_locked('BK_STATISTICS_SHOW_CHARTS') }}>
+                <label class="form-check-label" for="BK_STATISTICS_SHOW_CHARTS">
+                  BK_STATISTICS_SHOW_CHARTS {{ config_badges('BK_STATISTICS_SHOW_CHARTS') }}
+                  <div class="text-muted small">Show collection growth charts on statistics page</div>
+                </label>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input config-toggle" type="checkbox" id="BK_STATISTICS_DEFAULT_EXPANDED" data-var="BK_STATISTICS_DEFAULT_EXPANDED" {{ is_locked('BK_STATISTICS_DEFAULT_EXPANDED') }}>
+                <label class="form-check-label" for="BK_STATISTICS_DEFAULT_EXPANDED">
+                  BK_STATISTICS_DEFAULT_EXPANDED {{ config_badges('BK_STATISTICS_DEFAULT_EXPANDED') }}
+                  <div class="text-muted small">Expand all statistics sections by default</div>
+                </label>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input config-toggle" type="checkbox" id="BK_DARK_MODE" data-var="BK_DARK_MODE" {{ is_locked('BK_DARK_MODE') }}>
+                <label class="form-check-label" for="BK_DARK_MODE">
+                  BK_DARK_MODE {{ config_badges('BK_DARK_MODE') }}
+                  <div class="text-muted small">Enable dark mode theme</div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced Settings -->
+          <h6 class="fw-bold text-primary border-bottom pb-1 mb-3 mt-4">Advanced Settings</h6>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="BK_PEERON_DOWNLOAD_DELAY" class="form-label">
+                BK_PEERON_DOWNLOAD_DELAY {{ config_badges('BK_PEERON_DOWNLOAD_DELAY') }}
+                <div class="text-muted small">Delay between Peeron downloads in milliseconds</div>
+              </label>
+              <input type="number" class="form-control config-number" id="BK_PEERON_DOWNLOAD_DELAY" data-var="BK_PEERON_DOWNLOAD_DELAY" min="0" max="10000">
+            </div>
+
+            <div class="col-md-6">
+              <label for="BK_PEERON_MIN_IMAGE_SIZE" class="form-label">
+                BK_PEERON_MIN_IMAGE_SIZE {{ config_badges('BK_PEERON_MIN_IMAGE_SIZE') }}
+                <div class="text-muted small">Minimum valid image size in bytes</div>
+              </label>
+              <input type="number" class="form-control config-number" id="BK_PEERON_MIN_IMAGE_SIZE" data-var="BK_PEERON_MIN_IMAGE_SIZE" min="1000" max="1000000">
+            </div>
+
+
+            <div class="col-md-6">
+              <label for="BK_ADMIN_DEFAULT_EXPANDED_SECTIONS" class="form-label">
+                BK_ADMIN_DEFAULT_EXPANDED_SECTIONS {{ config_badges('BK_ADMIN_DEFAULT_EXPANDED_SECTIONS') }}
+                <div class="text-muted small">Admin sections to expand by default (comma-separated)</div>
+              </label>
+              <input type="text" class="form-control config-text" id="BK_ADMIN_DEFAULT_EXPANDED_SECTIONS" data-var="BK_ADMIN_DEFAULT_EXPANDED_SECTIONS" {{ is_locked('BK_ADMIN_DEFAULT_EXPANDED_SECTIONS') }}>
+            </div>
+          </div>
 
           <!-- Default Ordering & Formatting -->
           <h6 class="fw-bold text-primary border-bottom pb-1 mb-3 mt-4">Default Ordering & Formatting</h6>
@@ -543,6 +669,14 @@
 
           <div class="row g-3">
             <div class="col-12">
+              <label for="BK_BRICKLINK_LINK_SET_PATTERN" class="form-label">
+                BK_BRICKLINK_LINK_SET_PATTERN {{ config_badges('BK_BRICKLINK_LINK_SET_PATTERN') }}
+                <div class="text-muted small">Pattern for BrickLink set links (supports {set_num})</div>
+              </label>
+              <input type="text" class="form-control config-text" id="BK_BRICKLINK_LINK_SET_PATTERN" data-var="BK_BRICKLINK_LINK_SET_PATTERN" {{ is_locked('BK_BRICKLINK_LINK_SET_PATTERN') }}>
+            </div>
+
+            <div class="col-12">
               <label for="BK_BRICKLINK_LINK_PART_PATTERN" class="form-label">
                 BK_BRICKLINK_LINK_PART_PATTERN {{ config_badges('BK_BRICKLINK_LINK_PART_PATTERN') }}
                 <div class="text-muted small">Pattern for BrickLink part links (supports {part} and {color})</div>
@@ -643,6 +777,175 @@
               <input type="text" class="form-control config-text" id="BK_RETIRED_SETS_FILE_URL" data-var="BK_RETIRED_SETS_FILE_URL" {{ is_locked('BK_RETIRED_SETS_FILE_URL') }}>
             </div>
 
+            <div class="col-12">
+              <label for="BK_RETIRED_SETS_PATH" class="form-label">
+                BK_RETIRED_SETS_PATH {{ config_badges('BK_RETIRED_SETS_PATH') }}
+                <div class="text-muted small">Local path to store retired sets CSV</div>
+              </label>
+              <input type="text" class="form-control config-text" id="BK_RETIRED_SETS_PATH" data-var="BK_RETIRED_SETS_PATH" {{ is_locked('BK_RETIRED_SETS_PATH') }}>
+            </div>
+
+
+          </div>
+{{ accordion.footer() }}
+
+<!-- Static Settings Accordion -->
+{{ accordion.header('Static Settings', 'static-settings', 'admin', expanded=false, icon='database-2-line', class='p-3') }}
+  <div class="mb-3">
+    <span class="badge text-bg-warning">Requires Restart</span>
+  </div>
+  <!-- Static configuration with editable fields -->
+
+          <div class="alert alert-warning">
+            <h6><i class="ri-warning-line"></i> Restart Required</h6>
+            These settings require an application restart to take effect. Values can be edited here and will be saved to the .env file.
+          </div>
+
+          <!-- Authentication -->
+          <h6 class="fw-bold text-secondary border-bottom pb-1 mb-3">Authentication & Security</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="static-BK_AUTHENTICATION_PASSWORD" class="form-label">
+                BK_AUTHENTICATION_PASSWORD {{ config_badges('BK_AUTHENTICATION_PASSWORD') }}
+                <div class="text-muted small">Password for authentication system</div>
+              </label>
+              <input type="password" class="form-control config-static" id="static-BK_AUTHENTICATION_PASSWORD" data-var="BK_AUTHENTICATION_PASSWORD" {{ is_locked('BK_AUTHENTICATION_PASSWORD') }}>
+            </div>
+            <div class="col-md-6">
+              <label for="static-BK_AUTHENTICATION_KEY" class="form-label">
+                BK_AUTHENTICATION_KEY {{ config_badges('BK_AUTHENTICATION_KEY') }}
+                <div class="text-muted small">Secret key for session signing</div>
+              </label>
+              <input type="password" class="form-control config-static" id="static-BK_AUTHENTICATION_KEY" data-var="BK_AUTHENTICATION_KEY" {{ is_locked('BK_AUTHENTICATION_KEY') }}>
+            </div>
+          </div>
+
+          <!-- Server Configuration -->
+          <h6 class="fw-bold text-secondary border-bottom pb-1 mb-3 mt-4">Server Configuration</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="static-BK_HOST" class="form-label">
+                BK_HOST {{ config_badges('BK_HOST') }}
+                <div class="text-muted small">Server host address to bind to</div>
+              </label>
+              <input type="text" class="form-control config-static" id="static-BK_HOST" data-var="BK_HOST" {{ is_locked('BK_HOST') }}>
+            </div>
+            <div class="col-md-6">
+              <label for="static-BK_PORT" class="form-label">
+                BK_PORT {{ config_badges('BK_PORT') }}
+                <div class="text-muted small">Port number for the web server</div>
+              </label>
+              <input type="number" class="form-control config-static" id="static-BK_PORT" data-var="BK_PORT" min="1" max="65535">
+            </div>
+            <div class="col-md-6">
+              <div class="form-check form-switch">
+                <input class="form-check-input config-static-toggle" type="checkbox" id="static-BK_DEBUG" data-var="BK_DEBUG" {{ is_locked('BK_DEBUG') }}>
+                <label class="form-check-label" for="static-BK_DEBUG">
+                  BK_DEBUG {{ config_badges('BK_DEBUG') }}
+                  <div class="text-muted small">Enable debug mode</div>
+                </label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check form-switch">
+                <input class="form-check-input config-static-toggle" type="checkbox" id="static-BK_DISABLE_INDIVIDUAL_PARTS" data-var="BK_DISABLE_INDIVIDUAL_PARTS" {{ is_locked('BK_DISABLE_INDIVIDUAL_PARTS') }}>
+                <label class="form-check-label" for="static-BK_DISABLE_INDIVIDUAL_PARTS">
+                  BK_DISABLE_INDIVIDUAL_PARTS {{ config_badges('BK_DISABLE_INDIVIDUAL_PARTS') }}
+                  <div class="text-muted small">Disable individual parts feature (blocks adding/editing, allows viewing existing)</div>
+                </label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check form-switch">
+                <input class="form-check-input config-static-toggle" type="checkbox" id="static-BK_DISABLE_INDIVIDUAL_MINIFIGURES" data-var="BK_DISABLE_INDIVIDUAL_MINIFIGURES" {{ is_locked('BK_DISABLE_INDIVIDUAL_MINIFIGURES') }}>
+                <label class="form-check-label" for="static-BK_DISABLE_INDIVIDUAL_MINIFIGURES">
+                  BK_DISABLE_INDIVIDUAL_MINIFIGURES {{ config_badges('BK_DISABLE_INDIVIDUAL_MINIFIGURES') }}
+                  <div class="text-muted small">Disable individual minifigures feature (blocks adding/editing, allows viewing existing)</div>
+                </label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="static-BK_DOMAIN_NAME" class="form-label">
+                BK_DOMAIN_NAME {{ config_badges('BK_DOMAIN_NAME') }}
+                <div class="text-muted small">Domain name for CORS configuration</div>
+              </label>
+              <input type="text" class="form-control config-static" id="static-BK_DOMAIN_NAME" data-var="BK_DOMAIN_NAME" {{ is_locked('BK_DOMAIN_NAME') }}>
+            </div>
+            <div class="col-md-6">
+              <label for="static-BK_TIMEZONE" class="form-label">
+                BK_TIMEZONE {{ config_badges('BK_TIMEZONE') }}
+                <div class="text-muted small">Application timezone</div>
+              </label>
+              <input type="text" class="form-control config-static" id="static-BK_TIMEZONE" data-var="BK_TIMEZONE" {{ is_locked('BK_TIMEZONE') }}>
+            </div>
+          </div>
+
+          <!-- Database & Storage -->
+          <h6 class="fw-bold text-secondary border-bottom pb-1 mb-3 mt-4">Database & Storage</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="static-BK_DATABASE_PATH" class="form-label">
+                BK_DATABASE_PATH {{ config_badges('BK_DATABASE_PATH') }}
+                <div class="text-muted small">Path to the SQLite database file</div>
+              </label>
+              <input type="text" class="form-control config-static" id="static-BK_DATABASE_PATH" data-var="BK_DATABASE_PATH" {{ is_locked('BK_DATABASE_PATH') }}>
+            </div>
+            <div class="col-md-6">
+              <label for="static-BK_INSTRUCTIONS_FOLDER" class="form-label">
+                BK_INSTRUCTIONS_FOLDER {{ config_badges('BK_INSTRUCTIONS_FOLDER') }}
+                <div class="text-muted small">Folder for instruction files</div>
+              </label>
+              <input type="text" class="form-control config-static" id="static-BK_INSTRUCTIONS_FOLDER" data-var="BK_INSTRUCTIONS_FOLDER" {{ is_locked('BK_INSTRUCTIONS_FOLDER') }}>
+            </div>
+            <div class="col-md-6">
+              <label for="static-BK_PARTS_FOLDER" class="form-label">
+                BK_PARTS_FOLDER {{ config_badges('BK_PARTS_FOLDER') }}
+                <div class="text-muted small">Folder for part images</div>
+              </label>
+              <input type="text" class="form-control config-static" id="static-BK_PARTS_FOLDER" data-var="BK_PARTS_FOLDER" {{ is_locked('BK_PARTS_FOLDER') }}>
+            </div>
+            <div class="col-md-6">
+              <label for="static-BK_SETS_FOLDER" class="form-label">
+                BK_SETS_FOLDER {{ config_badges('BK_SETS_FOLDER') }}
+                <div class="text-muted small">Folder for set images</div>
+              </label>
+              <input type="text" class="form-control config-static" id="static-BK_SETS_FOLDER" data-var="BK_SETS_FOLDER" {{ is_locked('BK_SETS_FOLDER') }}>
+            </div>
+            <div class="col-md-6">
+              <label for="static-BK_MINIFIGURES_FOLDER" class="form-label">
+                BK_MINIFIGURES_FOLDER {{ config_badges('BK_MINIFIGURES_FOLDER') }}
+                <div class="text-muted small">Folder for minifigure images</div>
+              </label>
+              <input type="text" class="form-control config-static" id="static-BK_MINIFIGURES_FOLDER" data-var="BK_MINIFIGURES_FOLDER" {{ is_locked('BK_MINIFIGURES_FOLDER') }}>
+            </div>
+          </div>
+
+          <!-- API Configuration -->
+          <h6 class="fw-bold text-secondary border-bottom pb-1 mb-3 mt-4">API Configuration</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="static-BK_USER_AGENT" class="form-label">
+                BK_USER_AGENT {{ config_badges('BK_USER_AGENT') }}
+                <div class="text-muted small">User agent string for HTTP requests</div>
+              </label>
+              <input type="text" class="form-control config-static" id="static-BK_USER_AGENT" data-var="BK_USER_AGENT" {{ is_locked('BK_USER_AGENT') }}>
+            </div>
+          </div>
+
+          <!-- Date & Currency Formats -->
+          <h6 class="fw-bold text-secondary border-bottom pb-1 mb-3 mt-4">Date & Currency Formats</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="static-BK_DATABASE_TIMESTAMP_FORMAT" class="form-label">
+                BK_DATABASE_TIMESTAMP_FORMAT {{ config_badges('BK_DATABASE_TIMESTAMP_FORMAT') }}
+                <div class="text-muted small">Database timestamp format</div>
+              </label>
+              <input type="text" class="form-control config-static" id="static-BK_DATABASE_TIMESTAMP_FORMAT" data-var="BK_DATABASE_TIMESTAMP_FORMAT" {{ is_locked('BK_DATABASE_TIMESTAMP_FORMAT') }}>
+            </div>
+            <div class="col-md-6">
+              <label for="static-BK_FILE_DATETIME_FORMAT" class="form-label">
+                BK_FILE_DATETIME_FORMAT {{ config_badges('BK_FILE_DATETIME_FORMAT') }}
+                <div class="text-muted small">File datetime format</div>
               </label>
               <input type="text" class="form-control config-static" id="static-BK_FILE_DATETIME_FORMAT" data-var="BK_FILE_DATETIME_FORMAT" {{ is_locked('BK_FILE_DATETIME_FORMAT') }}>
             </div>
