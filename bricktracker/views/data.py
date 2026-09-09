@@ -32,6 +32,7 @@ def serve_data_file(folder: str, filename: str):
         'parts': current_app.config.get('PARTS_FOLDER', './data/parts'),
         'minifigures': current_app.config.get('MINIFIGURES_FOLDER', './data/minifigures'),
         'instructions': current_app.config.get('INSTRUCTIONS_FOLDER', './data/instructions'),
+        'lots': current_app.config.get('LOTS_FOLDER', './data/lots'),
     }
 
     # Check if the requested folder is allowed

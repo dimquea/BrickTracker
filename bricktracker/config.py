@@ -46,6 +46,8 @@ CONFIG: Final[list[dict[str, Any]]] = [
     {'n': 'INDEPENDENT_ACCORDIONS', 'c': bool},
     {'n': 'INSTRUCTIONS_ALLOWED_EXTENSIONS', 'd': ['.pdf'], 'c': list},  # noqa: E501
     {'n': 'INSTRUCTIONS_FOLDER', 'd': 'data/instructions'},
+    {'n': 'LOTS_ALLOWED_EXTENSIONS', 'd': ['.jpg', '.jpeg', '.png', '.webp', '.gif'], 'c': list},  # noqa: E501
+    {'n': 'LOTS_FOLDER', 'd': 'data/lots'},
     {'n': 'HIDE_ADD_SET', 'c': bool},
     {'n': 'HIDE_ADD_BULK_SET', 'c': bool},
     {'n': 'HIDE_ADMIN', 'c': bool},

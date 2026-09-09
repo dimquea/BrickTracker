@@ -7,6 +7,7 @@ SELECT
     "bricktracker_individual_part_lots"."purchase_location",
     "bricktracker_individual_part_lots"."purchase_date",
     "bricktracker_individual_part_lots"."purchase_price",
+    "bricktracker_individual_part_lots"."image",
     "bricktracker_metadata_storages"."name" AS "storage_name",
     "bricktracker_metadata_purchase_locations"."name" AS "purchase_location_name"
     {% if owners %},{{ owners }}{% endif %}

@@ -10,6 +10,7 @@ from flask import (
     current_app,
     url_for,
 )
+from werkzeug.datastructures import FileStorage
 
 from .exceptions import NotFoundException, DatabaseException, ErrorException
 from .individual_part import IndividualPart
@@ -66,6 +67,10 @@ class IndividualPartLot(BrickRecord):
 
     # Delete a lot and all its parts
     def delete(self, /) -> None:
+        # Картинку убираем до строки: после удаления имя файла взять
+        # будет негде, и он остался бы в папке навсегда
+        self.delete_image()
+
         BrickSQL().executescript(
             'individual_part_lot/delete',
             id=self.fields.id
@@ -74,6 +79,109 @@ class IndividualPartLot(BrickRecord):
     # Get the URL for this lot
     def url(self, /) -> str:
         return url_for('individual_part.lot_details', lot_id=self.fields.id)
+
+    # -- Своя картинка ----------------------------------------------------
+
+    # Есть ли у лота своя картинка
+    #
+    # Проверяется и файл: строка могла пережить папку данных, и тогда
+    # карточка показала бы битую картинку вместо мозаики из деталей.
+    def has_image(self, /) -> bool:
+        name = getattr(self.fields, 'image', None)
+
+        if not name:
+            return False
+
+        return os.path.isfile(self.image_path(name))
+
+    # Путь к файлу картинки
+    @staticmethod
+    def image_path(name: str, /) -> str:
+        folder: str = current_app.config['LOTS_FOLDER']
+
+        if not folder.startswith('/'):
+            folder = os.path.join(current_app.root_path, folder)
+
+        return os.path.join(folder, name)
+
+    # Адрес картинки для страницы
+    def url_for_image(self, /) -> str:
+        return url_for(
+            'data.serve_data_file',
+            folder='lots',
+            filename=self.fields.image,
+        )
+
+    # Сохранить загруженную картинку
+    #
+    # Имя файла — идентификатор лота: так он не столкнётся с чужим и не
+    # утащит в папку данных то, как файл назывался у пользователя.
+    # Расширение остаётся исходным, чтобы не перекодировать картинку.
+    def save_image(self, file: FileStorage, /) -> None:
+        _, extension = os.path.splitext(file.filename or '')
+
+        name = '{id}{extension}'.format(
+            id=self.fields.id,
+            extension=extension.lower(),
+        )
+
+        path = self.image_path(name)
+
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+        file.save(path)
+
+        # Прежняя картинка могла быть с другим расширением: тогда новая её
+        # не перезаписала, и старый файл надо убрать самим
+        previous = getattr(self.fields, 'image', None)
+
+        if previous and previous != name:
+            self.remove_image_file(previous)
+
+        self.fields.image = name
+
+        BrickSQL().execute_and_commit(
+            'individual_part_lot/update/image',
+            parameters={'id': self.fields.id, 'image': name},
+        )
+
+        logger.info('Individual part lot {id}: image saved as {name}'.format(
+            id=self.fields.id,
+            name=name,
+        ))
+
+    # Убрать картинку: и файл, и строку
+    def delete_image(self, /) -> None:
+        name = getattr(self.fields, 'image', None)
+
+        if not name:
+            return
+
+        self.remove_image_file(name)
+
+        self.fields.image = None
+
+        BrickSQL().execute_and_commit(
+            'individual_part_lot/update/image',
+            parameters={'id': self.fields.id, 'image': None},
+        )
+
+        logger.info('Individual part lot {id}: image removed'.format(
+            id=self.fields.id,
+        ))
+
+    # Удалить файл картинки, не трогая базу
+    @classmethod
+    def remove_image_file(cls, name: str, /) -> None:
+        try:
+            os.remove(cls.image_path(name))
+        except OSError as e:
+            # Файла может не быть: папку данных могли почистить руками.
+            # Это не повод ронять удаление лота.
+            logger.warning('Could not remove lot image {name}: {error}'.format(
+                name=name,
+                error=e,
+            ))
 
     # String representation for debugging
     def __repr__(self, /) -> str:

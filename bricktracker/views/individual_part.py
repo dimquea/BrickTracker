@@ -636,6 +636,43 @@ def delete_lot(*, lot_id: str):
     return redirect(url_for('individual_part.list_lots'))
 
 
+# Загрузить свою картинку лота
+#
+# Партии узнают по фотографии: тот самый пакет, та самая коробка. Без неё
+# карточка показывает мозаику из первых четырёх деталей, и партии выходят
+# на одно лицо.
+@individual_part_page.route('/lot/<lot_id>/image', methods=['POST'])
+@exception_handler(__file__, post_redirect='individual_part.list_lots')
+@require_individual_parts_write
+@login_required
+def upload_lot_image(*, lot_id: str) -> Response:
+    lot = IndividualPartLot().select_by_id(lot_id)
+
+    file = upload_helper(
+        'file',
+        'individual_part.lot_details',
+        extensions=current_app.config['LOTS_ALLOWED_EXTENSIONS'],
+    )
+
+    if isinstance(file, Response):
+        return file
+
+    lot.save_image(file)
+
+    return redirect(url_for('individual_part.lot_details', lot_id=lot_id))
+
+
+# Убрать свою картинку лота
+@individual_part_page.route('/lot/<lot_id>/image/delete', methods=['POST'])
+@exception_handler(__file__, post_redirect='individual_part.list_lots')
+@require_individual_parts_write
+@login_required
+def delete_lot_image(*, lot_id: str) -> Response:
+    IndividualPartLot().select_by_id(lot_id).delete_image()
+
+    return redirect(url_for('individual_part.lot_details', lot_id=lot_id))
+
+
 # Update lot owner
 @individual_part_page.route('/lot/<lot_id>/update/owner/<metadata_id>', methods=['POST'])
 @exception_handler(__file__)

@@ -15,6 +15,32 @@
         {{ form.input('', item.fields.id, 'lot-name-' ~ item.fields.id, url_for('individual_part.update_lot_name', lot_id=item.fields.id), item.fields.name) }}
       {% endif %}
     {{ accordion.footer() }}
+    {{ accordion.header('Picture', 'accordion-picture-' ~ item.fields.id, 'accordion-management-' ~ item.fields.id, icon='image-line') }}
+      <div class="alert alert-info" role="alert">
+        A picture of your own — the bag, the box, the table it came on. Without one the card shows a
+        mosaic of the first four parts, which makes every lot look alike.
+      </div>
+      {% if item.has_image() %}
+        <p class="text-center">
+          <img src="{{ item.url_for_image() }}" alt="{{ item.fields.name or 'Individual Part Lot' }}" class="img-fluid rounded" style="max-height: 200px;">
+        </p>
+      {% endif %}
+      {% if management_read_only %}
+        <p class="text-muted mb-0"><i class="ri-prohibited-line"></i> Individual parts are read-only.</p>
+      {% else %}
+        <form method="POST" action="{{ url_for('individual_part.upload_lot_image', lot_id=item.fields.id) }}" enctype="multipart/form-data">
+          <div class="input-group">
+            <input class="form-control form-control-sm" type="file" name="file" accept="{{ config['LOTS_ALLOWED_EXTENSIONS'] | join(',') }}" required>
+            <button type="submit" class="btn btn-sm btn-primary"><i class="ri-upload-2-line"></i> {% if item.has_image() %}Replace{% else %}Upload{% endif %}</button>
+          </div>
+        </form>
+        {% if item.has_image() %}
+          <form method="POST" action="{{ url_for('individual_part.delete_lot_image', lot_id=item.fields.id) }}" class="mt-2">
+            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="ri-delete-bin-line"></i> Remove the picture</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    {{ accordion.footer() }}
     {% endif %}
     {{ accordion.header('Owners', 'accordion-owners-' ~ item.fields.id, 'accordion-management-' ~ item.fields.id, icon='group-line', class='p-0') }}
       <ul class="list-group list-group-flush">

@@ -24,6 +24,16 @@
     {% endif %}
   </div>
 
+  {% if item.has_image() %}
+  <!-- Своя картинка партии: по ней её и узнают -->
+  <div class="border-bottom text-center">
+    <a data-lightbox data-caption="{{ item.fields.name or 'Individual Part Lot' }}" href="{{ item.url_for_image() }}" target="_blank">
+      <img src="{{ item.url_for_image() }}" alt="{{ item.fields.name or 'Individual Part Lot' }}" loading="lazy"
+           class="img-fluid" style="{% if solo %}max-height: 320px{% else %}max-height: 200px{% endif %}; object-fit: contain;">
+    </a>
+  </div>
+  {% set lot_parts = item.parts() %}
+  {% else %}
   <!-- Part preview grid (2x2 grid of top 4 parts) -->
   <div class="row g-0 border-bottom">
     {% set lot_parts = item.parts() %}
@@ -40,6 +50,7 @@
     </div>
     {% endif %}
   </div>
+  {% endif %}
 
   <div class="card-body border-bottom-0 {% if not solo %}p-1{% endif %}">
     {# Always show unique parts count and total quantity first for part lots #}
