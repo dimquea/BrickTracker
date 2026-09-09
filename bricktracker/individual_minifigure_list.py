@@ -14,7 +14,10 @@ logger = logging.getLogger(__name__)
 class IndividualMinifigureList(BrickRecordList[IndividualMinifigure]):
     # Queries
     all_query: str = 'individual_minifigure/list/all'
+    damaged_part_query: str = 'individual_minifigure/list/damaged_part'
     instances_by_figure_query: str = 'individual_minifigure/select/instances_by_figure'
+    missing_part_query: str = 'individual_minifigure/list/missing_part'
+    using_part_query: str = 'individual_minifigure/list/using_part'
     using_storage_query: str = 'individual_minifigure/list/using_storage'
     using_purchase_location_query: str = 'individual_minifigure/list/using_purchase_location'
     without_storage_query: str = 'individual_minifigure/list/without_storage'
@@ -49,6 +52,44 @@ class IndividualMinifigureList(BrickRecordList[IndividualMinifigure]):
         self.list(override_query=self.instances_by_figure_query, **context)
 
         return self
+
+    # Отдельные фигурки, в состав которых входит деталь
+    #
+    # Наборные фигурки живут в minifigure_list: у них другая таблица
+    # деталей, другие колонки и другая карточка, поэтому это отдельный
+    # список, а не расширение того.
+    def using_part(self, part: str, color: int, /) -> Self:
+        return self.by_part(self.using_part_query, part, color)
+
+    # Отдельные фигурки, у которых эта деталь отмечена потерянной
+    def missing_part(self, part: str, color: int, /) -> Self:
+        return self.by_part(self.missing_part_query, part, color)
+
+    # Отдельные фигурки, у которых эта деталь отмечена повреждённой
+    def damaged_part(self, part: str, color: int, /) -> Self:
+        return self.by_part(self.damaged_part_query, part, color)
+
+    # Общая часть трёх выборок по детали
+    def by_part(self, query: str, part: str, color: int, /) -> Self:
+        self.fields.part = part
+        self.fields.color = color
+
+        self.list(override_query=query, **self.metadata_columns())
+
+        return self
+
+    # Колонки владельцев, статусов и меток
+    #
+    # Они динамические: колонка на каждую заведённую метку. Когда их нет
+    # вовсе, подставляется заглушка, иначе в списке через запятую
+    # окажется пустое место.
+    @staticmethod
+    def metadata_columns() -> dict[str, str]:
+        return {
+            'owners': BrickSetOwnerList.as_columns() if BrickSetOwnerList.list() else 'NULL AS "no_owners"',  # noqa: E501
+            'statuses': BrickSetStatusList.as_columns(all=True) if BrickSetStatusList.list(all=True) else 'NULL AS "no_statuses"',  # noqa: E501
+            'tags': BrickSetTagList.as_columns() if BrickSetTagList.list() else 'NULL AS "no_tags"',  # noqa: E501
+        }
 
     # Load all individual minifigures using a specific storage
     def using_storage(self, storage: 'BrickSetStorage', /) -> Self:

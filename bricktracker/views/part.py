@@ -1,6 +1,7 @@
 from flask import Blueprint, current_app, render_template, request
 
 from .exceptions import exception_handler
+from ..individual_minifigure_list import IndividualMinifigureList
 from ..individual_part_list import IndividualPartList
 from ..individual_part_lot_list import IndividualPartLotList
 from ..minifigure_list import BrickMinifigureList
@@ -238,6 +239,18 @@ def details(*, part: str, color: int) -> str:
         ),
         different_color=BrickPartList().with_different_color(brickpart),
         similar_prints=BrickPartList().from_print(brickpart),
+        individual_minifigures_using=IndividualMinifigureList().using_part(
+            part,
+            color
+        ),
+        individual_minifigures_missing=IndividualMinifigureList().missing_part(
+            part,
+            color
+        ),
+        individual_minifigures_damaged=IndividualMinifigureList().damaged_part(
+            part,
+            color
+        ),
         individual_parts=IndividualPartList().by_part_and_color(part, color),
         individual_lots=IndividualPartLotList().by_part_and_color(part, color),
         writes_disabled=writes_disabled,
